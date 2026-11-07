@@ -1149,44 +1149,56 @@ round extraPort : Unit + Qubit = {
 \end{tikzpicture}
 \end{minipage}\par
 
-The first two clauses are the rotation we already know. Only the
-last clause mentions \code{back 0}. In the order \code{exit unit},
-\code{back 1}, \code{back 0}, the body therefore has matrix
-$R_\theta\oplus I_1$. On external input $u$, write $y_1$ and $y_0$
-for their respective return amplitudes. The clauses give
-\[
- y_1=\tfrac45 u+\tfrac35 y_1,\qquad y_0=y_0.
-\]
-The first equation fixes $y_1=2u$. The second holds for every $y_0$,
-so $I_Y-D=\operatorname{diag}(2/5,0)$ is \emph{singular}: it has no
-inverse. Starting from $u$ gives $y_0=0$ because no call reaches
-\code{back 0}. Any choice for $y_0$ gives the same external output,
-$(3/5)u-(4/5)y_1=-u$.
+In the order \code{exit unit}, \code{back 1}, \code{back 0}, the first
+two clauses give $R_\theta$ and the last gives $I_1$. The body is
+$R_\theta\oplus I_1$. On input $u$, the amplitude on \code{back 1}
+satisfies $y_1=\tfrac45 u+\tfrac35 y_1$, so $y_1=2u$. On \code{back 0}
+we get $y_0=y_0$. This leaves $y_0$ free and makes $I_Y-D=\operatorname{diag}(2/5,0)$
+\emph{singular}, meaning it has no inverse. Starting from $u$ gives
+$y_0=0$ because no call reaches \code{back 0}. Every choice of $y_0$
+gives the same external output, $(3/5)u-(4/5)y_1=-u$.
 
-Czachor uses the same wire equation in a model of the grandfather
-paradox. Interference at the mouth of his wormhole gives certain
-reflection~\cite[\S~IV]{Czachor19Ring}. He observes that in the
-scalar case the inverse can fail and the external output can still be
-fixed. He asks whether this holds in higher dimensions~\cite[after
+The ring brings light back to the coupler one trip later.
+Czachor uses the same connection to model a wormhole. Part of a
+particle's later output feeds its earlier input. The grandfather
+story follows a traveler who goes back and prevents their own departure.
+That story gives the traveler a definite history. In the model,
+amplitudes for different trips add at the external port. The particle
+is reflected at the mouth with probability one~\cite[Thm.~1 and
+\S~IV]{Czachor19Ring}.
+
+Czachor asks whether the external output is still fixed when the
+inverse fails, as he finds in the scalar case~\cite[after
 Eq.~(45)]{Czachor19Ring}. For finite unitary bodies, Bartha's trace
-theorem gives an affirmative answer~\cite[Thm.~8]{Bartha14QuantumTuringAutomata}.
+theorem says it is~\cite[Thm.~8]{Bartha14QuantumTuringAutomata}.
 
-The sum of the returns supplies a solution
-on every external input. If two solutions differ by $w$, subtracting
-their wire equations gives $Dw=w$. On input $(0,w)$ the body
-therefore returns $w$ with its full norm. Unitarity forces the
-external component $Bw$ to be zero, so both solutions give the
-same column of $L$. The full argument is in
-Appendix~\ref{app:total}, Figure~\ref{fig:feedback-proof}.
+\noindent\begin{minipage}[c]{.65\linewidth}
+Summing the returns gives one solution. Suppose we find another on the
+same input $u$. Call the difference between the two returns $w$.
+When we subtract their equations $y=Cu+Dy$, the two copies of $Cu$
+cancel, leaving $w=Dw$. In the picture, all the squared norm that
+enters on the lower wire leaves on that wire. Since $U$ preserves
+norm, $Bw=0$. The caller gets the same output from either solution
+(Appendix~\ref{app:total}, Figure~\ref{fig:feedback-proof}).
+\end{minipage}\hfill
+\begin{minipage}[c]{.34\linewidth}\centering
+\begin{tikzpicture}[kme circuit,>={Stealth[length=1.25mm,width=.85mm]}]
+ \node[kme gate,minimum height=9mm] (u) at (0,0) {$U$};
+ \draw[flipout,->] (-1.02,.25) node[left] {$0$} -- (u.west |- 0,.25);
+ \draw[flipout,->] (u.east |- 0,.25) -- (1.02,.25) node[right] {$Bw$};
+ \draw[flipback,->] (-1.02,-.25) node[left] {$w$} -- (u.west |- 0,-.25);
+ \draw[flipback,->] (u.east |- 0,-.25) -- (1.02,-.25) node[right] {$Dw=w$};
+ \node[below=4pt] at (0,-.49)
+   {$\|w\|^2=\textcolor{flipout}{\|Bw\|^2}+\textcolor{flipback}{\|w\|^2}$};
+\end{tikzpicture}
+\end{minipage}\par
 
 \subsection{Compiling away the loop}
-The wire equation gave us the matrix $L=A+BF$ of the closed loop.
-We can also compute this gate directly in the clause table. In
-\code{guardRound}, the first clause sends $3/5$ to \code{exit unit}
-and $4/5$ to \code{back unit}. To remove the back edge, we need to
-know what that second term will contribute to the output. Follow
-the arrows from \code{back unit}. One call sends $B=-4/5$ to the
-exit and $D=3/5$ back to the same clause.
+The wire equation gave us the gate $L=A+BF$. We can also write its
+clauses directly. In \code{guardRound}, the first clause sends $3/5$
+to \code{exit unit} and $4/5$ to \code{back unit}. Follow the latter
+in the picture. One call sends $B=-4/5$ to the exit and $D=3/5$ back
+to the same clause.
 
 \par\smallskip\noindent
 \begin{minipage}[c]{.49\linewidth}\centering
@@ -1208,36 +1220,34 @@ exit and $D=3/5$ back to the same clause.
 \end{tikzpicture}
 \end{minipage}\hfill
 \begin{minipage}[c]{.48\linewidth}
-Each trip around the self-loop contributes another factor of $D$.
-From one unit of returning amplitude, the exits therefore sum to
+From unit amplitude on \code{back unit}, each further trip contributes
+one more factor of $D$. The exits sum to
 \[
  B+BD+BD^2+\cdots
    =\frac{\textcolor{flipback}{B}}{1-\textcolor{flipback}{D}}=-2.
 \]
-The first clause sends only $C=4/5$ there, so these exits
-contribute $(4/5)(-2)$. On the wire we grouped the same factors
-as $BF=(-4/5)\cdot2$, with $F=C/(1-D)$.
+The first clause sends $C=4/5$ there, giving $(4/5)(-2)$.
+The wire equation groups the same factors as
+$BF=(-4/5)\cdot2$, with $F=C/(1-D)$.
 \end{minipage}\par\smallskip
 
-Substituting the sum $-2\,(\code{exit unit})$ for \code{back unit} in the first clause gives
+In the first clause we replace \code{back unit} by $-2\,(\code{exit unit})$.
+Both terms now leave by the same port, so we can add their coefficients
+and drop the external tag.
 \[
  \code{exit unit}\;\leftrightarrow\;
  \tfrac35\,(\code{exit unit})+\tfrac45\bigl(-2\,(\code{exit unit})\bigr)
- =-\code{exit unit}.
+ =-\code{exit unit}
+ \qquad\leadsto\qquad \{*\leftrightarrow-1\cdot *\}.
 \]
-Both terms leave through \code{exit unit}. We add their coefficients and drop
-the external tag to obtain the clause $\{*\leftrightarrow-1\cdot *\}$.
 
-With two return patterns, removing the first can change the clause
-we must use for the second. In \code{flipRound}, each call rotates
-the same guard and flips a data bit (Appendix~\ref{app:flip}).
-The \code{back 0} clause sends $-4/5$ to \code{exit 1} and $3/5$ to
-\code{back 1}. Figure~\ref{fig:42-elim-flip} substitutes this
-expression in the two clauses that mention \code{back 0}.
-
-This creates a return from \code{back 1} to itself with coefficient
-$(3/5)^2=9/25$. We close that return before substituting in the
-external clauses.
+With two return patterns, removing the first can change the second.
+In \code{flipRound} each call rotates the guard and flips a data bit
+(Appendix~\ref{app:flip}). Figure~\ref{fig:42-elim-flip} replaces
+\code{back 0} by its two outputs wherever it occurs. The path from
+\code{back 1} through \code{back 0} and back to \code{back 1} now
+gives a self-loop with coefficient $(3/5)^2=9/25$. We close it before
+substituting in the external clauses.
 
 \begin{figure}[!htbp]\centering
 \begingroup
@@ -1266,23 +1276,23 @@ Delete the \code{back 0} clause. The third clause is $\ex0\mapsto\tfrac35\ex1+\t
 \textbf{Close \code{back 1}.}
 Sum its exits with factor $1/(1-\subst{9/25})=25/16$.
 \par\smallskip
-\begin{center}$\begin{aligned}
+{\centering $\begin{aligned}
 \bk1\;&\longmapsto\;
  \tfrac{25}{16}\bigl(-\tfrac45\ex0-\tfrac{12}{25}\ex1\bigr)
  =\subst{-\tfrac54\ex0-\tfrac34\ex1}.
-\end{aligned}$\end{center}
+\end{aligned}$\par}
 
 \vspace{.65\baselineskip}
 \textbf{Substitute for \code{back 1} in both exit clauses.}
 \par\smallskip
-\begin{center}$\begin{aligned}
+{\centering $\begin{aligned}
 \ex0&\mapsto\tfrac35\ex1+\tfrac45
        \subst{\bigl(-\tfrac54\ex0-\tfrac34\ex1\bigr)}
        =-\ex0,\\[5pt]
 \ex1&\mapsto\tfrac35\ex0-\tfrac{16}{25}\ex1+\tfrac{12}{25}
        \subst{\bigl(-\tfrac54\ex0-\tfrac34\ex1\bigr)}
        =-\ex1.
-\end{aligned}$\end{center}
+\end{aligned}$\par}
 \end{minipage}
 \endgroup
 \caption{Compiling \code{trace flipRound}. The arrows substitute for
@@ -1294,41 +1304,67 @@ expression, and the collected coefficients. Closing back one then replaces it by
 its two summed exits, leaving amplitude minus one on each original input.}
 \end{figure}
 
-For a general body, first evaluate the matching clause on each basis
-input, as in Section~\ref{sec:iso}. In the resulting table, choose a
-returning basis value \kw{back} $q$ and write
-its clause as $\kw{back}\,q\mapsto d\,(\kw{back}\,q)+e$. Here
-$d=D_{qq}$ is the amplitude to return to $q$ and $e$ contains the
-other outputs. If $d\ne1$, substitute $e/(1-d)$ for \kw{back} $q$
-in every other clause (Appendix~\ref{app:elim}). Thus
-$v\mapsto e'+\alpha\,(\kw{back}\,q)$ becomes
-$v\mapsto e'+\alpha e/(1-d)$.
-Collect terms on equal patterns and delete the clause for $q$.
-If $d=1$, unitarity forces all other entries in its row and column
-to vanish. We can simply delete that clause, as for \code{back 0}
-in \code{extraPort}.
+For a general body, we evaluate each basis input as in
+Section~\ref{sec:iso} and choose a return \kw{back} $q$.
+Write its clause as $\kw{back}\,q\mapsto d\,(\kw{back}\,q)+e$,
+where $d=D_{qq}$ is the amplitude to return to $q$ and $e$ contains
+the other outputs. If $d\ne1$, we replace each occurrence of
+$\alpha\,(\kw{back}\,q)$ in the other clauses by $\alpha e/(1-d)$,
+collect equal patterns and delete the clause for $q$. If $d=1$,
+unitarity makes the other entries in its row and column zero, so we
+can delete it directly, as in \code{extraPort}.
 
 \FloatBarrier
-Each step leaves a smaller unitary table whose coefficients we use
-for the next step. After $|\mathcal B(c)|$ steps, dropping the
-external tags gives an ordinary iso of type $a\leftrightarrow b$
-with matrix $L$. This applies the elimination for finite
-contractions to a unitary clause table~\cite[Thm.~3.3.15]{AndresMartinez22Thesis}.
-Proposition~\ref{prop:elim} shows that every order gives the same
+We repeat with the smaller unitary table. After $|\mathcal B(c)|$
+steps we drop the external tags and obtain an iso $a\leftrightarrow b$
+with matrix $L$. This is elimination for finite
+contractions~\cite[Thm.~3.3.15]{AndresMartinez22Thesis} applied to
+clauses. Proposition~\ref{prop:elim} shows that every order gives the same
 map and keeps the coefficients in their original subfield.
 
+In $\mathsf{Unitary}$ we closed $U$ with one operation, $L=\Tr^Y(U)$.
+To build the same loop out of bends and crossings, we need a type for
+a wire that runs back. In $\Int(\mathsf{Unitary})$~\cite[\S~4]{JSV96}
+an object $P=(P^+,P^-)$ gives the spaces for its rightward and leftward
+ports. A morphism $P\to Q$ takes input from both ends and is a unitary
+$P^+\oplus Q^-\to Q^+\oplus P^-$. The embedding $N$ sends $Y$ to
+$(Y,0)$ and keeps each gate's matrix. Here $0$ is the zero-dimensional
+space. A wire of type $(Y,0)$ carries amplitude only to the right,
+and a wire of type $(0,Y)$ only to the left.
+
 \par\smallskip\noindent
-\begin{minipage}[c]{.68\linewidth}
-In $\Int(\mathsf{Unitary})$ a box can send and receive amplitude at
-either end~\cite[\S~4]{JSV96}. To compose $f$ and $g$, join their two
-middle wires. Cut the upper wire at the mark. Amplitude entering $g$
-there can leave at an outer port or pass through $f$ and return to the
-cut. Closing the cut takes the trace of this open body. Eliminating
-the basis values on the cut wire gives the clauses for the composite
-(Figure~\ref{fig:44-scatterers}).
+\begin{minipage}[c]{.57\linewidth}
+Follow the return output of $N(U)$ around the cap $\varepsilon$.
+It travels left to the cup $\eta$ and turns right. The crossing
+$\sigma$ swaps the port order so this leg enters the gate and the
+other passes below it. Both bends carry the amplitude unchanged,
+so the return still satisfies $y=Cu+Dy$. The composite in
+Figure~\ref{fig:43-backward-wire} is therefore $N(L)$. Its matrix is
+the gate $L$ we compiled in $\mathsf{Unitary}$.
 \end{minipage}\hfill
-\begin{minipage}[c]{.30\linewidth}\centering
-\includegraphics[width=\linewidth,trim={0bp 27bp 196bp 15bp},clip]{figures/44-scatterers.pdf}
+\begin{minipage}[c]{.41\linewidth}\centering
+\begin{tikzpicture}[kme circuit,x=.98cm,>={Stealth[length=1.25mm,width=.9mm]},
+ return/.style={draw=flipback,line width=.67pt},
+ cut/.style={draw=ink!23,densely dashed,thin}]
+ \node[kme gate,minimum width=10mm,minimum height=10mm] (u) at (3.04,0) {$N(U)$};
+ \foreach \x in {.97,2.08,3.83} \draw[cut] (\x,.62) -- (\x,-1.11);
+ \draw[flipout,->] (.04,.25) node[above right] {$N(X)$} -- (u.west |- 0,.25);
+ \draw[flipout,->] (u.east |- 0,.25) -- (4.93,.25) node[above left] {$N(X')$};
+ \draw[return] (2.46,-1.00) -- (2.08,-1.00)
+   to[out=180,in=0] (.97,-.46) -- (.58,-.46)
+   arc[start angle=90,end angle=270,radius=2mm] -- (.97,-.86);
+ \draw[return,preaction={draw=white,line width=2.3pt}] (.97,-.86)
+   to[out=0,in=180] (2.08,-.25) -- (u.west |- 0,-.25);
+ \draw[return] (u.east |- 0,-.25) -- (4.11,-.25)
+   arc[start angle=90,end angle=-90,radius=3.75mm] -- (2.46,-1.00);
+ \draw[return,->] (3.06,-1.00) -- (2.62,-1.00);
+ \draw[return,->] (2.08,-.25) -- (2.42,-.25);
+ \node[text=flipback] at (2.04,-.015) {$(Y,0)$};
+ \node[text=flipback,above] at (.57,-.46) {$\eta$};
+ \node[text=flipback,right] at (4.49,-.63) {$\varepsilon$};
+ \node[text=flipback,below] at (1.48,-.90) {$\sigma$};
+ \node[text=flipback,below] at (3.03,-1.00) {$(0,Y)$};
+\end{tikzpicture}
 \end{minipage}\par
 
 \subsection{Making the sign observable}
@@ -2547,6 +2583,13 @@ Science}}
 \newblock
 \shownote{(arXiv:1710.03666)}.
 
+
+\bibitem[Gough(2014)]{Gough14Transport}
+\bibfield{author}{\bibinfo{person}{John~E. Gough}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{Feedback network models for quantum transport}.
+\newblock \bibinfo{journal}{\emph{Physical Review E}} \bibinfo{volume}{90}
+(\bibinfo{year}{2014}), Article \bibinfo{articleno}{062109}.
+\newblock \href{https://doi.org/10.1103/PhysRevE.90.062109}{doi:\nolinkurl{10.1103/PhysRevE.90.062109}}
 
 \bibitem[Gough and James(2009)]{GoughJames09Feedback}
 \bibfield{author}{\bibinfo{person}{John Gough} {and}
@@ -4815,6 +4858,11 @@ and $c^-$ the two middle amplitudes satisfy
 \[
  b^+=f_{11}a^++f_{12}b^-,\qquad b^-=g_{21}b^++g_{22}c^- .
 \]
+These are also the equations for light scattering between two components.
+The wave leaving $f$ enters $g$, and the part reflected by $g$ enters $f$
+again. When the internal inverse exists, eliminating these two amplitudes
+gives the scattering matrix of the pair, the Redheffer star
+product~\cite[Figs.~10--11]{Gough14Transport}.
 Starting at the cut on the upper wire, a return passes through $g$
 and then $f$, so its coefficient is $D=f_{12}g_{21}$. Closing the cut
 identifies its outgoing and incoming amplitudes. Substituting the
