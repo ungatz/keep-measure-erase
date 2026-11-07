@@ -478,24 +478,50 @@ aboveskip=.45\baselineskip,belowskip=.45\baselineskip}
 \subtitle{What a Quantum Loop Does with Its History}
 \author{Anonymous Author(s)}
 \affiliation{\institution{}\city{}\country{}}
+\begin{abstract}
+Quantum loops have a reputation for paradox. We trace the paradoxes to
+a single fact: the history of a quantum loop, the record of how many
+times its body ran, is itself quantum information. A loop can erase
+its history, keep it, or measure it, and these choices give three
+different programs. Each competing account of quantum loops makes one
+of these choices implicitly. We make the choice explicit in iso, a
+reversible language in the $\Pi$ family, and the paradoxes dissolve.
+The coherent loop, which erases its history, is the trace of its body:
+for every finite body it is total and unitary and compiles exactly
+into loop-free code, so the question of when it halts disappears. The
+other two loops come from the coherent one through two universal
+constructions on quantum processes: $R$, which adds allocation, yields
+the loop that keeps its history, and $L$, which then adds hiding,
+yields the loop that measures it. Measuring is therefore keeping and
+then forgetting, and forgetting is harmless exactly when the history
+is independent of the data, which a compiler can decide. Finally, the
+coherent loop is physical: light circling an optical ring resonator
+computes it. This gives the trace a physical meaning that recent work
+had left open, and it opens a new front for quantum programming: loops
+that run as optical feedback.
+\end{abstract}
 \maketitle
 \hypersetup{citecolor=ink,linkcolor=ink,urlcolor=muted}
 
 \section{Introduction}
 
-Every programmer knows how to find out how many times a loop ran: add
-a counter. Classically, a fresh private counter is harmless. A
-terminating run goes around a definite number of times, so recording
-that number changes neither the result nor its probability, even when
-the body flips a coin to decide whether to continue.
-In a quantum program the same counter can change the answer, even if
-nobody ever reads it. A quantum loop can exit after one round and
-after five rounds in superposition, and when those exits reach the
-same output their amplitudes add. An exact counter labels each exit
-with
-its number of returns. Different counts give orthogonal labels and
-keep those exits
-apart.
+Can a quantum computer run a loop? The question sounds settled, yet
+the answers on record contradict one another. Let the loop's guard be
+in superposition, so that one branch exits after three rounds while
+another keeps going. One answer says the computer then cannot halt
+without spoiling its computation~\cite{LindenPopescu98Halting}. A
+second says the loop must measure its guard on every round, which
+leaves a classical loop running over quantum
+data~\cite{YingFeng10QuantumLoop}. A third keeps the guard coherent
+but bounds the rounds and pads every branch until all of them finish
+together~\cite{YuanVillanyiCarbin24QCM,ZhangYing25QRM}. A fourth
+defines the loop as a trace, an infinite sum over the paths of its
+control
+flow~\cite{Bartha14QuantumTuringAutomata,AndresMartinez22Thesis}. We
+claim that all four answers are right, each about a different loop. A
+quantum loop consists of a body and a history, the record of how many
+times the body ran, and the four answers differ only in what happens
+to that history.
 
 Physics has a loop that nobody counts. An ideal lossless ring
 resonator has a straight waveguide and a ring that meet at a single
