@@ -482,88 +482,119 @@ aboveskip=.45\baselineskip,belowskip=.45\baselineskip}
 \hypersetup{citecolor=ink,linkcolor=ink,urlcolor=muted}
 
 \section{Introduction}
-Suppose we want to know how many iterations a loop went through
-before halting, and we want that number without changing its output
-or what the loop actually did. In a classical program we can just
-allocate and increment a private counter as the body goes through
-each iteration and keep or ignore it when the loop finishes. This
-remains a valid way to get the iteration count even if the body
-tosses a coin to decide whether to continue. A terminating execution
-still goes through the body a definite number of times, so recording
-that number changes neither its returned value nor the probability of
-obtaining that value.
 
-For a quantum program, recording the number of iterations can change
-the loop's output behaviour. A body operating on a quantum guard may
-send amplitude both out of the loop and back for another call. If the
-contributions leaving after different numbers of calls reach the same
-output, their complex amplitudes add before a measurement assigns
-concrete probabilities. A counter puts these contributions alongside
-orthogonal labels, which distinguish them even if nobody reads the
-counter. Ignoring it means observing only the returned data, whose
-state is obtained by tracing out that register. This removes the
-terms between different count labels. We ask when recording and
-discarding the count preserves every observation on the returned
-data: when does the loop with a record give the same data as coherent
-feedback?
+Every programmer knows how to find out how many times a loop ran: add
+a counter. Classically, a fresh private counter is harmless. A
+terminating run goes around a definite number of times, so recording
+that number changes neither the result nor its probability, even when
+the body flips a coin to decide whether to continue.
+In a quantum program the same counter can change the answer, even if
+nobody ever reads it. A quantum loop can exit after one round and
+after five rounds in superposition, and when those exits reach the
+same output their amplitudes add. An exact counter labels each exit
+with
+its number of returns. Different counts give orthogonal labels and
+keep those exits
+apart.
 
-We start with a finite unitary body $U:X\oplus Y\to X'\oplus Y$,
-connecting its output $Y$ to its input $Y$. The established
-direct-sum trace adds what leaves after every possible number of
-returns, as in reversible iteration and geometry of
-interaction~\cite
-{JamesSabry13Interpreters,AbramskyHaghverdiScott02GoI,JSV96}.
-On finite unitary bodies it gives a unitary external map even when
-infinitely many rounds
-contribute~\cite
-{Bartha14QuantumTuringAutomata,AndresMartinez22Thesis}.
-We use this trace to interpret coherent feedback
-(Section~\ref{sec:trace}).
+Physics has a loop that nobody counts. An ideal lossless ring
+resonator has a straight waveguide and a ring that meet at a single
+coupler. Light entering the coupler splits: part continues straight
+through, and part goes around the ring and meets the coupler again,
+where it splits again. Some light leaves after one trip, some after
+two, some after a hundred. Under steady illumination at a single
+frequency, all these contributions reach the same outgoing mode, so
+their amplitudes add~\cite[Eq.~(6)]{Alsing17RingLoss}. The ring
+thus gives a physical example of the execution formula from geometry
+of interaction: its output adds the amplitude that goes straight
+through to the amplitudes that leave after each trip around the
+ring~\cite
+  {AbramskyHaghverdiScott02GoI,Bartha14QuantumTuringAutomata}.
 
-We use symmetric pattern matching to write programs over the finite
-sum and product types of $\Pi$ (Section~\ref{sec:iso}). Classical
-$\Pi$ expresses finite bijections; its quantum extensions express
-unitary gates, with approximate universality for $\mathrm
-U\Pi$~\cite[\S\S~3.1--3.2]{HeunenKaarsgaard22Effects}. Our finite
-clause presentation admits exact complex coefficients, and we add
-$\mathsf{trace}$ for coherent feedback. Following \emph{Quantum
-Information Effects}~\cite[\S\S~3--4]{HeunenKaarsgaard22Effects}, we
-add allocation to supply a counter for the recording loop, and hiding
-to discard outputs and derive the guard measurement used on each
-turn~\cite[\S~3]{YingFeng10QuantumLoop} (Section~\ref{sec:effects}).
-Allocation lets a program return a counter with its data as a
-norm-preserving isometry. Hiding that register gives a channel on the
-remaining data. A finite cyclic counter records the count modulo its
-size, and an exact count is their countable semantic limit.
-Discarding the exact record gives the channel of measuring the guard
-on every call.
+In Q\# and OpenQASM~3, a \code{while} loop tests a classical
+condition~\cite{QSharpDocsLoops,OpenQASMClassicalInstructions}. If we
+measure the guard after each round to decide whether to continue, the
+measurement distinguishes an exit on this round from an exit on a
+later one. Keeping the guard coherent brings us back to a question
+about halting on a quantum Turing
+machine~\cite{LindenPopescu98Halting}. If different branches finish
+at different times, when can we read the output without learning
+which branch finished first?
 
-We write $L$ for the coherent loop and $x_k$ for the linear map that
-takes an input $u$ to the amplitude contribution $x_ku$ leaving after
-$k$ returns. In Section~\ref{sec:agreement} we give a finite test for
-equality of the measured channel and $\rho\mapsto L\rho L^\dagger$,
-permitting replacement in any channel context, including data
-entangled with a reference the caller keeps. It passes exactly when
-every exit is a scalar multiple of $L$, and checking the first $m+1$
-exits suffices, with $m=\dim Y$. Then the record has a fixed state
-independent of the data. Kraus proportionality for finite families is
-known~\cite[Cor.~2.23]{Watrous18TQI}; our comparison connects it to
-an exit sequence, a finite check and a typed replacement.
+We can see how the time of exit becomes a record by changing the
+light we send into the same ring. Suppose we send in a pulse that
+lasts less than the time it takes light to go around the ring once.
+The part that goes straight through has already passed the output
+before the part that went around once arrives. Each further trip
+gives another pulse, one round-trip time later. The arrival time now
+records the count~\cite[Eqs.~(30)--(33)]{RaymerMcKinstrie13Cavity}.
 
-This leaves a second question: what can we learn about the rounds of
-a loop that keeps no count (Section~\ref{sec:phase})? A phase on the
-return wire marks each passage, giving exit $k$ the factor
-$e^{ik\varphi}$. The phase-dependent gate therefore has the original
-exits $x_k$ as its Fourier coefficients. Averaging its channels
-recovers the measured loop, and averaging its relative phase
-derivative gives the measured mean count. We use transfer functions
-of unitary systems from operator
-theory~\cite{BehrndtHassiSnoo09Colligations} and identities from
-monitored recurrence, which repeatedly evolves and tests for return
-to a chosen subspace~\cite{Bourgain14Subspace}. These averages
-describe the measured program; at a fixed phase, coherent feedback
-still adds exits from different rounds. We follow one rotation from
-its clauses through feedback, agreement and the phase calculation.
+A quantum language has three choices for what to do with a loop's
+history:
+\begin{itemize}
+\item \textbf{Keep it.} Return a count register with the data.
+\item \textbf{Measure it.} Measure the guard after each call to
+decide whether to continue.
+\item \textbf{Erase it.} Add the amplitudes from different rounds at
+the same output, as the ring does.
+\end{itemize}
+
+For classical programs the three coincide on the returned data
+when the count is ignored, which is why classical languages never
+had to choose. For quantum programs they give three different loop
+constructs, and a language that provides only one has chosen for its
+programmers.
+
+We make this choice explicit in iso, a reversible language in the
+$\Pi$ family. We write the body once using symmetric pattern-matching
+clauses~\cite[\S\S~3--5]{SabryValironVizzotto18}, with an exit and a
+back edge, and close it in three ways. The coherent loop
+\code{trace} connects the back edge, $\mathsf{count}_K$ records
+the number of returns modulo $K$, and \code{while} measures the
+guard after each call. Each choice comes with something a compiler
+can use:
+
+\begin{itemize}
+\item \textbf{Coherent loops compile away.}
+  Starting from the body's table of clauses, we eliminate the
+  values on the back edge one at a time. This gives a finite iso
+  with exact coefficients and no back edge. There is one
+  elimination step per returning basis value, even when infinitely
+  many rounds contribute~\cite[Thm.~3.3.15]{AndresMartinez22Thesis}.
+
+\item \textbf{Forgetting can be certified.}
+  Each possible return count gives an exit map: on a given input,
+  it gives the amplitude that leaves after exactly that many
+  returns. Suppose the back edge has $m$ basis values and the
+  external data type is nonempty. We check whether the first
+  $m+1$ exit maps are all scalar multiples of the same map. With
+  exact coefficients whose equality we can decide, this test tells
+  us when the measured loop may replace the coherent one in every
+  well-typed channel context. That includes contexts where the
+  input is entangled with a reference the caller keeps.
+
+\item \textbf{We can probe the coherent loop without a counter.}
+  Put a phase on the back edge. Amplitude that goes around once
+  picks up the phase once, and amplitude that goes around twice
+  picks it up twice. How the output changes as we vary the phase
+  tells us how much weight circulates on the back edge. One extra
+  control qubit lets us compare two nearby phases, and repeated
+  measurements let us estimate that weight. Averaging the weight
+  over the phase gives the measured loop's mean number of returns.
+  For the rotation with $\cos\theta=3/5$ and $\sin\theta=4/5$, the
+  measured loop makes one return on average. With no added phase,
+  the coherent loop circulates four times the input weight and
+  returns the input with its sign flipped.
+
+\item \textbf{An ideal ring realizes the scalar loop.}
+  A lossless coupler can give the same amplitude as our scalar
+  \code{trace} for each trip around the ring. Its response at a
+  single frequency is therefore the same coherent sum. When the
+  coupler is independent of frequency and each trip adds a phase
+  proportional to frequency, multiplying the circulating weight
+  for a unit input by the round-trip time gives the ring's
+  Wigner--Smith delay~\cite{Smith60LifetimeMatrix}.
+\end{itemize}
 
 \section{Finite programs in iso}\label{sec:iso}
 An iso $\omega:a\leftrightarrow b$ is a reversible program from data
@@ -577,107 +608,170 @@ and }b.
 \end{array}
 \]
 These are the sum and product types of $\Pi$, including the empty and
-unit types~\cite[\S~3.1]{HeunenKaarsgaard22Effects}. Write $\mathcal
-B(a)$ for the basis values of $a$ and $\ket s$ for the basis vector
-of
-$s\in\mathcal B(a)$. For example, $\mathcal B(1)=\{*\}$ and
-$1+1$ has values $\mathrm{left}\,*$ and $\mathrm{right}\,*$.
+unit types~\cite[\S~3.1]{HeunenKaarsgaard22Effects}. Write
+$\mathcal B(a)$ for the basis values of $a$ and $\ket s$ for the
+basis vector of $s\in\mathcal B(a)$. For example,
+$\mathcal B(1)=\{*\}$ and $1+1$ has values $\mathrm{left}\,*$ and
+$\mathrm{right}\,*$.
 
 \subsection{Syntax}
-A clause $v\leftrightarrow e$ matches an input pattern and binds its
-variables in $e$. Patterns $v$ use unit $*$, variables $x$, tags
-$\mathrm{left}\,v,\mathrm{right}\,v$ and pairs
-$\langle v_1,v_2\rangle$; $p,q$ use unit, variables and pairs.
-For finite index sets and $\alpha_i\in\C$, expressions form
-superpositions and apply local isos:
+
+An iso can be given by a table of clauses. To read a clause
+$v\leftrightarrow e$, match the input against $v$ and use the
+variables bound by the match to evaluate $e$. For example, the
+pattern $\mathrm{left}\,x$ matches $\mathrm{left}\,s$ and binds
+$x$ to the payload $s$. A pattern may be unit $*$,
+a variable $x$, a tagged pattern $\mathrm{left}\,v$ or
+$\mathrm{right}\,v$, or a pair $\langle v_1,v_2\rangle$. Each
+variable occurs at most once in the pattern. The grammar also allows
+an
+expression to form a finite superposition with coefficients
+$\alpha_i\in\C$, or to apply an iso locally:
 \[
 \begin{aligned}
 e&::=v\mid\textstyle\sum_i\alpha_i e_i
        \mid\mathsf{let}\ p=\omega\,q\ \mathsf{in}\ e,\\
- \mathcal T&::=\{v_i\leftrightarrow e_i\}_{i\in I},\\
- \omega&::=f\mid\mathcal T\mid\omega;\omega
-       \mid\omega\oplus\omega\mid\omega\otimes\omega\mid\omega
-^\dagger.
+\mathcal T&::=\{v_i\leftrightarrow e_i\}_{i\in I},
+       \qquad t::=e\mid\omega\,t,\\
+\omega&::=f\mid\mathcal T\mid\omega;\omega
+       \mid\omega\oplus\omega\mid\omega\otimes\omega
+       \mid\omega^\dagger.
 \end{aligned}
 \]
-A name $f$ refers to an earlier checked definition. Sequence $;$ runs
-left first; $\oplus$ acts on alternatives, $\otimes$ on simultaneous
-factors, and dagger reverses the iso. In a local application, $q$
-assembles an argument and $p$ binds the result for
-$e$. A variable may bind any type, while unit and pair patterns
-make this result binding exhaustive.
+Here $I$ is finite. In a local application, $q$ assembles the
+argument to $\omega$, and $p$ binds the result for the rest of the
+expression. Both $p$ and $q$ use only unit, variables and pairs.
+A variable can bind a value of any type, including a whole tagged
+value. A pair pattern takes apart a result of product type. In
+this way the same binding works for every basis value that the local
+iso can return.
 
-The executable names \kw{Unit} and \code{unit} mean type $1$ and
-value $*$. The type \kw{Qubit} is $1+1$, with
-$\code{0}=\mathrm{left}\,*$ and $\code{1}=\mathrm{right}\,*$.
-We use \kw{exit} and \kw{back} for the outer \kw{left} and
-\kw{right} tags. At type $a+c$, they carry $a$ and $c$ values;
-the tag alone neither stops nor repeats a computation. Thus
-\code{exit 0} expands to $\mathrm{left}\,(\mathrm{left}\,*)$.
-Brackets group a superposition and a dot scales the expression that
-follows it. Closed application is written $\omega\,t$, where $t$ is a
-closed expression or another closed application. The executable
-spelling is \code{omega on t}; \code{on} binds less tightly than
-sequence, so \code{f; g on t} applies the whole sequence to $t$.
+An iso may be a clause table, a name $f$ for an earlier checked
+definition, or a combination of isos. Sequence $f;g$ runs $f$
+first and then $g$. A sum acts on the alternative selected by the
+tag, a tensor acts on the two factors of a pair, and dagger reverses
+the iso. A closed term $t$ has no free value variables. We write
+application $\omega\,t$ as \code{omega on t} in the executable
+syntax. Thus \code{f; g on t} applies the whole sequence to $t$: it
+feeds the result of $f$ directly into $g$.
 
-The abbreviation $\kw{round}\ f:a+c=\mathcal T$ declares an open body
-$f:(a+c)\leftrightarrow(a+c)$; it specializes the external input and
-output to the same type.
+In general, $\kw{round}\ f:a+c=\mathcal T$ names a table of clauses
+$\mathcal T$ and gives the open body $f$ type
+$(a+c)\leftrightarrow(a+c)$. This abbreviation uses the same
+external type $a$ on both sides. The outer tags \kw{exit} and
+\kw{back} stand for \kw{left} and \kw{right} and carry values of
+type $a$ and $c$, respectively. The payload can itself be tagged.
+For example, \kw{Qubit} is the executable name for $1+1$, with
+\code{0} for $\mathrm{left}\,*$ and \code{1} for $\mathrm{right}\,*$.
+Thus \code{exit 0} expands to $\mathrm{left}\,(\mathrm{left}\,*)$:
+the outer tag selects the port and the inner tag gives the qubit
+value. Similarly, \kw{Unit} names the type $1$ and \code{unit}
+its value $*$.
 
-For our running example, suppose we want each call to rotate a guard
-qubit through $\theta=\arccos(3/5)$. Choose $0$ as the exit tag and
-$1$ as the return tag, with a unit payload on each. The rotation has
-$\cos\theta=3/5$ and $\sin\theta=4/5$, giving
-\par\noindent\begin{minipage}{.72\linewidth}
-\begin{lstlisting}
+For the loop from the introduction, take both payload types to be
+\kw{Unit}. The guard then has just two basis values,
+\code{exit unit} and \code{back unit}. We want one call to rotate
+this guard through $\theta=\arccos(3/5)$. With the exit basis value
+first and the return basis value second, the two clauses give the
+two columns of the rotation matrix shown beside them.
+\par\smallskip\noindent\begin{minipage}{.67\linewidth}
+\begin{lstlisting}[xleftmargin=0pt]
 round guardRound : Unit + Unit = {
   exit unit <-> [ 3/5 . exit unit + 4/5 . back unit];
   back unit <-> [-4/5 . exit unit + 3/5 . back unit]
 }
 \end{lstlisting}
 \end{minipage}\hfill
-\begin{minipage}{.25\linewidth}\centering
-\begin{tikzpicture}[kme circuit,>={Stealth[length=1.2mm,width=.8mm]}]
- \node[kme gate,minimum width=.8cm,minimum height=1.25cm] (r) at
- (1.1,0) {$R_\theta$};
- \draw[flipout,->] (0,.30) -- (r.west |- 0,.30);
- \draw[flipout,->] (r.east |- 0,.30) -- (2.2,.30);
- \draw[flipback,->] (0,-.30) -- (r.west |- 0,-.30);
- \draw[flipback,->] (r.east |- 0,-.30) -- (2.2,-.30);
- \node[text=flipout,above] at (1.1,.80) {exit ports};
- \node[text=flipback,below] at (1.1,-.80) {return ports};
+\begin{minipage}{.32\linewidth}\raggedleft
+\begin{tikzpicture}[kme circuit,>={Stealth[length=1.1mm,width=.8mm]}]
+ \node[kme gate,inner xsep=4pt,inner ysep=5pt] (r) {
+   \setlength{\arraycolsep}{2.5pt}$R_\theta=\begin{pmatrix}
+      \cos\theta & -\sin\theta\\
+      \sin\theta &  \cos\theta
+   \end{pmatrix}$
+ };
+ \foreach \h/\c/\tagname/\side in
+ {2.6/flipout/exit/above,-2.6/flipback/back/below}{
+   \coordinate (in) at ([yshift=\h mm]r.west);
+   \coordinate (out) at ([yshift=\h mm]r.east);
+   \node[\side=1.5pt,inner sep=1pt,text=\c] at ([xshift=-3.8mm]in)
+   {\kw{\tagname}};
+   \draw[\c,->] ([xshift=-7.5mm]in) -- (in);
+   \draw[\c,->] (out) -- ([xshift=4mm]out);
+ }
+ \node[below=2pt of r,inner sep=0pt]
+   {$\cos\theta=\tfrac35,\qquad \sin\theta=\tfrac45$};
 \end{tikzpicture}
-\end{minipage}\par
+\end{minipage}\par\smallskip
 
-Its type is $(1+1)\leftrightarrow(1+1)$. On input
-\code{exit unit}, one call returns
+On input \code{exit unit}, the first clause gives
 $(3/5)\ket{\mathsf{exit}\,*}+(4/5)\ket{\mathsf{back}\,*}$.
-The closing brace ends this definition; it does not feed anything
-back. Both payloads are unit, so this example needs no data qubit
-beside its guard. Section~\ref{sec:trace} will connect the return
-output to the return input.
+The brackets group the superposition, and the dot scales each tagged
+value by its amplitude. These two amplitudes form the first column
+of $R_\theta$. The \code{back unit} clause gives the second column
+in the same order.
 
-To evaluate a whole iso, we first replace each checked clause table
-$\mathcal T$ by an atom $[M]$ containing its matrix. This gives a
-smaller language of \emph{matrix combinators}:
+The closing brace completes the definition of one call. In the
+diagram, amplitude enters from outside through the upper input and
+leaves through the upper output. To run another round on the
+returning amplitude, we connect the lower output to the lower input,
+as we do in Section~\ref{sec:trace}.
+
+To evaluate a source iso $\omega$, we unfold its names and replace
+each checked clause table by an atom $[M]$ containing that table's
+matrix. The result is a program $\kappa$ built from
+\emph{matrix combinators}:
 \[
  \kappa::=[M]\mid\kappa;\kappa\mid\kappa\oplus\kappa
                  \mid\kappa\otimes\kappa\mid\kappa^\dagger.
 \]
-Thus $\omega$ is a source program, $\kappa$ is a program built from
-matrix atoms, and $M$ is the matrix computed by that program.
+For \code{guardRound} the whole table becomes the single atom
+$\left[\begin{smallmatrix}3/5&-4/5\\4/5&3/5\end{smallmatrix}\right]$.
+Before a table can become a matrix atom, its columns must pass the
+unitary check.
 
 \subsection{Statics}
-Match each basis input $s$ against its unique clause and evaluate the
-output expression under those bindings. Its vector becomes column $s$
-of $M$: entry $M_{ts}$ is the amplitude from input
-$s$ to output $t$. Admission requires linearly typed expressions,
-a partition of the input basis, equal input and output basis sizes,
-and $M^\dagger M=I$. Dagger is conjugate transpose, so the diagonal
-entries test squared column norms and the off-diagonal entries test
-inner products. Together these make the columns an orthonormal basis.
-Figure~\ref{fig:column-test} performs this check on the two clauses
-of \code{guardRound}.
+\newsavebox{\entryview}
+\sbox{\entryview}{\begin{tikzpicture}[kme circuit,every
+node/.style={font=\small,inner sep=1pt}]
+ \fill[flipback!10] (.77,-.62) rectangle (1.60,.56);
+ \draw[ink] (.10,.56)--(0,.56)--(0,-.62)--(.10,-.62)
+             (1.50,.56)--(1.60,.56)--(1.60,-.62)--(1.50,-.62);
+ \node[text=flipout] at (.36,.80) {\kw{exit}};
+ \node[text=flipback] at (1.31,.80) {$s{=}\kw{back}$};
+ \node[anchor=east,text=flipout] at (-.09,.27) {$t{=}\kw{exit}$};
+ \node[anchor=east,text=flipback] at (-.09,-.33) {\kw{back}};
+ \node at (.36,.27) {$3/5$};
+ \node[draw=flipback,rounded corners=1pt,inner sep=1.5pt] at
+ (1.19,.27) {$-4/5$};
+ \node at (.36,-.33) {$4/5$};
+ \node at (1.19,-.33) {$3/5$};
+
+\end{tikzpicture}}
+\noindent\begin{minipage}[c]{\dimexpr
+  \linewidth-\wd\entryview-1.2em\relax}
+To check a table $\omega:a\leftrightarrow b$, we first check that
+each basis input of $a$ matches exactly one clause and that each
+output expression has type $b$ under the variables its pattern binds.
+Evaluating that clause on $s$ gives column $s$ of $M=\sem{\omega}$.
+Its entry in row $t$ is the amplitude for output $t$. For
+\code{guardRound}, the marked entry $M_{ts}=-4/5$
+is the exit amplitude on a returning input.
+\end{minipage}\hspace{1.2em}\ignorespaces
+\begin{minipage}[c]{\wd\entryview}\usebox{\entryview}
+\end{minipage}\par\smallskip
+
+Both columns of \code{guardRound} have squared norm one, and their
+inner product is
+zero: the exit row contributes $-12/25$ and the return row
+contributes
+$12/25$ (Figure~\ref{fig:column-test}). In general, we check that
+$a$ and $b$ have equally many basis values and that $M^\dagger M=I$,
+where dagger takes the conjugate transpose. The diagonal entries of
+this product are the squared column norms and the off-diagonal
+entries
+are the inner products of distinct columns. A square matrix that
+passes this check is unitary.
 \par\begin{figure}[!htbp]\centering
 \begin{minipage}{.62\linewidth}\centering
 \begin{tikzpicture}[kme circuit,>={Stealth[length=1.3mm,width=.9mm]}]
@@ -687,11 +781,11 @@ of \code{guardRound}.
  \node at (2.15,1.22)
    {$\textcolor{flipback}{\kw{back}\,*}\leftrightarrow-\tfrac45\,\kw
 {exit}\,*+\tfrac35\,\kw{back}\,*$};
- \draw[->,flipout,line width=.65pt] (-2.15,.92) -- (-.60,.30);
- \draw[->,flipback,line width=.65pt] (2.15,.92) -- (.60,.30);
- \node at (0,.80) {$M=R_\theta$};
- \node[text=flipout] at (-.60,.12) {$\mathbf c_{\rm exit}$};
- \node[text=flipback] at (.60,.12) {$\mathbf c_{\rm back}$};
+ \draw[->,flipout,line width=.65pt] (-2.15,.97) -- (-.60,-.09)
+   node[pos=.55,below left=1pt] {$\mathbf c_{\rm exit}$};
+ \draw[->,flipback,line width=.65pt] (2.15,.97) -- (.60,-.09)
+   node[pos=.55,below right=1pt] {$\mathbf c_{\rm back}$};
+ \node[anchor=east] at (-1.28,-.66) {$M=R_\theta=$};
  \fill[flipout!9] (-1.20,-.18) rectangle (0,-1.14);
  \fill[flipback!9] (0,-.18) rectangle (1.20,-1.14);
  \draw[ink] (-1.07,-.18) -- (-1.20,-.18) -- (-1.20,-1.14) --
@@ -707,682 +801,671 @@ of \code{guardRound}.
 \end{tikzpicture}
 \end{minipage}\hfill
 \begin{minipage}{.35\linewidth}\centering
-\begin
-{tikzpicture}[x=1.10cm,y=1.10cm,>={Stealth[length=1.3mm,width=.9mm]},
-every node/.style={font=\small,inner sep=1pt}]
- \draw[hairline] (0,0) circle (1);
- \draw[muted,->] (-1.08,0) -- (1.14,0);
- \draw[muted,->] (0,-1.08) -- (0,1.14);
- \node[anchor=west] at (1.17,-.09) {$\ket{\kw{exit}\,*}$};
- \node[anchor=south] at (0,1.18) {$\ket{\kw{back}\,*}$};
- \draw[flipout,line width=.9pt,->] (0,0) -- (.6,.8);
- \draw[flipback,line width=.9pt,->] (0,0) -- (-.8,.6);
- \node[text=flipout,anchor=south west] at (.6,.82) {$\mathbf c_{\rm
- exit}$};
- \node[text=flipback,anchor=south east] at (-.8,.62) {$\mathbf c_{\rm
- back}$};
+\begin{tikzpicture}[x=1.40cm,y=1.40cm,
+  >={Stealth[length=1.3mm,width=.9mm]},
+ every node/.style={font=\small,inner sep=1pt}]
+ \pgfmathsetmacro{\rotangle}{atan2(4,3)}
+ \draw[hairline] (0,0) circle[radius=1];
+ \draw[muted,->] (-1.05,0) -- (1.12,0) node[below right]
+ {$\ket{\kw{exit}\,*}$};
+ \draw[muted,->] (0,-1.05) -- (0,1.12) node[above]
+ {$\ket{\kw{back}\,*}$};
+ \foreach \start/\col in {0/flipout,90/flipback}{
+   \draw[\col,line width=.5pt,->] (\start:.34)
+     arc[start angle=\start,end angle=\start+\rotangle,radius=.34];
+   \node[text=\col] at ({\start+\rotangle/2}:.53) {$\theta$};
+ }
+ \draw[flipout,line width=.9pt,->] (0,0) -- (.6,.8)
+   node[pos=.74,sloped,above=2pt] {$\mathbf c_{\rm exit}$};
+ \draw[flipback,line width=.9pt,->] (0,0) -- (-.8,.6)
+   node[pos=.70,sloped,below=1.5pt] {$\mathbf c_{\rm back}$};
  \draw[ink,line width=.45pt] (.09,.12) -- (-.03,.21) -- (-.12,.09);
 \end{tikzpicture}
-\end{minipage}
-\[
- \|\mathbf c_{\rm exit}\|^2=\frac{9+16}{25}=1,\qquad
- \|\mathbf c_{\rm back}\|^2=\frac{16+9}{25}=1.
-\]
-\[
+\end{minipage}\par\smallskip
+\noindent\begin{minipage}[c]{.42\linewidth}\centering
+$\displaystyle
+\begin{aligned}
+ \|\mathbf c_{\rm exit}\|^2 &= \frac{9+16}{25}=1,\\[2pt]
+ \|\mathbf c_{\rm back}\|^2 &= \frac{16+9}{25}=1.
+\end{aligned}$
+\end{minipage}\hfill
+\begin{minipage}[c]{.56\linewidth}\centering
+$\displaystyle
+\begin{aligned}
  \langle\mathbf c_{\rm exit},\mathbf c_{\rm back}\rangle
-=\underbrace{\textcolor{flipout}{\frac35}\,
-       \textcolor{flipback}{\left(-\frac45\right)}}_{\text{exit row}}
-+\underbrace{\textcolor{flipout}{\frac45}\,
-       \textcolor{flipback}{\frac35}}_{\text{back row}}
-=-\frac{12}{25}+\frac{12}{25}=0.
-\]
-\caption{Clauses become colored columns. Their real output vectors
-have unit length and zero inner product; the products compare the
-same output row. Complex columns use conjugation of the first
-factor.}\label{fig:column-test}
-\Description{The two source clauses point into green and purple
-matrix columns. Those columns are drawn as unit vectors at right
-angles and checked by their norms and rowwise inner product.}
+ &=\underbrace{\textcolor{flipout}{\tfrac35}\,
+       \textcolor{flipback}{\bigl(-\tfrac45\bigr)}}_{\text{exit row}}
+   +\underbrace{\textcolor{flipout}{\tfrac45}\,
+       \textcolor{flipback}{\tfrac35}}_{\text{back row}}\\
+ &=-\tfrac{12}{25}+\tfrac{12}{25}=0.
+\end{aligned}$
+\end{minipage}\par
+\caption{Each clause gives one column of $R_\theta$. The rotation
+turns each basis vector through the same angle $\theta$, so the
+columns lie on the unit circle and remain perpendicular. Each
+product in their inner product uses entries from the same output
+row. For complex columns we conjugate the first entry of each
+product.}\label{fig:column-test}
+\Description{The exit and back clauses give the columns $(3/5,4/5)$
+and $(-4/5,3/5)$. Two arcs mark the counterclockwise rotation from
+each input basis axis to its column. A square marks the right angle
+between columns.}
 \end{figure}\par
 
-The judgment $\Sigma;\Delta\vdash e:b$ uses earlier iso definitions
-in $\Sigma$ and variables in the linear context
-$\Delta$. Each sum alternative uses the same variables once;
-pairs and local applications split disjoint contexts, and result
-patterns bind fresh variables. A checked iso has judgment
-$\Sigma\vdash\omega:a\leftrightarrow b$. Matrix atoms use the same
-column test;
-the combinators match their boundary types. A declaration cannot call
-itself. It enters $\Sigma$ only after checking. Admission and
-evaluation are defined together, recursing only into earlier
-definitions or proper subprograms.
+The judgment $\Sigma;\Delta\vdash e:b$ gives $e$ output type $b$
+in the earlier iso definitions $\Sigma$ and the context of value
+variables $\Delta$. These variables are used linearly.
+In a pair, the two components use disjoint parts of $\Delta$. In a
+superposition, each alternative uses the same variables once. A
+local application splits the variables between its argument and its
+continuation, where the result pattern binds fresh variables.
 
+A checked iso has judgment $\Sigma\vdash\omega:a\leftrightarrow b$.
+Matrix atoms pass the same column test as tables, and the
+combinators must agree on the types they connect. A named declaration
+enters $\Sigma$ only after it passes these checks, so evaluating a
+clause during checking can use only earlier definitions. Within a
+definition, checking and evaluation recurse on proper subprograms.
 The clauses and linear contexts adapt symmetric pattern
 matching~\cite[\S\S~3--5]{SabryValironVizzotto18}~\cite
-[Ch.~3]{Lemonnier24}.
-Appendix~\ref{app:rules} gives the inherited rules in full.
+  [Ch.~3]{Lemonnier24}.
+Appendix~\ref{app:rules} gives the full rules.
 
 \subsection{Dynamics}
-Write $\gamma\vdash e\Downarrow\psi$ for evaluation under a basis
-assignment. A value gives
-$\ket{v[\gamma]}$ and a sum adds its weighted outputs. A local
-application passes every weighted result to its continuation and adds
-the resulting vectors, without measurement or normalization.
+In Figure~\ref{fig:column-test}, we obtained each column by
+evaluating the right-hand side of a clause. Write
+$\gamma\vdash e\Downarrow\psi$ when expression $e$ evaluates to
+the vector $\psi$ under the basis values assigned by $\gamma$.
+A value $v$ gives $\ket{v[\gamma]}$, and a sum adds its weighted
+outputs. A local application passes each basis result, with its
+amplitude, to the continuation and adds the resulting vectors.
 
-Elaboration $\mathcal E_\Sigma(\omega)=\kappa$ replaces a checked
-table by its atom and unfolds a name in its earlier environment. It
-commutes with sequence, sum, tensor and dagger. For $\kappa\Downarrow
-M$ and $\lambda\Downarrow N$,
+Write $\mathcal E_\Sigma(\omega)=\kappa$ for elaboration and
+$\Sigma\vdash\omega\Downarrow M$ when $\kappa$ evaluates to $M$.
+For \code{guardRound}, the atom rule $[R_\theta]\Downarrow R_\theta$
+gives the matrix whose columns we just checked. A closed term then
+applies the matrix to its
+input: if $t\Downarrow\psi$, then $\omega\,t\Downarrow M\psi$.
+
+Suppose we apply \code{guardRound} twice in sequence, starting
+with \code{exit unit}. After the first call the amplitudes are
+$3/5$ on \kw{exit} and $4/5$ on \kw{back}. The second call
+therefore uses both clauses. Its output is the first column
+weighted by $3/5$ plus the second column weighted by $4/5$:
 \[
- [M]\Downarrow M,\qquad \kappa;\lambda\Downarrow NM.
+  \frac35\binom{3/5}{4/5}+\frac45\binom{-4/5}{3/5}
+  =\binom{-7/25}{24/25}.
 \]
-Sum, tensor and dagger use the corresponding matrix operations. Write
-$\Sigma\vdash\omega\Downarrow M$ when its elaboration evaluates to
-$M$. A closed term applies this matrix to its evaluated input vector:
-if $t\Downarrow\psi$, then $\omega\,t\Downarrow M\psi$.
+This is ordinary sequence: the whole output of the first call
+becomes the input to the second. In general, if
+$\kappa\Downarrow M$ and $\lambda\Downarrow N$, then
+$\kappa;\lambda\Downarrow NM$, since $M$ acts first on the input
+column. Elaboration preserves sequence, sum, tensor and dagger;
+the last three evaluate by taking the direct sum, tensor product
+and conjugate transpose of the corresponding matrices.
 
 \subsection{Denotation}
-A type denotes $\sem a=\C^{\mathcal B(a)}$, with its basis values
-orthonormal. Thus $0$ and $1$ denote the zero space and
-$\C$, and sum and product denote Hilbert sum and tensor. A checked
-iso denotes the linear extension of its evaluated columns. The column
-check makes this map unitary; Appendix~\ref{app:rules} proves the
-interpretation and the inherited combinator cases.
+A type $a$ denotes the space $\sem a=\C^{\mathcal B(a)}$, with one
+orthonormal basis vector for each basis value of $a$. Thus $0$ and
+$1$ denote the zero space and $\C$, and sum and product types
+denote direct sums and tensor products, respectively.
 
-\section{From a round to its exits}\label{sec:trace}
-We now add the operation that lets us connect a body's returning
-ports and follow an input through the resulting feedback.
-
-\paragraph{Syntax.}
-Extend the source and combinator grammars with
-$\mathsf{trace}_c\,\omega$ and $\mathsf{trace}_c\,\kappa$,
-respectively. Here $\omega$ is a source iso and $\kappa$ is a matrix
-combinator program. In either syntax, the constructor connects the
-body's output summand of type $c$ to the input summand of the same
-type. QWhile uses this typed feedback interface for its do-while
-combinator~\cite[\S~5.1]{AndresMartinez22Thesis}.
-
-\paragraph{Statics.}
-The external input and output remain after this connection:
+A checked iso $\omega:a\leftrightarrow b$ denotes the linear map
+from $\sem a$ to $\sem b$ determined by its evaluated columns.
+For \code{guardRound}, the two clauses tell us what happens to the
+basis inputs \code{exit unit} and \code{back unit}. Now suppose
+the input has amplitude $u$ on \kw{exit} and $v$ on \kw{back}.
+By linearity, one call gives the first column weighted by $u$
+plus the second column weighted by $v$:
 \[
- \frac{\Sigma\vdash\beta:a+c\leftrightarrow b+c}
-      {\Sigma\vdash\mathsf{trace}_c\,\beta:a\leftrightarrow b}
- \qquad
- \frac{\kappa:a+c\leftrightarrow b+c}
-      {\mathsf{trace}_c\,\kappa:a\leftrightarrow b}.
+  \sem{\code{guardRound}}\binom{u}{v}
+  = u\binom{3/5}{4/5}+v\binom{-4/5}{3/5}
+  = \binom{(3u-4v)/5}{(4u+3v)/5}.
 \]
-These are typing rules: they specify the remaining input and output
-types, without computing the loop. The subscript $c$ is the return
-\emph{type}, not a value tag. For a named \kw{round}, the executable
-spelling \code{trace f} infers this type from its declaration.
-Elaboration preserves the connection:
-\[
- \mathcal E_\Sigma(\mathsf{trace}_c\,\omega)
-=\mathsf{trace}_c\,\mathcal E_\Sigma(\omega).
-\]
-\paragraph{Dynamics.}
-Let $\beta:a+c\leftrightarrow b+c$ be the source body. Elaboration
-gives the matrix program
-$\kappa=\mathcal E_\Sigma(\beta)$, and evaluating that program,
-$\kappa\Downarrow U$, gives its matrix. For example,
-$\code{guardRound}$ elaborates to $[R_\theta]$, which evaluates
-to $R_\theta$. The symbol $\kappa$ below always denotes a program.
+This is what it means for \code{guardRound} to denote $R_\theta$:
+multiplying by $R_\theta$ gives the output of the two clauses on
+every input. The column check makes this map unitary.
+Appendix~\ref{app:rules} proves the correspondence with evaluation
+for all checked isos.
 
-Put $X=\sem a$, $X'=\sem b$ and $Y=\sem c$. To divide $U$ into four
-blocks, group its input columns and output rows by their outer tags.
-Evaluating a source input \kw{exit} $s$ supplies the
-$A$ and $C$ entries of its column; evaluating \kw{back} $q$
-supplies the $B$ and $D$ entries:
-\[
-\begin{array}{c|cc}
- &\text{input }\mathsf{exit}\ s&\text{input }\mathsf{back}\ q\\
- \hline
- \text{output }\mathsf{exit}\
- t&\textcolor{flipout}{A_{ts}}&\textcolor{flipback}{B_{tq}}\\
- \text{output }\mathsf{back}\
- r&\textcolor{flipout}{C_{rs}}&\textcolor{flipback}{D_{rq}}
-\end{array}
-\quad
-\begin{gathered}
-s\in\mathcal B(a),\quad t\in\mathcal B(b),\\ q,r\in\mathcal B(c).
-\end{gathered}
-\]
-Thus $A:X\to X'$ is the immediate external action, $C:X\to Y$ sends
-an external input back, $B:Y\to X'$ lets a returning input leave, and
-$D:Y\to Y$ sends it back again. On a general vector, these same
-entries give
-\begin{equation}\label{eq:body-blocks}
-U\binom{u}{y}=
- \begin{pmatrix}\textcolor{flipout}{A}&\textcolor{flipback}{B}\\
-                 \textcolor{flipout}{C}&\textcolor{flipback}{D}\end
-{pmatrix}
- \binom{u}{y}=\binom{Au+By}{Cu+Dy}.
-\end{equation}
-Here $u\in X$ comes from outside and $y\in Y$ enters on the return
-port. The rows give external output $Au+By\in X'$ and returning
-output $Cu+Dy\in Y$. The body is \emph{open} because its returning
-input and output are still separate ports. Closing them gives the
-loop. Unitarity and the common finite $Y$ imply
-$\dim X=\dim X'$. For \code{guardRound}, the first clause gives
-$A=3/5$ and $C=4/5$; the second gives $B=-4/5$ and $D=3/5$.
+In the sequence above, we passed both output coordinates to the
+next call. To form a loop, we let the \kw{exit} amplitude leave
+and feed only the \kw{back} amplitude into the next call.
 
-The first call on external input $u$ receives $(u,0)$: here $0$ is
-absent amplitude on $Y$, not a prepared basis state $\ket0$. Only
-$Cu$ supplies the next call, with zero external input.
-Figure~\ref{fig:scalar-loop} follows three calls. These are
-components of the original amplitude, without normalization; the
-block inclusions are ambient linear maps, not reversible gates.
+\section{What the coherent loop computes}\label{sec:trace}
+
+Closing \code{guardRound} leaves the caller with a single output
+of type \kw{Unit}. Every amplitude that leaves through \kw{exit}
+contributes to that output, including amplitude that returns many
+times before it leaves.
+
+\subsection{From a round to its exits}
+
+Follow the lower wire in Figure~\ref{fig:scalar-loop}. On the
+second call, only the \kw{back} clause contributes: it takes the
+returning amplitude $4/5$ and sends $(4/5)(-4/5)=-16/25$ to the
+external output. The rest goes around again.
+
 \begin{figure}[!htbp]\centering
-\begin{tikzpicture}[kme circuit,>={Stealth[length=1.3mm,width=.9mm]},
-ext/.style={draw=flipout,line width=.8pt},
-ret/.style={draw=flipback,line width=.8pt}]
- \foreach \x/\n/\incoming/\emitted in {
-1.50/1/{u=1}/{Au=\frac35}, 5.00/2/0/{BCu=-\frac{16}{25}},
-8.50/3/0/{BDCu=-\frac{48}{125}}}{
-   \node[kme gate,minimum width=.90cm,minimum height=1.40cm] (u\n) at
-   (\x,1.10) {$U$};
-   \draw[ext,->] (\x-.95,2.25) -- (\x-.95,1.50) -- (u\n.west |-
-   0,1.50);
-   \node[above,text=flipout] at (\x-.95,2.25) {$\incoming$};
-   \draw[ext,->] (u\n.east |- 0,1.50) -- (\x+1.05,1.50) --
-   (\x+1.05,2.25);
-   \node[above,text=flipout] at (\x+1.05,2.25) {$\emitted$};
-   \node at (\x,.00) {call \n};
+\begin{tikzpicture}[kme circuit,>={Stealth[length=1.2mm,width=.8mm]},
+ ext/.style={draw=flipout,line width=.8pt},
+ ret/.style={draw=flipback,line width=.8pt}]
+ \foreach \x/\n/\out in
+ {0/1/{3/5},3/2/{-16/25},6/3/{-48/125},9/4/{-144/625}}{
+   \node[kme gate,minimum width=1cm,minimum height=1.10cm]
+     (g\n) at (\x,0) {$R_\theta$};
+   \node[below=2pt] at (g\n.south) {call \n};
+   \draw[ext,->] (g\n.east |- 0,.30) -- (\x+.88,.30) -- (\x+.88,.85)
+     node[above,text=flipout] {$\out$};
  }
- \draw[ret,->] (.00,.70) node[left] {$0$} -- (u1.west |- 0,.70);
- \draw[ret,->] (u1.east |- 0,.70)
--- node[below,text=flipback] {$Cu=\frac45$} (u2.west |- 0,.70);
- \draw[ret,->] (u2.east |- 0,.70)
--- node[below,text=flipback] {$DCu=\frac{12}{25}$} (u3.west |-
-0,.70);
- \draw[ret,->] (u3.east |- 0,.70)
--- node[below,text=flipback] {$D^2Cu=\frac{36}{125}$} (11.20,.70);
- \node at (11.50,.70) {$\cdots$};
+ \draw[ext,->] (-1.35,.30) node[left] {$1$} -- (g1.west |- 0,.30);
+ \draw[ret,->] (-1.35,-.30) node[left] {$0$} -- (g1.west |- 0,-.30);
+ \foreach \x/\n/\prev/\amp in
+ {3/2/1/{4/5},6/3/2/{12/25},9/4/3/{36/125}}{
+   \draw[ext,->] (\x-.88,.85) node[above] {$0$} -- (\x-.88,.30)
+     -- (g\n.west |- 0,.30);
+   \draw[ret,->] (g\prev.east |- 0,-.30)
+     -- node[below=2pt,text=flipback] {$\amp$} (g\n.west |- 0,-.30);
+ }
+ \draw[ret,->] (g4.east |- 0,-.30)
+   -- node[below=2pt,text=flipback] {$108/625$} (11,-.30) node[right]
+   {$\cdots$};
 \end{tikzpicture}
-\caption{Three calls, with scalar values for $U=R_\theta$ and $u=1$.
-Purple return components alone supply the next call; later external
-inputs have zero amplitude.}\label{fig:scalar-loop}
-\Description{Three complete two-port bodies show general block
-formulas and the corresponding scalar amplitudes. Successive exits
-are three fifths, minus sixteen twenty-fifths and minus forty-eight
-one-hundred-and-twenty-fifths. The third return is thirty-six
-one-hundred-and-twenty-fifths and continues.}
+\caption{Four calls to \code{guardRound}. The upper outputs
+contribute
+to the caller's result; the first two add to $-1/25$. The lower wire
+carries the returning amplitude from one call to the next. A zero
+at an input means no amplitude enters that
+port.}\label{fig:scalar-loop}
+\Description{The external contributions are three fifths, minus
+sixteen
+twenty-fifths, minus forty-eight over 125, and minus 144 over 625.
+The successive returns are four fifths, twelve twenty-fifths,
+36 over 125, and 108 over 625, which enters the fifth call.}
 \end{figure}
 
-Define $x_k:X\to X'$ to be the exit map after $k$ returns. Thus count
-$k$ means $k+1$ body calls, including the first; adding one to the
-label gives the number of iterations from the introduction. The
-immediate exit is $A$. To exit after $k+1$ returns, a contribution
-first enters $Y$ through $C$, makes $k$ further passages through $D$,
-and finally leaves through $B$. Its exit maps are therefore
-\begin{equation}\label{eq:exits}
-x_0=A,\qquad x_{k+1}=BD^kC.
-\end{equation}
-After $n+1$ calls, the emissions are $x_0u,\ldots,x_nu$ and the
-remainder is $D^nCu$. The three loop readings differ in how they
-combine this same exit sequence.
-
-Closing the return port identifies its outgoing vector $Cu+Dy$ with
-its incoming vector $y$. Thus, for external input $u$, the connected
-wire must satisfy $y=Cu+Dy$. We call this the
-\emph{wire equation}. Any solution gives external output $Au+By$.
-
-The evaluator must compute the whole closed matrix, so it solves this
-equation on each external basis input $s$. Let $y_s$ be a solution of
-the finite linear system $(I_Y-D)y_s=C\ket s$. The corresponding
-output column is $A\ket s+By_s$. Collecting the returning columns
-into a map $F:X\to Y$, with $F\ket s=y_s$, gives $(I_Y-D)F=C$ and
-output matrix $A+BF$. The rule first evaluates the open program, then
-solves its returning columns:
+\paragraph{Syntax and statics.}
+The programmer writes \code{trace guardRound}. Unfolding the name
+and replacing its two clauses by their checked matrix atom gives
+the evaluator $\mathsf{trace}_1[R_\theta]$. Both programs connect the
+same return wire. The two
+typing rules describe this connection before and after elaboration:
 \[
- \frac{\kappa\Downarrow U\quad
-U=\left(\begin{smallmatrix}A&B\\C&D\end{smallmatrix}\right)
-       \quad F:X\to Y\quad (I_Y-D)F=C}
-      {\mathsf{trace}_c\,\kappa\Downarrow A+BF}.
+ \underbrace{\frac{\Sigma\vdash\omega:a+c\leftrightarrow b+c}
+      {\Sigma\vdash\mathsf{trace}_c\,\omega:a\leftrightarrow b}}_
+      {\text{source iso}}
+ \qquad
+ \underbrace{\frac{\kappa:a+c\leftrightarrow b+c}
+      {\mathsf{trace}_c\,\kappa:a\leftrightarrow b}}_
+      {\text{matrix combinator}} .
 \]
-Applied to input $u$, the closed matrix $A+BF$ returns $(A+BF)u$ at
-type $b$, with the return summand removed. The earlier typing rules
-specify its boundary; this rule computes its action.
+In the source rule, $\Sigma$ supplies the earlier definitions that
+$\omega$ may name. In the matrix rule those names have already been
+unfolded. In each premise, the output and input to be connected
+have the same type $c$. In each conclusion, only the external input
+$a$ and output $b$ remain. Thus \code{trace guardRound} has type
+$1\leftrightarrow1$; the \kw{round} declaration supplies the return
+type $1$. In general, if $\mathcal E_\Sigma(\omega)=\kappa$, then
+$\mathcal
+E_\Sigma(\mathsf{trace}_c\,\omega)=\mathsf{trace}_c\,\kappa$.
+Both grammars gain one constructor,
+$\omega::=\cdots\mid\mathsf{trace}_c\,\omega$ and
+$\kappa::=\cdots\mid\mathsf{trace}_c\,\kappa$.
+In \code{trace f; g}, we close \code{f} first, then apply \code{g}.
+QWhile uses this typed feedback interface
+for its do-while combinator~\cite[\S~5.1]{AndresMartinez22Thesis}.
 
-Theorem~\ref{thm:total} proves that a solution exists whenever the
-well-typed body $\kappa$ evaluates to a finite unitary $U$. The
-matrix $I_Y-D$ may be singular, meaning it has no inverse. In that
-case two wire solutions can differ, but their difference
-$v$ satisfies $Dv=v$. Unitarity then forces $Bv=0$: a returning
-vector that preserves all its norm internally cannot also emit norm
-through $B$. Thus all solutions give the same external output, and
-the rule still determines one matrix.
+Elaboration preserves how the program connects its parts. We can
+evaluate the resulting combinator to a matrix or draw those same
+connections as a diagram. A box for an iso denotes a morphism in
+$\mathsf{Unitary}$, the category of finite-dimensional Hilbert spaces
+and
+unitary maps. Joining boxes in sequence composes their maps.
+Closing a return wire takes the trace for direct
+sum~\cite{JSV96,Bartha14QuantumTuringAutomata}.
 
-To depict this connection, we use \emph{sheet diagrams}, read
-upwards. Separate sheets carry sum alternatives, whereas wires at
-different depths on one sheet carry tensor factors~\cite[Defs.~16,
-18--20]{ComfortDelpeuchHedges20Sheets}. The circled $U$ at a seam
-acts on both incident summands; a sheet in front may hide part of the
-other wire, but does not remove it. In Figure~\ref{fig:28-sheets},
-bending the $Y$ sheet back to that seam connects its output to its
-input.
+\noindent\begin{minipage}[c]{.59\linewidth}
+Suppose both tags carry a payload $H$, and write $G=\C^2$ for the
+guard. Read the picture from left to right. Its factor box is the
+unitary $H\oplus H\to G\otimes H$ that sends $\kw{exit}\,x$ to
+$\ket0\otimes x$ and $\kw{back}\,x$ to $\ket1\otimes x$. This
+includes the swap that puts the guard first. The body $\beta$ acts
+from $G\otimes H$ to itself, and the dist box is the inverse of the
+factor box. Closing the lower $H$ leaves a map $H\to H$ for the
+caller. The general rule also allows different payload types.
+\end{minipage}\hfill
+\begin{minipage}[c]{.38\linewidth}\centering
+$\mathsf{trace}_H(\mathsf{factor};\beta;\mathsf{dist})$\par
+\includegraphics[viewport=0 0 137
+73,clip,width=\linewidth]{figures/40-pi-trace.pdf}
+\end{minipage}\par
+
+\paragraph{The exit maps.}
+To follow the same calculation for any body
+$\beta:a+c\leftrightarrow b+c$, evaluate it to a matrix $U$ and
+group its columns by the input tag and its rows by the output tag.
+Write $X=\sem a$, $X'=\sem b$ and $Y=\sem c$. On external input
+$u\in X$ and returning input $y\in Y$, one call gives
+\begin{equation}\label{eq:body-blocks}
+ U\binom{u}{y}=
+ \begin{pmatrix}
+ \textcolor{flipout}{A}&\textcolor{flipback}{B}\\
+ \textcolor{flipout}{C}&\textcolor{flipback}{D}
+ \end{pmatrix}\binom{u}{y}
+ =\binom{Au+By}{Cu+Dy}.
+\end{equation}
+The top row gives the external output in $X'$ and the bottom row
+gives the returning output in $Y$. For \code{guardRound}, the first
+clause gives $A=3/5$ and $C=4/5$, and the second gives $B=-4/5$
+and $D=3/5$. Reading the same rows and columns gives
+$A:X\to X'$, $B:Y\to X'$, $C:X\to Y$ and $D:Y\to Y$. These are
+morphisms in $\mathbf{FdHilb}$, where all linear maps are allowed.
+Since $U$ itself is unitary and the same finite
+space $Y$ occurs on both sides, $\dim X=\dim X'$.
+
+The first call receives $(u,0)$, so $Au$ leaves immediately and
+$Cu$ goes back. The second call receives $(0,Cu)$, so $BCu$ leaves
+and $DCu$ goes back. These are components of the original input
+amplitude, with no normalization between calls. The zero denotes
+a port with no incoming amplitude. Taking either component of the
+output is a projection in $\mathbf{FdHilb}$.
+
+Write $x_k:X\to X'$ for the exit map after $k$ returns. The
+immediate exit has made zero returns. To exit after $k+1$ returns,
+a contribution first enters $Y$ through $C$, makes $k$ further
+passages through $D$, and finally leaves through $B$. Thus
+\begin{equation}\label{eq:exits}
+ x_0=A,\qquad x_{k+1}=BD^kC.
+\end{equation}
+After $n+1$ calls the contributions to the external output are
+$x_0u,\ldots,x_nu$, with $D^nCu$ still on the return wire.
+Coherent feedback adds all the exits at their common output:
+\[
+ \sem{\mathsf{trace}_c\,\beta}=L=\sum_{k\ge0}x_k.
+\]
+This is the execution formula from the
+introduction~\cite{AbramskyHaghverdiScott02GoI}. In the ring,
+$x_0$ gives the light that goes straight through and $x_k$ gives
+the contribution after $k$ trips around the ring. A finite unitary
+body can have infinitely many nonzero exits. To compute their sum,
+we follow the amplitude on the return wire.
+
+\subsection{Computing the sum without a last round}
+
+Follow the return wire of \code{guardRound} in
+Figure~\ref{fig:scalar-loop}. On input \code{unit}, the first
+call sends $4/5$ back. Each later call returns $3/5$ of the
+amplitude it received on that wire. The four labels on the lower wire
+are therefore the first
+four terms of the same geometric series. Write $y$ for its sum.
+Since each term is $3/5$ times the preceding one, the series
+converges and its tail is $3/5$ times the whole sum:
+\[
+ y=\frac45+
+   \underbrace{\frac{12}{25}+\frac{36}{125}+\frac{108}{625}+
+               \frac{324}{3125}+\cdots}_{(3/5)y}
+   =\frac45+\frac35y.
+\]
+This is the \emph{wire equation}. Subtracting $(3/5)y$ from both
+sides gives $(2/5)y=4/5$, so the returns sum to $y=2$. On the
+external wire,
+the first call contributes $3/5$ directly. Each returning amplitude
+contributes to that same output with coefficient $-4/5$. Their sum is
+$3/5-(4/5)y=-1$, so
+$\code{trace guardRound on unit}\Downarrow-\ket*$.
+
+For a general body, the same argument starts with $Cu$ on the
+return wire and applies $D$ on each further passage. For a finite
+unitary body, the external input reaches only the part of the
+return space where these contributions decay geometrically
+(Theorem~\ref{thm:total} and its proof). Separating the first
+return and then collecting the exits gives
+\[
+ \begin{aligned}
+ y  &= Cu+DCu+D^2Cu+\cdots = Cu+Dy,\\
+ Lu &= Au+B(Cu+DCu+D^2Cu+\cdots) = Au+By.
+ \end{aligned}
+\]
+For finite unitary bodies the exits are absolutely summable,
+$L$ is unitary, and $\sum_kx_k^\dagger x_k=I_X$~\cite[Thms.~4, 7,
+8]{Bartha14QuantumTuringAutomata}~\cite[Thm.~3.3.15,
+Cor.~3.3.16]{AndresMartinez22Thesis}.
+
+The first equation also follows directly from the connection:
+the vector $Cu+Dy$ leaving the returning port is the vector $y$
+entering it. Figure~\ref{fig:28-sheets} draws this connection as
+a sheet diagram, read upwards. Separate sheets carry sum
+alternatives; wires at different depths on one sheet carry tensor
+factors~\cite[Defs.~16, 18--20]{ComfortDelpeuchHedges20Sheets}.
+The circled $U$ acts on both incident summands, including the one
+partly hidden by the front sheet.
+
 \begin{programfigure}
 \begin{minipage}{.70\linewidth}\centering
 \includegraphics{figures/28-sheets.pdf}
 \end{minipage}\hfill
 \begin{minipage}{.27\linewidth}\raggedright
-Closing the return gives
+For \code{guardRound} on input \code{unit}, the wire equation gives
 \[
- \begin{aligned}
-y&=Cu+Dy,\\ Lu&=Au+By.
- \end{aligned}
+ R_\theta\binom{1}{\textcolor{flipback}{2}}
+   =\binom{\textcolor{flipout}{-1}}{\textcolor{flipback}{2}}.
 \]
-For the atom $[R_\theta]$,
-\[
- \begin{gathered}
-(1-\tfrac35)F=\tfrac45,\\ F=2,\\
- \tfrac35-\tfrac45 F=-1,\\
- \mathsf{trace}_1[R_\theta]\Downarrow(-1).
- \end{gathered}
-\]
+The purple output matches the purple input. The caller receives
+the green output, $-1$.
 \end{minipage}
-\caption{Direct-sum feedback identifies the two ends of the returning
-$Y$ sheet. The annotations evaluate the rotation by the trace
-rule.}\label{fig:28-sheets}
-\Description{Separate sheets carry the external and returning
-summands. The returning sheet bends back to the same body. Equations
-beside the drawing identify its input and output amplitudes and
-calculate the scalar instance.}
+\caption{In $\mathsf{Unitary}$, the open body at left is
+$U:X\oplus Y\to X'\oplus Y$. Joining the two ends of the purple
+$Y$ sheet at right gives its direct-sum trace
+$L=\Tr^Y(U):X\to X'$.}\label{fig:28-sheets}
+\Description{The open body has separate external and return sheets.
+Closing the purple sheet identifies its two ends. The example maps
+external and returning inputs one and two to outputs minus one and
+two.}
 \end{programfigure}
-For the rotation, elaboration supplies the atom $[R_\theta]$.
-Figure~\ref{fig:28-sheets} solves its returning column, giving
-$F=2$ and closed matrix $(-1)$. The returning value $2$ is a sum
-of amplitudes, rather than a normalized state on a new register. The
-computed closed iso is
-$\{*\leftrightarrow-1\cdot *\}:1\leftrightarrow1$, so
-\[
- \code{trace guardRound on unit}\Downarrow-\ket*.
-\]
-The closing operation removes both port tags and returns a value of
-type $1$. A single call to the open \code{guardRound} still returns
-its tagged superposition from the first column.
 
-\paragraph{Denotation.}
-Coherent feedback adds all the emissions on their common external
-output:
-\[
- \sem{\mathsf{trace}_c\,\beta}=L=\sum_{k\ge0}x_k.
-\]
-This is the established direct-sum execution
-formula~\cite{AbramskyHaghverdiScott02GoI}. Theorem~\ref{thm:total}
-identifies it with the wire-equation output, so the operational rule
-and categorical trace $\Tr^Y(U)$ compute the same map.
+For \code{guardRound}, one basis input gave the whole closed matrix.
+For a larger input type, the same wire equation gives one column at a
+time.
 
-\paragraph{Why is the sum defined for every finite body?}
-For a finite unitary body, the established feedback theorem gives
-absolute convergence of the exits, a unitary sum $L$, and
-$\sum_kx_k^\dagger x_k=I_X$~\cite[Thms.~4, 7,
-8]{Bartha14QuantumTuringAutomata}~\cite[Thm.~3.3.15,
-Cor.~3.3.16]{AndresMartinez22Thesis}. Its proof separates the
-internal vectors that never emit from those that do. Unitarity
-prevents the external input from entering that closed component; on
-the emitting part the returns decay geometrically.
-Appendix~\ref{app:total} proves this by the norm accounting in
-Figure~\ref{fig:feedback-proof}. No last nonzero exit is required.
-
-\par\noindent\begin{minipage}{.70\linewidth}
-Take $U=R_\theta\oplus1$, with ordered coordinates $(u,y_0,y_1)$.
-Here $y_0$ is the emitting return and $y_1$ is the isolated one.
-Connecting these two return ports gives
+Write $F$ for the matrix whose column $s$ holds the sum of the
+returns on input $\ket s$. The first call contributes $C\ket s$ to
+that column. Every later call takes what the previous call sent back
+and applies $D$, so the later calls together contribute $DF\ket s$.
+Writing this for all inputs gives $F=C+DF$, or $(I_Y-D)F=C$.
+At the external output, $A$ gives the immediate exits and $B$ sends
+the accumulated returns to that same output. To evaluate the loop,
+we evaluate the open body $\kappa$, find a solution $F$ of the wire
+equation, and return the gate $A+BF$.
 \[
- \tfrac25y_0=\tfrac45u,\qquad y_1=y_1,\qquad y_0=2u.
+ \frac{\kappa\Downarrow U\quad
+ U=\left(\begin{smallmatrix}A&B\\C&D\end{smallmatrix}\right)
+ \quad F:X\to Y\quad (I_Y-D)F=C}
+ {\mathsf{trace}_c\,\kappa\Downarrow A+BF}.
 \]
+
+\paragraph{An undetermined return.}
+For \code{guardRound} we found the return by dividing by $1-3/5$.
+To see what happens when $I_Y-D$ has no inverse, give the body two
+return values. Use \code{back 1} for the original return and let
+the new value, \code{back 0}, return to itself.
+
+\par\noindent\begin{minipage}[c]{.65\linewidth}
+\begin{lstlisting}[xleftmargin=0pt]
+round extraPort : Unit + Qubit = {
+  exit unit <-> [ 3/5 . exit unit + 4/5 . back 1];
+  back 1    <-> [-4/5 . exit unit + 3/5 . back 1];
+  back 0    <-> back 0
+}
+\end{lstlisting}
 \end{minipage}\hfill
-\begin{minipage}{.27\linewidth}\centering
+\begin{minipage}[c]{.33\linewidth}\centering
 \begin{tikzpicture}[kme circuit,>={Stealth[length=1.2mm,width=.8mm]}]
- \node[kme gate] (d) at (0,.45) {$1$};
- \draw[flipback] (d.east) -- (.85,.45)
-.. controls (1.30,.45) and (1.30,-.45) .. (.85,-.45) -- (-.85,-.45)
-.. controls (-1.30,-.45) and (-1.30,.45) .. (-.85,.45) -- (d.west);
- \draw[flipback,->] (-.85,.45) -- (d.west);
- \draw[flipback,->] (.25,-.45) -- (-.25,-.45);
- \node[above] at (0,.97) {isolated return};
- \node[below,text=flipback] at (0,-.61) {$y_1=y_1$};
+ \node[kme gate,minimum width=.78cm,minimum height=.8cm] (r) at (0,0)
+ {$R_\theta$};
+ \node[kme gate,minimum width=.66cm] (i) at (2.18,-.19) {$I_1$};
+ \draw[flipout,->] (-.98,.19) -- (r.west |- 0,.19);
+ \draw[flipout,->] (r.east |- 0,.19) -- (.98,.19);
+ \node[above,text=flipout] at (0,.42) {\code{exit unit}};
+ \foreach \gate/\cx in {r/0,i/2.18} {
+   \begin{scope}[shift={(\cx,0)}]
+   \draw[flipback,->] (\gate.east |- 0,-.19) -- (.64,-.19)
+     arc[start angle=90,end angle=-90,radius=.25] -- (-.64,-.69)
+     arc[start angle=-90,end angle=-270,radius=.25] -- (\gate.west |-
+     0,-.19);
+   \draw[flipback,->] (.20,-.69) -- (-.14,-.69);
+   \end{scope}
+ }
+ \node[text=flipback,below] at (0,-.74) {\code{back 1}};
+ \node[text=flipback,below] at (2.18,-.74) {\code{back 0}};
 \end{tikzpicture}
 \end{minipage}\par
-The isolated amplitude $y_1$ is arbitrary, but only $y_0$ enters the
-output $(3/5)u-(4/5)y_0=-u$. Thus
-$D=\operatorname{diag}(3/5,1)$ makes $I_Y-D$ singular without
-making the loop's output ambiguous. For rotations approaching the
-identity the loop remains $-1$, but at the identity it is
-$+1$~\cite[Remark~B.1]{FairbanksSelinger25Traces}.
 
-\paragraph{Computing the closed iso.}
-The wire equation $y=Cu+Dy$ asks which amplitude must enter each
-return pattern when its output is connected back to its input. For a
-basis value $q\in\mathcal B(c)$, $y_q=\langle q|y\rangle$ is the
-amplitude on \kw{back} $q$. The entry $D_{qq}$ is the coefficient of
-\kw{back} $q$ in the ground clause whose input is also \kw{back} $q$.
-For \code{guardRound}, $q=*$ and
-$D_{qq}=3/5$. The coordinate equation is
+The first two clauses are the rotation we already know. Only the
+last clause mentions \code{back 0}. In the order \code{exit unit},
+\code{back 1}, \code{back 0}, the body therefore has matrix
+$R_\theta\oplus I_1$. On external input $u$, write $y_1$ and $y_0$
+for their respective return amplitudes. The clauses give
 \[
-(1-D_{qq})y_q=(Cu)_q+\sum_{r\ne q}D_{qr}y_r.
+ y_1=\tfrac45 u+\tfrac35 y_1,\qquad y_0=y_0.
 \]
-If $D_{qq}\ne1$, divide by $1-D_{qq}$ and substitute for $y_q$ in the
-other return equations and the external output $v=Au+By$. In the
-ground clause table, this removes the input pattern
-\kw{back} $q$ and replaces every output occurrence of that pattern
-by the other terms of its clause, scaled by $1/(1-D_{qq})$.
-Coefficients multiply along a substituted path and add when paths
-reach the same output. If $D_{qq}=1$, unitarity forces every other
-entry in that row and column to vanish, so the isolated pattern can
-simply be removed. The smaller body is again unitary. Repeating with
-its updated coefficients eventually leaves only external clauses.
-Removing their \kw{exit} tags gives the atom
-$[L]:a\leftrightarrow b$ with output $v=Lu$.
-This is the established elimination for finite contractions,
-including unitaries~\cite[Thm.~3.3.15]{AndresMartinez22Thesis};
-Appendix~\ref{app:elim} proves order independence and preservation of
-the coefficient subfield.
+The first equation fixes $y_1=2u$. The second holds for every
+$y_0$. This is why $I_Y-D=\operatorname{diag}(2/5,0)$ is
+\emph{singular}, meaning it has no inverse. Starting from $u$,
+no call sends any amplitude to \code{back 0}, so the actual returns
+there sum to zero. Even if the evaluator chooses another $y_0$,
+only $y_1$ contributes to the exit. The caller still receives
+$(3/5)u-(4/5)y_1=-u$.
 
-Figure~\ref{fig:42-elim-flip} follows two such steps for
-\code{flipRound}, whose body $\beta_{\rm flip}$ rotates the guard
-as before and flips a data bit on each call. Here $u_0,u_1$ are the
-input amplitudes on \kw{exit} $0,1$, $y_0,y_1$ are the returning
-amplitudes on \kw{back} $0,1$, and $v_0,v_1$ are the external output
-amplitudes. Substituting for $y_0$ creates a self-coefficient $9/25$
-on the remaining return $y_1$. Solving that wire equation and
-substituting into the outputs gives $v=-u$. Appendix~\ref{app:flip}
-gives the iso clauses.
+For any finite unitary body, the external output is fixed even
+when the return is undetermined. The sum of the returns supplies a
+solution
+on every external input. If two solutions differ by $w$, subtracting
+their wire equations gives $Dw=w$. On input $(0,w)$ the body
+therefore returns $w$ with its full norm. Unitarity forces the
+external component $Bw$ to be zero, so both solutions give the
+same column of $L$. The full argument is in
+Appendix~\ref{app:total}, Figure~\ref{fig:feedback-proof}.
+
+\subsection{Compiling away the loop}
+The wire equation gave us the matrix $L=A+BF$ of the closed loop.
+We can also compute this gate directly in the clause table. In
+\code{guardRound}, the first clause sends $3/5$ to \code{exit unit}
+and $4/5$ to \code{back unit}. To remove the back edge, we need to
+know what that second term will contribute to the output. Follow
+the arrows from \code{back unit}. One call sends $B=-4/5$ to the
+exit and $D=3/5$ back to the same clause.
+
+\par\smallskip\noindent
+\begin{minipage}[c]{.49\linewidth}\centering
+\begin{tikzpicture}[kme
+circuit,>={Stealth[length=1.25mm,width=.9mm]},
+ tag/.style={draw,rounded corners=1.2pt,inner xsep=3pt,inner
+ ysep=2.5pt},
+ ex/.style={tag,draw=flipout,fill=flipout!7},
+ rt/.style={tag,draw=flipback,fill=flipback!7},
+ fromex/.style={draw=flipout,->,line width=.65pt},
+ fromrt/.style={draw=flipback,->,line width=.65pt}]
+ \node[ex] (i) at (0,0) {\code{exit unit}};
+ \node[ex] (o) at (4.15,0) {\code{exit unit}};
+ \node[rt] (r) at (2.075,-1.12) {\code{back unit}};
+ \draw[fromex] (i) -- node[above] {$A=3/5$} (o);
+ \draw[fromex] (i.south) to[out=-90,in=180] node[pos=.48,below left]
+ {$C=4/5$} (r.west);
+ \draw[fromrt] (r.east) to[out=0,in=-90] node[pos=.52,below right]
+ {$B=-4/5$} (o.south);
+ \draw[fromrt] ([xshift=2.4mm]r.south)
+   arc[start angle=38,end angle=-218,radius=3.05mm]
+   node[pos=.5,below=1.3pt] {$D=3/5$};
+\end{tikzpicture}
+\end{minipage}\hfill
+\begin{minipage}[c]{.48\linewidth}
+Each trip around the self-loop contributes another factor of $D$.
+From one unit of returning amplitude, the exits therefore sum to
+\[
+ B+BD+BD^2+\cdots
+   =\frac{\textcolor{flipback}{B}}{1-\textcolor{flipback}{D}}=-2.
+\]
+The first clause sends only $C=4/5$ there, so these exits
+contribute $(4/5)(-2)$. On the wire we grouped the same factors
+as $BF=(-4/5)\cdot2$, with $F=C/(1-D)$.
+\end{minipage}\par\smallskip
+
+We can now replace \code{back unit} in the first clause by the
+sum of its exits, $-2\,(\code{exit unit})$. The clause becomes
+\[
+ \code{exit unit}\;\leftrightarrow\;
+ \tfrac35\,(\code{exit unit})+\tfrac45\bigl(-2\,(\code{exit
+ unit})\bigr)
+ =-\code{exit unit}.
+\]
+Both terms leave through \code{exit unit}, so their coefficients
+add. Dropping the external tag gives
+$\{*\leftrightarrow-1\cdot *\}$.
+
+With two return patterns, removing the first can change the clause
+we must use for the second. In \code{flipRound}, each call rotates
+the same guard and flips a data bit (Appendix~\ref{app:flip}).
+The \code{back 0} clause sends $-4/5$ to \code{exit 1} and $3/5$ to
+\code{back 1}. Figure~\ref{fig:42-elim-flip} substitutes this
+expression in the two clauses that mention \code{back 0}.
+
+This creates a return from \code{back 1} to itself with coefficient
+$(3/5)^2=9/25$. We close that return before substituting in the
+external clauses.
+
 \begin{figure}[!htbp]\centering
 \begingroup
-\newcommand{\elimret}[1]{\textcolor{flipback}{#1}}
-\newcommand{\elimext}[1]{\textcolor{flipout}{#1}}
-\begin{tikzpicture}[x=1mm,y=.90mm,
->={Stealth[length=1.3mm,width=.9mm]}, every
-node/.style={font=\fontsize{9.8}{12}\selectfont,text=ink,inner
-sep=0pt}, elim/tag/.style={draw,line width=.55pt,rounded
-corners=1.2pt, minimum height=4.8mm,inner xsep=2pt,inner ysep=1.2pt},
-elim/exit/.style={elim/tag,draw=flipout,fill=flipout!7},
-elim/back/.style={elim/tag,draw=flipback,fill=flipback!7},
-elim/flow/.style={draw=ink,line width=.55pt,->},
-elim/weight/.style={fill=white,inner xsep=1pt,inner ysep=.6pt},
-elim/head/.style={anchor=west,font=\fontsize{9.8}{12}\selectfont
-\bfseries},
-elim/eq/.style={anchor=west}]
-\path[use as bounding box] (0,0) rectangle (139.1,101.5);
+\newcommand{\ex}[1]{\kw{exit}\,#1}
+\newcommand{\bk}[1]{\kw{back}\,#1}
+\newcommand{\subst}[1]{\textcolor{flipback}{#1}}
+\begin{minipage}{.98\linewidth}
+\textbf{Remove \code{back 0}.}
+Replace it by $\subst{-\tfrac45\ex1+\tfrac35\bk1}$.
+\par\medskip
+\begin{minipage}[t]{.48\linewidth}\centering
+$\ex1\mapsto\tfrac35\ex0+\tfrac45\subst{\bk0}$\par\smallskip
+$\Downarrow$\par\smallskip
+$\tfrac35\ex0+\tfrac45\subst{
+  \bigl(-\tfrac45\ex1+\tfrac35\bk1\bigr)}$\par\smallskip
+$=\tfrac35\ex0-\tfrac{16}{25}\ex1+\tfrac{12}{25}\bk1$
+\end{minipage}\hfill
+\begin{minipage}[t]{.48\linewidth}\centering
+$\bk1\mapsto-\tfrac45\ex0+\tfrac35\subst{\bk0}$\par\smallskip
+$\Downarrow$\par\smallskip
+$-\tfrac45\ex0+\tfrac35\subst{
+  \bigl(-\tfrac45\ex1+\tfrac35\bk1\bigr)}$\par\smallskip
+$=-\tfrac45\ex0-\tfrac{12}{25}\ex1+\subst{\tfrac9{25}\bk1}$
+\end{minipage}\par\medskip
+Delete the \code{back 0} clause. The third clause is
+$\ex0\mapsto\tfrac35\ex1+\tfrac45\bk1$.
 
-\node[elim/head] at (0,99.4) {The open body $\beta_{\rm flip}$};
-\node[elim/eq] at (90,99.4) {$v=Au+By,\quad y=Cu+Dy$};
-\begin{scope}[shift={(0,84)}]
-\node[elim/back] (a-b1) at (10,0) {\kw{back}\,$1$};
-\node[elim/exit] (a-e0) at (32,0) {\kw{exit}\,$0$};
-\node[elim/exit] (a-e1) at (54,0) {\kw{exit}\,$1$};
-\node[elim/back] (a-b0) at (76,0) {\kw{back}\,$0$};
-\draw[elim/flow] (a-b1.north east) .. controls (20,5.3) and (24,5.3)
-.. (a-e0.north west);
-\node[elim/weight] at (21,4.8) {$-4/5$};
-\draw[elim/flow] (a-e0.south west) .. controls (24,-5.3) and
-(20,-5.3) .. (a-b1.south east);
-\node[elim/weight] at (21,-4.8) {$4/5$};
-\draw[elim/flow] (a-e0.north east) .. controls (42,5.3) and (46,5.3)
-.. (a-e1.north west);
-\node[elim/weight] at (43,4.8) {$3/5$};
-\draw[elim/flow] (a-e1.south west) .. controls (46,-5.3) and
-(42,-5.3) .. (a-e0.south east);
-\node[elim/weight] at (43,-4.8) {$3/5$};
-\draw[elim/flow] (a-e1.north east) .. controls (64,5.3) and (68,5.3)
-.. (a-b0.north west);
-\node[elim/weight] at (65,4.8) {$4/5$};
-\draw[elim/flow] (a-b0.south west) .. controls (68,-5.3) and
-(64,-5.3) .. (a-e1.south east);
-\node[elim/weight] at (65,-4.8) {$-4/5$};
-\draw[elim/flow] (a-b1.north) .. controls (10,14) and (76,14) ..
-(a-b0.north);
-\node[elim/weight] at (43,11.4) {$3/5$};
-\draw[elim/flow] (a-b0.south) .. controls (76,-14) and (10,-14) ..
-(a-b1.south);
-\node[elim/weight] at (43,-11.4) {$3/5$};
-\end{scope}
-\node[elim/eq] at (90,91.8)
-{$\elimext{v_0}=\tfrac35u_1-\tfrac45\elimret{y_1}$};
-\node[elim/eq] at (90,85.3)
-{$\elimext{v_1}=\tfrac35u_0-\tfrac45\elimret{y_0}$};
-\node[elim/eq] at (90,78.8)
-{$\elimret{y_0}=\tfrac45u_1+\tfrac35\elimret{y_1}$};
-\node[elim/eq] at (90,72.3)
-{$\elimret{y_1}=\tfrac45u_0+\tfrac35\elimret{y_0}$};
+\vspace{.65\baselineskip}
+\textbf{Close \code{back 1}.}
+Sum its exits with factor $1/(1-\subst{9/25})=25/16$.
+\par\smallskip
+\begin{center}$\begin{aligned}
+\bk1\;&\longmapsto\;
+ \tfrac{25}{16}\bigl(-\tfrac45\ex0-\tfrac{12}{25}\ex1\bigr)
+ =\subst{-\tfrac54\ex0-\tfrac34\ex1}.
+\end{aligned}$\end{center}
 
-\node[elim/head] at (0,66.8) {1\quad Close \kw{back}\,$0$: substitute
-for $\elimret{y_0}$.};
-\node[elim/eq] at (90,65.1) {New terms from this substitution:};
-\begin{scope}[shift={(0,51)}]
-\node[elim/back] (b-b1) at (10,0) {\kw{back}\,$1$};
-\node[elim/exit] (b-e0) at (32,0) {\kw{exit}\,$0$};
-\node[elim/exit] (b-e1) at (54,0) {\kw{exit}\,$1$};
-\draw[elim/flow] (b-b1.north east) .. controls (20,5.3) and (24,5.3)
-.. (b-e0.north west);
-\node[elim/weight] at (21,4.8) {$-4/5$};
-\draw[elim/flow] (b-e0.south west) .. controls (24,-5.3) and
-(20,-5.3) .. (b-b1.south east);
-\node[elim/weight] at (21,-4.8) {$4/5$};
-\draw[elim/flow] (b-e0.north east) .. controls (42,5.3) and (46,5.3)
-.. (b-e1.north west);
-\node[elim/weight] at (43,4.8) {$3/5$};
-\draw[elim/flow] (b-e1.south west) .. controls (46,-5.3) and
-(42,-5.3) .. (b-e0.south east);
-\node[elim/weight] at (43,-4.8) {$3/5$};
-\draw[elim/flow,draw=flipout,line width=.8pt] (b-b1.north) ..
-controls (10,14) and (54,14) .. (b-e1.north);
-\node[elim/weight,text=flipout] at (32,11.4) {$-12/25$};
-\draw[elim/flow,draw=flipback,line width=.8pt] (b-e1.south) ..
-controls (54,-14) and (10,-14) .. (b-b1.south);
-\node[elim/weight,text=flipback] at (32,-11.4) {$12/25$};
-\draw[elim/flow,draw=flipback,line width=.8pt]
-([yshift=.8mm]b-b1.west)
-.. controls (0,5) and (0,-5) .. ([yshift=-.8mm]b-b1.west);
-\node[elim/weight,text=flipback] at (7,-7.8) {$9/25$};
-\draw[elim/flow,draw=flipout,line width=.8pt]
-([yshift=-.8mm]b-e1.east)
-.. controls (69,-5) and (69,5) .. ([yshift=.8mm]b-e1.east);
-\node[elim/weight,text=flipout] at (77,0) {$-16/25$};
-\end{scope}
-\node[elim/eq] at (90,58.8) {$\elimret{y_1}:\quad
-\tfrac35\tfrac35\,y_1=\tfrac9{25}y_1$};
-\node[elim/eq] at (90,52.3) {$\phantom{y_1:}\quad
-\tfrac35\tfrac45\,u_1=\tfrac{12}{25}u_1$};
-\node[elim/eq] at (90,45.8) {$\elimext{v_1}:\quad
--\tfrac45\tfrac35\,y_1=-\tfrac{12}{25}y_1$};
-\node[elim/eq] at (90,39.3) {$\phantom{v_1:}\quad
--\tfrac45\tfrac45\,u_1=-\tfrac{16}{25}u_1$};
-
-\node[elim/head] at (0,33.5) {2\quad Close \kw{back}\,$1$: solve for
-$\elimret{y_1}$.};
-\node[elim/eq] at (90,32.4)
- {$\bigl(1-\tfrac9{25}\bigr)y_1=\tfrac45u_0+\tfrac{12}{25}u_1$};
-\node[elim/eq] at (90,25.9)
-{$\elimret{y_1}=\tfrac54u_0+\tfrac34u_1$};
-\begin{scope}[shift={(0,24)}]
-\node[elim/exit] (c-e0) at (32,0) {$\ket0$};
-\node[elim/exit] (c-e1) at (54,0) {$\ket1$};
-\draw[elim/flow] ([yshift=.8mm]c-e0.west)
-.. controls (20,5) and (20,-5) .. ([yshift=-.8mm]c-e0.west);
-\node[elim/weight] at (18,0) {$-1$};
-\draw[elim/flow] ([yshift=-.8mm]c-e1.east)
-.. controls (66,-5) and (66,5) .. ([yshift=.8mm]c-e1.east);
-\node[elim/weight] at (68,0) {$-1$};
-\end{scope}
-\node[elim/eq] at (2,15)
- {$\elimext{v_0}=\tfrac35u_1-\tfrac45\bigl(\tfrac54u_0+\tfrac
-34u_1\bigr)
-=-u_0+\bigl(\tfrac35-\tfrac35\bigr)u_1=\elimext{-u_0}$};
-\node[elim/eq] at (2,8.5)
- {$\elimext{v_1}=\tfrac35u_0-\tfrac{16}{25}u_1-\tfrac{12}{25}\bigl
-(\tfrac54u_0+\tfrac34u_1\bigr)
-=\bigl(\tfrac35-\tfrac35\bigr)u_0-\bigl(\tfrac{16}{25}+\tfrac
-9{25}\bigr)u_1
-=\elimext{-u_1}$};
-\node at (69.55,1.4)
- {$\mathsf{trace}_{\mathsf{Qubit}}\,\beta_{\rm
- flip}:\mathsf{Qubit}\leftrightarrow\mathsf{Qubit},
-    \qquad v=Lu=-u,\qquad L=-I_2$};
-\end{tikzpicture}
+\vspace{.65\baselineskip}
+\textbf{Substitute for \code{back 1} in both exit clauses.}
+\par\smallskip
+\begin{center}$\begin{aligned}
+\ex0&\mapsto\tfrac35\ex1+\tfrac45
+       \subst{\bigl(-\tfrac54\ex0-\tfrac34\ex1\bigr)}
+       =-\ex0,\\[5pt]
+\ex1&\mapsto\tfrac35\ex0-\tfrac{16}{25}\ex1+\tfrac{12}{25}
+       \subst{\bigl(-\tfrac54\ex0-\tfrac34\ex1\bigr)}
+       =-\ex1.
+\end{aligned}$\end{center}
+\end{minipage}
 \endgroup
-\caption{Eliminating the two returns of \code{flipRound}. An arrow
-gives an amplitude from its input port to its output port. The
-colored arrows in the middle graph are created by substituting for
-$y_0$; their products are at right. Solving the remaining equation
-gives the untagged output $v=-u$.}\label{fig:42-elim-flip}
-\Description{Three stacked port graphs show the original four ports,
-the three ports after closing back zero, and the two untagged
-external ports after closing back one. The component wire equations
-and all changed coefficients are beside the corresponding graph; both
-external-output cancellations are calculated below.}
+\caption{Compiling \code{trace flipRound}. The arrows substitute for
+\code{back 0}. Closing \code{back 1} and substituting its exits
+leaves each input bit with amplitude $-1$.}
+\label{fig:42-elim-flip}
+\Description{Both substitutions show the original return pattern, its
+replacement
+expression, and the collected coefficients. Closing back one then
+replaces it by
+its two summed exits, leaving amplitude minus one on each original
+input.}
 \end{figure}
+
+For a general body, first evaluate the matching clause on each basis
+input, as in Section~\ref{sec:iso}. In the resulting table, choose a
+returning basis value \kw{back} $q$ and write
+its clause as $\kw{back}\,q\mapsto d\,(\kw{back}\,q)+e$. Here
+$d=D_{qq}$ is the amplitude to return to $q$ and $e$ contains the
+other outputs. If $d\ne1$, substitute $e/(1-d)$ for \kw{back} $q$
+in every other clause (Appendix~\ref{app:elim}). Thus
+$v\mapsto e'+\alpha\,(\kw{back}\,q)$ becomes
+$v\mapsto e'+\alpha e/(1-d)$.
+Collect terms on equal patterns and delete the clause for $q$.
+If $d=1$, unitarity forces all other entries in its row and column
+to vanish. We can simply delete that clause, as for \code{back 0}
+in \code{extraPort}.
+
+Each step leaves a smaller unitary table whose coefficients we use
+for the next step. After $|\mathcal B(c)|$ steps, dropping the
+external tags gives an ordinary iso of type $a\leftrightarrow b$
+with matrix $L$. This applies the elimination for finite
+contractions to a unitary clause
+table~\cite[Thm.~3.3.15]{AndresMartinez22Thesis}.
+Proposition~\ref{prop:elim} shows that every order gives the same
+map and keeps the coefficients in their original subfield.
+
 \FloatBarrier
 
-\paragraph{The rotation and its reference.}
-For \code{guardRound}, put $t=3/5$ and $s=4/5$, so
-$A=D=t$, $C=s$ and $B=-s$. On input $\ket*$, the first call
-emits amplitude $t$ and sends amplitude $s$ back. Let $r_n$ be the
-amplitude still returning after call $n$, with $r_1=s$. The next call
-sends $-sr_n$ out and $tr_n$ back. Coherent feedback adds the new
-emission to the sum $\ell_n$ of all earlier emissions. If the guard
-is measured on each call, we instead add the squared magnitude of
-that emission to the cumulative halting probability $p_n$. Starting
-with $\ell_1=t$ and $p_1=t^2$, these updates are
-\[
-r_{n+1}=tr_n,\qquad \ell_{n+1}=\ell_n-sr_n,\qquad
-p_{n+1}=p_n+s^2|r_n|^2.
-\]
-Table~\ref{tab:rounds} separates the two calculations. The coherent
-sum can shrink through cancellation, while $p_n$ only increases.
-Section~\ref{sec:effects} defines the recording and measured loops.
-\begin{table}[!htbp]\centering
-\small
-\begin{tabular}{c r r r r r}
-\toprule
- & \multicolumn{2}{c}{one call}
- & \multicolumn{2}{c}{coherent feedback}
- & guard measured\\
-\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(l){6-6}
-call $n$ & \shortstack{emitted\\$x_{n-1}$}
- & \shortstack{still returning\\$r_n$}
- & \shortstack{sum emitted\\$\ell_n$}
- & \shortstack{squared length\\$|\ell_n|^2$}
- & \shortstack{halted so far\\$p_n$}\\
-\midrule
-1 & $\textcolor{flipout}{\tfrac35}$
-  & $\textcolor{flipback}{\tfrac45}$ & $\tfrac35$ & $0.3600$
-  & $\textcolor{accentwarm}{0.3600}$\\[3pt]
-2 & $\textcolor{flipout}{-\tfrac{16}{25}}$
-  & $\textcolor{flipback}{\tfrac{12}{25}}$ & $-\tfrac1{25}$ &
-  $0.0016$
-  & $\textcolor{accentwarm}{0.7696}$\\[3pt]
-3 & $\textcolor{flipout}{-\tfrac{48}{125}}$
-  & $\textcolor{flipback}{\tfrac{36}{125}}$ & $-\tfrac{53}{125}$ &
-  $0.1798$
-  & $\textcolor{accentwarm}{0.9171}$\\[3pt]
-4 & $\textcolor{flipout}{-\tfrac{144}{625}}$
-  & $\textcolor{flipback}{\tfrac{108}{625}}$ & $-\tfrac{409}{625}$ &
-  $0.4282$
-  & $\textcolor{accentwarm}{0.9701}$\\[3pt]
-5 & $\textcolor{flipout}{-\tfrac{432}{3125}}$
-  & $\textcolor{flipback}{\tfrac{324}{3125}}$ & $-\tfrac{2477}{3125}$
-  & $0.6283$
-  & $\textcolor{accentwarm}{0.9893}$\\[3pt]
-$n\to\infty$ & $0$ & $0$ & $-1$ & $1$ & $1$\\
-\bottomrule
-\end{tabular}
-\caption{\code{guardRound} on $\ket*$. Coherent feedback adds
-emissions, while guard measurement adds their squared magnitudes. A
-record keeps emission $x_{n-1}$ with label $n-1$. Only $p_n$ is a
-halting probability; decimal entries are rounded to four
-places.}\label{tab:rounds}
-\end{table}
+\subsection{Making the sign observable}
 
-In the limit $\ell_n\to-1$ and $p_n\to1$, so both readings return the
-only external value $*$ with certainty. The coherent phase $-\ket*$
-is global on this interface. To observe it, we place the loop beside
-an unaffected amplitude.
-
-\Needspace{9\baselineskip}
-Add the bypass by changing the external type to $\kw{Qubit}=1+1$,
-with $0$ for the bypass and $1$ for the loop arm. Keep the return
-type \kw{Unit}, leave external $0$ unchanged, and rotate external
-$1$ with the return port:
+The clause for \code{trace guardRound} sends $\ket*$ to $-\ket*$.
+A caller who measures the result still sees $*$ with certainty,
+just as for the identity. To see the sign, the caller needs a
+second amplitude to compare with the one that went through the loop.
+In \code{bypassRound}, the two amplitudes belong to one qubit.
+Figure~\ref{fig:bypass-intro} draws them as two paths. The upper
+path carries $\ket0$ straight through. The lower path carries
+$\ket1$ through \code{guardRound}. The return still carries
+\kw{Unit}.
+\par\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}
-round withReference : Qubit + Unit = {
+round bypassRound : Qubit + Unit = {
   exit 0 <-> exit 0;
   exit 1 <-> [ 3/5 . exit 1 + 4/5 . back unit];
   back unit <-> [-4/5 . exit 1 + 3/5 . back unit]
 }
 \end{lstlisting}
-Use \code{exit 0}, \code{exit 1}, \code{back unit} as the ordered
-input and output bases. The three clauses give the three columns
-below. The first two rows and columns belong to the external qubit,
-and the last row and column belong to the return port. The boxed
-letters name the four blocks of~\eqref{eq:body-blocks}.
-\begin{center}
-\begin{tikzpicture}[kme circuit,
-blockname/.style={draw,rounded corners=1pt,fill=white,inner sep=2pt}]
- \node[text=flipout] at (.52,1.92) {\kw{exit}\,$0$};
- \node[text=flipout] at (1.62,1.92) {\kw{exit}\,$1$};
- \node[text=flipback] at (2.72,1.92) {\kw{back}\,$*$};
- \node[anchor=east] at (-.28,.56) {\kw{exit}\,$0$};
- \node[anchor=east] at (-.28,0) {\kw{exit}\,$1$};
- \node[anchor=east] at (-.28,-.56) {\kw{back}\,$*$};
- \node[anchor=east] at (-1.75,0) {$U_{\rm ref}=$};
- \fill[flipout!9] (0,-.84) rectangle (2.17,.84);
- \fill[flipback!9] (2.17,-.84) rectangle (3.27,.84);
- \draw[ink] (.12,.84) -- (0,.84) -- (0,-.84) -- (.12,-.84);
- \draw[ink] (3.15,.84) -- (3.27,.84) -- (3.27,-.84) -- (3.15,-.84);
- \draw[hairline] (2.17,-.84) -- (2.17,.84);
- \draw[hairline] (0,-.28) -- (3.27,-.28);
- \foreach \x/\y/\entry in
- {.52/.56/1,1.62/.56/0,.52/0/0,1.62/0/t,.52/-.56/0,1.62/-.56/s}
-   \node[text=flipout] at (\x,\y) {$\entry$};
- \foreach \y/\entry in {.56/0,0/{-s},-.56/t}
-   \node[text=flipback] at (2.72,\y) {$\entry$};
- \node[blockname,draw=flipout,text=flipout] at (1.08,1.23) {$A$};
- \node[blockname,draw=flipback,text=flipback] at (2.72,1.23) {$B$};
- \node[blockname,draw=flipout,text=flipout] at (1.08,-1.23) {$C$};
- \node[blockname,draw=flipback,text=flipback] at (2.72,-1.23) {$D$};
- \node[anchor=west,align=left] at (3.85,.64)
-   {$A=\operatorname{diag}(1,t)$\\[4pt]$B=\displaystyle\binom0{-s}$};
- \node[anchor=west,align=left] at (3.85,-.64)
-   {$C=\begin{pmatrix}0&s\end{pmatrix}$\\[4pt]$D=t$};
-\end{tikzpicture}
-\end{center}
-Substituting these blocks into the exit formula gives
+\end{minipage}\par
+The first clause sends all of \code{exit 0} straight through, so the
+bypass appears only in the immediate exit $x_0$. Every later exit
+comes from \code{back unit}, whose only external output is \code{exit
+1}.
+Read the clauses as columns in the order \code{exit 0}, \code{exit
+1},
+\code{back unit}, with $t=3/5$ and $s=4/5$:
 \[
-x_0=\operatorname{diag}(1,t),\qquad
-x_{k+1}=\binom0{-s}\,t^k\begin{pmatrix}0&s\end{pmatrix}
-=\begin{pmatrix}0&0\\0&-s^2t^k\end{pmatrix}.
+ U_{\rm bypass}=
+ \left(\begin{array}{cc|c}
+   1 & 0 & 0\\
+   0 & t & -s\\ \hline
+   0 & s & t
+ \end{array}\right),
+ \qquad
+ x_0=\operatorname{diag}(1,t),\qquad
+ x_{k+1}=\operatorname{diag}(0,-s^2t^k)\quad(k\ge0).
 \]
-Only the immediate exit contains the bypass. Summing the lower right
-entries gives $-1$ as before, so the closed gate is
-$L=\operatorname{diag}(1,-1)$ on the external qubit. Finite
-elimination gives the same external clauses:
-$\{0\leftrightarrow0,\ 1\leftrightarrow-1\cdot1\}$.
+On the lower path, a later exit picks up $s$ on entering the return
+wire, $t$ on each further return, and $-s$ on leaving. These are
+the same exits we summed for \code{guardRound}. Closing the loop
+therefore leaves $\ket0$ alone and sends $\ket1$ to $-\ket1$.
 
-The standard \emph{Hadamard test} makes this relative phase
-observable~\cite[p.~1, Eqs.~(1)--(3)]{Childs13Hadamard}. Its Hadamard
-iso has two clauses, one for each input column:
+The caller in Figure~\ref{fig:bypass-intro} runs the Hadamard test on
+the scalar loop~\cite[p.~1, Eqs.~(1)--(3)]{Childs13Hadamard}.
+Its program is \code{H; trace bypassRound; H; measure on 0}.
+The first Hadamard prepares
+$(\ket0+\ket1)/\sqrt2$. The loop changes this to
+$(\ket0-\ket1)/\sqrt2$. Measuring either state in the computational
+basis would give $0$ and $1$ with equal probability. The second
+Hadamard lets both paths contribute to each output before the caller
+measures.
 \[
-H=\{0\leftrightarrow\tfrac1{\sqrt2}(0+1),\quad
-1\leftrightarrow\tfrac1{\sqrt2}(0-1)\}
-:\kw{Qubit}\leftrightarrow\kw{Qubit},\qquad
- \sem H=\frac1{\sqrt2}\begin{pmatrix}1&1\\1&-1\end{pmatrix}.
+ \begin{aligned}
+ H\frac{\ket0-\ket1}{\sqrt2}
+   &=\frac12(\ket0+\ket1)-\frac12(\ket0-\ket1)\\
+   &=\underbrace{\bigl(\tfrac12-\tfrac12\bigr)}_{\text{output
+   }0}\ket0
+     +\underbrace{\bigl(\tfrac12+\tfrac12\bigr)}_{\text{output
+     }1}\ket1
+     =\ket1.
+ \end{aligned}
 \]
-It sends input $\ket0$ to
-$\ket+=(\ket0+\ket1)/\sqrt2$, supplying amplitude to both arms.
-The coherent loop changes this to
-$\ket-=(\ket0-\ket1)/\sqrt2$. Applying $H$ again gives
-$\ket1$, so a computational-basis measurement returns $1$
-with certainty. The composition
-$H;\mathsf{trace}_1\,\mathsf{withReference};H$
-uses the Hadamard iso just defined on both sides of the closed body.
-Here the controlled operation is just the scalar loop, so the control
-qubit is the entire external data. Figure~\ref{fig:bypass-intro}
-shows the test and expands its two arms. Section~\ref{sec:effects}
-will run the same test after measuring the loop's return tag and
-obtain probability $1/5$ for outcome $1$.
+The contributions cancel at output $0$ and add at output $1$, so the
+caller reads $1$ with certainty. Had the loop preserved the sign,
+the two Hadamards would have returned the caller to $0$.
+
 \begin{figure}[!htbp]\centering
 \begin{tikzpicture}[kme circuit,>={Stealth[length=1.3mm,width=.9mm]},
 pass/.style={draw=flipout,line width=.8pt},
@@ -1397,10 +1480,13 @@ ret/.style={draw=flipback,line width=.8pt}]
  (4.25,.30) {$R_\theta$};
  \node[kme gate,minimum height=1.20cm] (h2) at (7.10,.90) {$H$};
  \draw[pass,->] (h1.east |- 0,1.20) -- (h2.west |- 0,1.20);
- \node[above,text=flipout] at (4.25,1.35) {basis $0$: bypass $1$};
- \draw[pass,->] (h1.east |- 0,.60) -- (u.west |- 0,.60);
+ \node[above,text=flipout] at (3.45,1.27) {basis $0$ bypass};
+ \draw[pass,->] (h1.east |- 0,.60) -- (u.west |- 0,.60)
+   node[midway,below=2pt,text=flipout] {basis $1$};
  \draw[pass,->] (u.east |- 0,.60) -- (h2.west |- 0,.60);
- \node[below,text=flipback] at (4.25,-1.06) {basis $1$: phase $-1$};
+ \node[above,text=flipout] at (5.98,1.24) {$1/\sqrt2$};
+ \node[below,text=flipout] at (5.98,.54) {$-1/\sqrt2$};
+ \node[below,text=flipback] at (4.25,-.91) {\code{back unit}};
  \draw[ret] (u.east |- 0,0) -- (5.15,0)
 .. controls (5.80,0) and (5.80,-.85) .. (5.15,-.85) -- (3.25,-.85) ..
 controls (2.60,-.85) and (2.60,0) .. (3.25,0) -- (u.west |- 0,0);
@@ -1413,132 +1499,311 @@ controls (2.60,-.85) and (2.60,0) .. (3.25,0) -- (u.west |- 0,0);
  \draw[accentwarm,double,double distance=.65pt,->] (m.east) --
  (9.65,.90) node[right] {$b$};
 \end{tikzpicture}
-\caption{The two rails are the basis alternatives of
-$\kw{Qubit}=1+1$. Only basis $1$ enters the scalar loop, whose
-rotation has $\cos\theta=t=3/5$. The second $H$ recombines its phase
-with the bypass, giving $b=1$ with
-certainty.}\label{fig:bypass-intro}
+\caption{The two rails carry the basis alternatives of one qubit
+$G=\C^2$.
+Each $H:G\to G$ and the closed loop $\operatorname{diag}(1,-1):G\to
+G$
+are in $\mathsf{Unitary}$. The final measurement
+$M_Z:G\rightsquigarrow G$ is
+a channel in $\mathsf{CPTP}$. Its output is diagonal in the
+computational
+basis and gives bit $1$ with certainty.}\label{fig:bypass-intro}
 \Description{Two-port Hadamard couplers place the scalar rotation
 feedback loop beside a bypass and recombine their amplitudes before a
 computational-basis measurement. The initial amplitudes are one and
 zero.}
 \end{figure}
 
-Elimination computes $L$ without retaining its decomposition into
-exits. To compare feedback with measurement, we now keep that
-decomposition: attach a count label to each $x_ku$, discard those
-labels and compare the returned data with $Lu$.
+The two paths in Figure~\ref{fig:bypass-intro} also have a use in
+optics. A splitter sends light along two waveguides. One takes it
+straight to a second splitter. The other meets the ring from the
+introduction. Some light goes straight through, and some makes one
+or more trips around the ring before rejoining that waveguide.
+The second splitter brings the two paths together. How the waves
+line up there determines which output gets more light. Wang et al.
+used this to sort light by wavelength. They chose the path lengths
+so that neighboring wavelength channels went mostly to different
+outputs~\cite[Figs.~1 and~6]{Wang25Interleaver}.
 
+In our program, output $0$ never occurs because the bypass amplitude
+cancels the sum of the exits from \code{guardRound}. Suppose we add
+a counter to find out how many times the loop returned. A classical
+programmer could keep this count for later without changing what
+the caller sees. Here a count can distinguish exits whose amplitudes
+we just added at the same output.
 \FloatBarrier
 \section{What allocation and hiding do to the
 loop}\label{sec:effects}
-Returning a count requires a register the caller did not supply.
-Following \emph{Quantum Information Effects}, allocation exposes an
-input summand of a unitary and hiding discards an output factor of an
-isometry~\cite[\S\S~3--4, Thm.~22]{HeunenKaarsgaard22Effects}. These
-extend finite iso first to $\mathsf{iso}_a$ isometries, then to
-$\mathsf{iso}_a^\chi$ channels. We need both extensions to carry out
-the classical idea from the introduction: allocation supplies the
-count register, and hiding lets the caller ignore it. Together they
-also derive measurement, which will distinguish exit from return
-inside every call.
+\newsavebox{\parityview}
+\sbox{\parityview}{\begin{tikzpicture}[kme
+circuit,>={Stealth[length=1.35mm,width=1mm]}]
+  \node[anchor=east] at (-.21,.93) {returns};
+  \foreach \x/\k in {0/0,.69/1,1.38/2,2.07/3}
+    \node at (\x,.93) {$\k$};
+  \node[anchor=east,text=flipout] (bypass) at (-.6,.40) {bypass};
+  \node[text=equalcount] (zero) at (0,.40) {$\ket0$};
+  \draw[flipout,->] (bypass.east) -- (zero.west);
+  \node[anchor=east,text=flipback] (looparm) at (-.6,-.30) {loop
+  path};
+  \draw[flipback,->] (looparm.east) -- (-.08,-.30);
+  \foreach \y/\bit in {-.30/0,-.85/1}{
+    \draw[hairline] (0,\y) -- (2.47,\y);
+    \node[anchor=west,text=equalcount] at (2.48,\y) {$\ket\bit$};
+  }
+  \draw[flipback,->,shorten >=2pt] (0,-.30) -- (.69,-.85);
+  \draw[flipback,->,shorten >=2pt] (.69,-.85) -- (1.38,-.30);
+  \draw[flipback,->,shorten >=2pt] (1.38,-.30) -- (2.07,-.85);
+  \draw[flipback,densely dotted] (2.07,-.85) -- (2.45,-.55);
+  \foreach \x/\y in {0/-.30,.69/-.85,1.38/-.30,2.07/-.85}
+    \node[circle,inner sep=0pt,minimum size=3.6pt,fill=equalcount] at
+    (\x,\y) {};
+\end{tikzpicture}}
+\noindent\begin{minipage}[c]{\dimexpr
+  \linewidth-\wd\parityview-1.3em\relax}
+We run the same three clauses of \code{bypassRound}, this time with a
+counter bit. We start it at $0$ and flip it on each return. The
+bypass
+exits at once with $0$. On the lower path, one return takes the bit
+to $1$ and two bring it back to $0$. At the second Hadamard, exits
+with an even count can still interfere with the bypass. Odd counts
+carry a different bit.
+\end{minipage}\hspace{1.3em}\ignorespaces
+\begin{minipage}[c]{\wd\parityview}\usebox{\parityview}
+\end{minipage}\par
 
-\paragraph{Syntax.}
-An allocation program $v:a\rightarrowtail b$ is built from
-$\mathsf{arr}\,\omega$, $\mathsf{lift}\,\omega$, sequence,
-sum and tensor; a channel program $h:a\rightsquigarrow b$ uses
-$\mathsf{arr}\,v$, $\mathsf{hide}\,v$, sequence and tensor.
-We add the forms $\mathsf{count}_K\,\omega$ and
-$\mathsf{while}_c\,\omega$, with $K\ge1$ and a reversible body.
-Their definitions follow below; the full grammars and inherited rules
-are in Appendix~\ref{app:rules}. The executable spelling \code{while
-f} infers $c$ from a named
-\kw{round}, as \code{trace f} does.
+\smallskip\noindent The caller did not supply a count register. We
+need the ability to
+allocate that register.
 
-\paragraph{Statics.}
-An embedding $\mathsf{arr}$ retains its program's input and output
-types. Given $\omega:a+d\leftrightarrow b$, allocation produces
-$\mathsf{lift}\,\omega:a\rightarrowtail b$ by selecting the $a$
-input summand. Given $v:a\rightarrowtail b\otimes g$ with
-$\mathcal B(g)\ne\varnothing$, hiding produces
-$\mathsf{hide}\,v:a\rightsquigarrow b$ by removing the $g$ factor.
-The loop rules, with their common environment $\Sigma$ omitted, are
-\begin{mathpar}
- \isorule{\beta:a+c\leftrightarrow b+c\\K\ge1}
-         {\mathsf{count}_K\,\beta:a\rightarrowtail[K]\otimes b}
- \and\isorule{\beta:a+c\leftrightarrow b+c}
-         {\mathsf{while}_c\,\beta:a\rightsquigarrow b}.
-\end{mathpar}
-Sequence matches intermediate types, while tensor forms products of
-input and of output types. Isometries also combine by direct sum,
-while channels have no coherent sum constructor. The type $[K]$ is
-the $K$-fold sum of $1$, with basis labels $0,\ldots,K-1$.
+\paragraph{Adding allocation to iso.}
+Our caller supplies one qubit, with two basis values. Returning it
+alongside a counter bit gives four output pairs. An iso needs a
+square
+table, so we tag the input to give it four basis values as well.
+\par\noindent\begin{minipage}[c]{.63\linewidth}
+\begin{lstlisting}
+tagBit :: (Qubit + Qubit) <-> (Qubit x Qubit)
+tagBit = {left x  <-> <0, x>;
+          right x <-> <1, x>}
+lift tagBit on 1
+\end{lstlisting}
+\end{minipage}\hfill
+\begin{minipage}[c]{.345\linewidth}\centering
+\begin{tikzpicture}[kme
+circuit,>={Stealth[length=1.25mm,width=.9mm]}]
+  \node[kme gate,minimum height=.99cm] (u) at (0,0) {\code{tagBit}};
+  \draw[kme wire,->] (-1.12,.31) node[left] {$u$} -- (u.west |-
+  0,.31);
+  \draw[hid,->] (-1.12,-.31) node[left] {$0$} -- (u.west |- 0,-.31);
+  \node[text=muted] at (-.87,0) {$\oplus$};
+  \draw[equalcount,->] (u.east |- 0,.31) -- (1.13,.31)
+  node[right,text=equalcount] {$\ket0$};
+  \draw[kme wire,->] (u.east |- 0,-.31) -- (1.13,-.31) node[right]
+  {$u$};
+  \node[text=muted] at (.89,0) {$\otimes$};
+\end{tikzpicture}
+\end{minipage}\par
+The bit records the input tag, so either clause can run backwards.
+The last line uses \code{lift} to supply the data through the left
+input. On \code{1} it gives \code{<0, 1>}. On the caller's
+superposition $u=(\ket0+\ket1)/\sqrt2$, it gives $\ket0\otimes u$.
+The $0$ on the unused input means zero amplitude.
 
-\paragraph{Dynamics.}
-If $\omega\Downarrow U$, evaluating $\mathsf{lift}\,\omega$ uses only
-the input columns belonging to $a$, so input $u$ gives
-$U(u,0)$. If $v\Downarrow V$, evaluating $\mathsf{hide}\,v$ on
-a density operator $\rho$ gives $\tr_g(V\rho V^\dagger)$. Here a
-density operator is a positive semidefinite matrix of trace one; a
-unit vector $u$ has state $\ket u\bra u$. The partial trace sums
-diagonal blocks indexed by the hidden factor's basis. The first
-$\mathsf{arr}$ retains the unitary matrix, while the second sends an
-isometry $V$ to
-$\chan V:\rho\mapsto V\rho V^\dagger$. The loop evaluations below
-use the same finite exit matrices.
-
-\paragraph{Denotation.}
-The allocation and hiding completions turn finite unitaries
-$\mathbf U$ into isometries $\mathbf I\simeq R[\mathbf U]$ and
-then channels $\mathbf Q\simeq L[\mathbf I]$~\cite[Prop.~7,
-Thm.~22]{HeunenKaarsgaard22Effects}. They expose an input summand and
-hide an output factor as in the evaluation rules above.
-Appendix~\ref{app:rules} gives the representatives and their defining
-equivalence relations.
-
-\paragraph{Allocation, discard and measurement.}
-The operations we need can now be defined from these constructors.
-For $0\le j<K$, put $d=[K-1]\otimes a$, with $[0]=0$, and let
-$p_j:a+d\leftrightarrow[K]\otimes a$ be a basis permutation that
-places the exposed $a$ summand at label
-$j$. Let $\epsilon_b:b\leftrightarrow1\otimes b$ insert the unit
-factor, and let $\mathsf{clone}_b:b\rightarrowtail b\otimes b$ send
-each basis value $s$ to $\langle s,s\rangle$. This last map is a
-$\mathsf{lift}$ of a permutation onto the diagonal basis values.
-Define allocation for any $a$, and discard and measurement for
-inhabited $b$:
+Following Heunen and Kaarsgaard, we call the extended language
+$\mathsf{iso}_a$~\cite[\S~3.3]{HeunenKaarsgaard22Effects}. It embeds
+each iso with $\mathsf{arr}$ and adds $\mathsf{lift}$:
 \[
-\begin{aligned}
- \mathsf{alloc}_j&=\mathsf{lift}\,p_j
-       &:a&\rightarrowtail[K]\otimes a,\\
- \mathsf{discard}_b&=\mathsf{hide}(\mathsf{arr}\,\epsilon_b)
-       &:b&\rightsquigarrow1,\\
- \mathsf{measure}_b&=\mathsf{arr}\,\mathsf{clone}_b\,;
-(I_b\otimes\mathsf{discard}_b)\,;\,\mathsf{unit}_\otimes
-       &:b&\rightsquigarrow b.
-\end{aligned}
+ \frac{\omega:a\leftrightarrow
+ b}{\mathsf{arr}\,\omega:a\rightarrowtail b}
+ \qquad
+ \frac{\omega:a+d\leftrightarrow
+ b}{\mathsf{lift}\,\omega:a\rightarrowtail b}.
 \]
-Here identities and $\mathsf{unit}_\otimes:b\otimes1\leftrightarrow
-b$ are embedded as channels. Allocation sends $u$ to $\ket j\otimes
-u$; discard sends $\rho$ to its trace. Cloning copies the chosen
-\emph{basis values}, so a superposition becomes $\sum_s\alpha_s\ket
-s\otimes\ket s$. Hiding its second factor removes the off-diagonal
-terms, giving
+If $\omega$ evaluates to $U$, then $\mathsf{arr}\,\omega$ uses the
+whole matrix. On input $u$, $\mathsf{lift}\,\omega$ gives $U(u,0)$:
+only the columns for $a$ are used. Those columns are still
+orthonormal, so the map preserves inner products. This is an
+\emph{isometry}, written $\rightarrowtail$. Programs in
+$\mathsf{iso}_a$ compose in sequence, by direct sum and by tensor.
+They denote maps in the category of finite-dimensional isometries
+$\mathsf{Isometry}\simeq
+R[\mathsf{Unitary}]$~\cite[Thm.~22]{HeunenKaarsgaard22Effects}.
+
+Write $[K]$ for the sum of $K\ge1$ copies of $1$. The same
+construction gives $\mathsf{alloc}_j$, which prepares the counter
+at $j$ alongside the data. Starting at $0$ and advancing on each
+return gives $\mathsf{count}_K\,\beta:a\rightarrowtail[K]\otimes b$
+for a body $\beta:a+c\leftrightarrow b+c$. In a program we write
+\code{count K f on t}, with a positive numeral for \code{K}, the
+round for \code{f}, and its external input for \code{t}. The numeral
+specifies how many values the counter has.
+
+\paragraph{Adding hiding to $\mathsf{iso}_a$.}
+The counting loop returns the counter and the data. Suppose we want
+to return just the data to the caller for the second Hadamard.
+We need the ability to hide the counter. To see what this does, group
+the exits of \code{bypassRound} by the bit they carry. Write $u_0$
+for the sum of the data vectors at even counts, including the bypass,
+and $u_1$ for their sum at odd counts. The joint output is
+$\ket0\otimes u_0+\ket1\otimes u_1$. If the caller keeps only the
+data, we take the partial trace over the bit. A unit vector $w$
+has density matrix $ww^\dagger$. For our joint output, grouping
+its rows and columns by the counter gives
 \[
+ \begin{pmatrix}
+   \textcolor{equalcount}{u_0u_0^\dagger} & u_0u_1^\dagger\\
+   u_1u_0^\dagger & \textcolor{equalcount}{u_1u_1^\dagger}
+ \end{pmatrix}
+ \quad\xrightarrow{\ \text{hide the bit}\ }\quad
+ \textcolor{equalcount}{u_0u_0^\dagger}+
+  \textcolor{equalcount}{u_1u_1^\dagger}.
+\]
+The partial trace adds the two diagonal blocks. The other two
+drop out because $\langle0\mid1\rangle=0$. Exits carrying the same
+bit have already added their amplitudes in $u_0$ or $u_1$.
+
+This second extension, $\mathsf{iso}_a^\chi$, embeds an isometry with
+$\mathsf{arr}$ and adds
+$\mathsf{hide}$~\cite[\S~3.4]{HeunenKaarsgaard22Effects}:
+\[
+ \frac{v:a\rightarrowtail b}{\mathsf{arr}\,v:a\rightsquigarrow b}
+ \qquad
+ \frac{v:a\rightarrowtail b\otimes g\qquad\mathcal
+ B(g)\ne\varnothing}
+      {\mathsf{hide}\,v:a\rightsquigarrow b}.
+\]
+The second rule hides the last factor, so for $\mathsf{count}_K$
+we first exchange the factors in our counter-first formula.
+The executable \code{count} already returns the data first, so
+\code{count 2 bypassRound; discard} keeps just the data.
+The arrow $\rightsquigarrow$ denotes a channel. Its input state is
+a density operator $\rho$, a positive semidefinite matrix of trace
+one.
+If $v$ evaluates to $V$, then $\mathsf{arr}\,v$ gives $V\rho
+V^\dagger$,
+and $\mathsf{hide}\,v$ gives $\tr_g(V\rho V^\dagger)$. Channel
+programs compose in sequence
+and by tensor. These channels are completely positive and
+trace-preserving. Huot and Staton identify their category as
+$\mathsf{CPTP}\simeq
+L[\mathsf{Isometry}]$~\cite[Cor.~7]{HuotStaton18}.
+Figure~\ref{fig:54-completions} gives the general diagrams for
+allocation and hiding.
+
+To discard a whole register of inhabited type $b$, embed the iso
+$b\leftrightarrow1\otimes b$ and hide its last factor. The resulting
+channel $\mathsf{discard}_b:b\rightsquigarrow1$ leaves just
+$\tr\rho$ at the unit output.
+
+\par\smallskip\noindent\begin{minipage}[c]{.60\linewidth}
+\textit{From a fresh bit to a measurement.}
+Start a fresh bit at $0$ and flip it when the data bit is $1$.
+On basis input $s$ this writes a copy of $s$. On a superposition
+$\alpha\ket0+\beta\ket1$, the two wires carry
+$\alpha\ket{00}+\beta\ket{11}$. Discarding the copy destroys the
+coherence between $0$ and $1$. Reading the data now gives $0$ with
+probability $|\alpha|^2$ and $1$ with probability $|\beta|^2$.
+\end{minipage}\hfill
+\begin{minipage}[c]{.38\linewidth}\centering
+\begin{tikzpicture}[kme circuit,>={Stealth[length=1.35mm,width=1mm]}]
+  \draw[kme wire,->] (0,.33) node[left] {data} -- (3.23,.33);
+  \node[text=accentwarm,anchor=west] at (2.59,-.34) {discard};
+  \foreach \x/\h in {2.38/.17,2.46/.12,2.54/.065}
+    \draw[accentwarm,line width=.7pt] (\x,{-0.34-\h}) --
+    (\x,{-0.34+\h});
+  \node[text=equalcount,anchor=east] (fresh) at (.39,-.34) {$\ket0$};
+  \draw[equalcount] (fresh.east) -- (2.38,-.34);
+  \draw[kme wire] (1.18,.33) -- (1.18,-.34);
+  \node[kme dot] at (1.18,.33) {};
+  \node[kme open,minimum size=9pt] at (1.18,-.34) {};
+  \draw[kme wire] (1.18,-.34) +(-.14,0) -- +(.14,0);
+  \draw[kme wire] (1.18,-.34) +(0,-.14) -- +(0,.14);
+  \node[above,text=muted] at (1.18,.40) {basis copy};
+\end{tikzpicture}
+\end{minipage}\par
+
+For an inhabited type $b$, lifting a permutation that sends each
+selected input $s$ to $\langle s,s\rangle$ gives the same basis
+copier $\mathsf{clone}_b:b\rightarrowtail b\otimes b$.
+Hiding the copy gives computational-basis
+measurement~\cite[\S~3.4.1]{HeunenKaarsgaard22Effects}:
+\[
+ \mathsf{measure}_b=\mathsf{hide}\,\mathsf{clone}_b,
+ \qquad
  \sem{\mathsf{measure}_b}(\rho)=\sum_{s\in\mathcal B(b)}P_s\rho P_s,
- \qquad P_s=\ket s\bra s.
+ \qquad P_s=\ket s\bra s .
 \]
-This is the derived computational-basis measurement of
-\emph{Quantum Information
-Effects}~\cite[\S~3.4.1]{HeunenKaarsgaard22Effects}.
-It retains the measured value in its output and forgets the copy.
-These operations supply the counter and the measurement for one body
-call. Closing the return uses coherent feedback for \kw{count} and
-classical iteration after measurement for \kw{while}.
+\noindent\begin{minipage}[c]{.63\linewidth}
+In the loop we copy only the \kw{exit} or \kw{back} tag.
+The picture shows the output of a call with common payload space $X$.
+Read upwards:
+the payload wire on the left passes through, and the tag wire on the
+right supplies the copy that ends at the orange discard mark.
+This measurement destroys coherence between the two tags and
+preserves it within each payload.
+\end{minipage}\hfill
+\begin{minipage}[c]{.34\linewidth}\centering
+\includegraphics[viewport=0 111 172
+185,clip,width=\linewidth]{figures/77-measured-sheet.pdf}
+\end{minipage}\par
+\smallskip\noindent
+Appendix~\ref{app:effect-rules} gives the rules for empty types.
+The counting loop carries one register across calls and returns it
+with the data. The measured loop
+$\mathsf{while}_c\,\beta:a\rightsquigarrow b$
+discards a fresh copy of the tag after every call.
 
 \subsection{Keep a count}
-Allocate a register $[K]$ at $0$, with $K\ge1$, and carry it through
-the body. On a return, advance it by the reversible successor
+In \code{count 2 guardRound on unit}, the input is \code{unit} and
+the $2$ tells us to keep the count modulo two. The first call sends
+$3/5$ to the exit with the bit still at $0$. The other $4/5$ goes
+around with
+the bit flipped to $1$, so the second exit carries $1$. A second
+return flips it
+back to $0$. The first and third exits now contribute to the same
+counter value. All three carry the unit payload.
+\par\smallskip\noindent\makebox[\linewidth][c]{\ignorespaces
+  \begin{tikzpicture}[kme
+circuit,x=1mm,y=1mm,>={Stealth[length=1.35mm,width=.95mm]}]
+  \node[anchor=east,text=equalcount] (input) at (-8,0) {bit $\ket0$};
+  \foreach \x/\gate/\amp/\bit in
+  {7/a/{3/5}/0,45/b/{-16/25}/1,83/c/{-48/125}/0}{
+    \node[kme gate,minimum width=11mm,minimum height=7mm] (\gate) at
+    (\x,0) {$R_\theta$};
+    \draw[flipout,->] (\gate.north) -- (\x,9);
+    \node[anchor=south] at (\x,9)
+    {$\amp\,\textcolor{equalcount}{\ket\bit}$};
+  }
+  \draw[kme wire,->] (input.east) -- (a.west);
+  \foreach \x/\before/\after/\amp/\bit in
+  {26/a/b/{4/5}/1,64/b/c/{12/25}/0}{
+    \node[draw=equalcount,fill=equalcount!7,rounded corners=1.5pt,
+          inner sep=2pt,text=equalcount] (flip) at (\x,0) {flip bit};
+    \draw[flipback,->] (\before.east) -- (flip.west);
+    \draw[flipback,->] (flip.east) -- (\after.west);
+    \node[below] at (\x,-3)
+    {$\amp\,\textcolor{equalcount}{\ket\bit}$};
+  }
+  \draw[flipback,->] (c.east) -- (96,0) node[right,text=flipback]
+  {$\cdots$};
+\end{tikzpicture}}\par\smallskip
+After the first return, every two further returns multiply the exit
+amplitude by $(3/5)^2$. Summing the exits with each bit value gives
+\[
+ \underbrace{\frac35-\frac{48/125}{1-(3/5)^2}}_{\text{even
+ returns}}=0,
+ \qquad
+ \underbrace{\frac{-16/25}{1-(3/5)^2}}_{\text{odd returns}}=-1.
+\]
+Thus the loop arm of \code{bypassRound} leaves with counter state
+$-\ket1$, while the bypass leaves with $\ket0$. On the caller's
+input $(\ket0+\ket1)/\sqrt2$, the joint output is
+$(\ket0\otimes\ket0-\ket1\otimes\ket1)/\sqrt2$, with the counter
+first. Hiding it leaves the data in the equal mixture $I/2$.
+The second Hadamard leaves this mixture unchanged, so the caller
+now reads $1$ with probability $1/2$.
+
+For a counter with $K$ values, replace the bit flip by the successor
 $S_K:j\mapsto j+1\bmod K$. Distributivity identifies
 $\C^K\otimes(X\oplus Y)$ with
 $(\C^K\otimes X)\oplus(\C^K\otimes Y)$, so each alternative
@@ -1594,9 +1859,8 @@ $\ket0\otimes Au$ and returns $\ket{1\bmod K}\otimes Cu$.
 Here $\ket0$ is a prepared counter, while the bare $0$ is absent
 amplitude. Closing $\C^K\otimes Y$ adds the exits, with the counter
 advanced once on each return. Figure~\ref{fig:28b-sheets-unrolled}
-follows three calls with $K>3$. The blue counter and black payload
-travel together on each sheet. The right panel closes the original
-body and adds its exits without count labels.
+follows three calls with $K>3$. The right panel shows where those
+same exits meet when we close the body without a counter.
 \par\begin{figure}[!htbp]\centering
 \includegraphics{figures/28b-sheets-unrolled.pdf}
 \caption{After three calls of a $K>3$ clock, $\ket3\otimes D^2Cu$
@@ -1611,10 +1875,9 @@ To hide the counter, first use the symmetry iso
 $\sigma_{[K],b}:[K]\otimes b\leftrightarrow b\otimes[K]$. Hiding then
 gives
 $\mathsf{hide}(\mathsf{count}_K\beta;\mathsf{arr}\,\sigma_{[K],b})$.
-Native \code{count} returns data first, so \code{discard} hides its
-counter directly. Counts congruent modulo $K$ share a label, so their
-amplitudes interfere before the clock is discarded. Hiding this
-finite clock therefore need not give the measured loop.
+Counts congruent modulo $K$ share a label, so their amplitudes
+interfere before the clock is discarded. Hiding this finite clock
+therefore need not give the measured loop.
 
 Allocation is an isometry and the enlarged coherent loop is unitary,
 so their composite $R_K$ is an isometry. Evaluation returns the joint
@@ -1624,345 +1887,340 @@ An exact count uses $H_{\rm rec}=\ell^2(\N)$ and $Ru=\sum_k\ket
 k\otimes x_ku$, with $\|Ru\|^2=\sum_k\|x_ku\|^2=\|u\|^2$. It is the
 semantic limit of finite clocks. For the scalar rotation,
 $R\ket*=\xi_{\rm rot}\otimes\ket*$ with unit count state $\xi_{\rm
-rot}=t\ket0-s^2\sum_{k\ge1}t^{k-1}\ket k$. For \code{withReference},
+rot}=t\ket0-s^2\sum_{k\ge1}t^{k-1}\ket k$. For \code{bypassRound},
 the bypass instead has record $\ket0$:
 $R\ket0=\ket0\otimes\ket0$, while
 $R\ket1=\xi_{\rm rot}\otimes\ket1$. These different records of
-the two arms make $R\ket+$ entangled.
+the two arms make $R\ket+$ entangled. If we embed each finite counter
+in $H_{\rm rec}$, the maps $R_K$ converge in operator norm to $R$ as
+$K$ grows (Appendix~\ref{app:readings}). A time-dependent model can
+keep the same distinctions by making outputs from different calls
+arrive at different times~\cite[\S~3.4]{AndresMartinez22Thesis}.
 
-
-
-
-For \code{guardRound} at $K=2$, the even-count amplitudes sum to
-$t-s^2t/(1-t^2)=0$, and the odd-count amplitudes sum to
-$-s^2/(1-t^2)=-1$. Its parity clock is therefore $-\ket1$.
-The bypass retains label $\ket0$. The parity clock therefore
-distinguishes the two arms. The joint output on $\ket+$ is
-$(\ket0\ket0-\ket1\ket1)/\sqrt2$, so tracing out the clock leaves
-$I/2$.
-
-Including each finite counter in $H_{\rm rec}$, these outputs
-converge in operator norm to the exact record $R$
-(Appendix~\ref{app:readings}). A time-dependent model can keep the
-same distinctions by making outputs from different calls arrive at
-different times~\cite[\S~3.4]{AndresMartinez22Thesis}. Synchronizing
-execution has a different purpose. The quantum control machine
-synchronizes final control states~\cite{YuanVillanyiCarbin24QCM}, and
-register-machine compilation obtains wait counts within a chosen time
-bound~\cite[\S~5]{ZhangYing25QRM}. These address common-clock
-halting~\cite{LindenPopescu98Halting} without requiring the program
-to return a count register.
+In the bounded loop of Yuan et al., an input register says how many
+times to apply an operation. Their program runs for a fixed number
+of iterations. Once a branch has finished its work, it executes
+no-op instructions so that all branches reach the same control
+state at the same machine step~\cite[\S~6.1,
+Fig.~7]{YuanVillanyiCarbin24QCM}. The original count remains in the
+input register. Register-machine compilation likewise computes wait
+counts within a chosen time bound~\cite[\S~5]{ZhangYing25QRM} to
+address the common-clock halting
+question~\cite{LindenPopescu98Halting}.
+In our loop, amplitude from a single input can leave after different
+numbers of returns. The counter labels those exits as the body runs,
+even when there is no last round.
 
 \subsection{Measure the returning tag}
-To measure the guard without measuring the payload, allocate a fresh
-bit at $0$ and flip it only on a \kw{back} tag. Hiding this copied
-bit removes the cross terms between exit and return, while preserving
-coherence within either payload. This works for unequal payloads, as
-in \code{withReference}. The tag-copying isometry is
-\[
-T:b+c\rightarrowtail(b+c)\otimes\kw{Qubit},\qquad
- \mathsf{exit}\,x\mapsto\langle\mathsf{exit}\,x,0\rangle,
- \quad\mathsf{back}\,y\mapsto\langle\mathsf{back}\,y,1\rangle.
-\]
-The full reversible clauses are in Appendix~\ref{app:rules}. One call
-is $\mathsf{hide}(\mathsf{arr}\,\beta;T)$, which keeps the payload
-and removes only coherence between the two tags.
+We now run \code{H; while bypassRound; H; measure on 0}. The
+one-bit counter gave the first and third exits the same label.
+Here we measure the tag after every call. An exit on the first call
+therefore stays separate from every later exit.
 
-For a density input $\rho$ of trace one, the first call emits
-$A\rho A^\dagger$ and returns $\sigma_1=C\rho C^\dagger$.
-Subsequent calls emit $B\sigma_nB^\dagger$ and return
-$\sigma_{n+1}=D\sigma_nD^\dagger$. The blocks are not normalized
-after each call: $\tr\sigma_n$ is precisely the probability of still
-being inside after $n$ calls. The emitted block on call
-$k+1$ is $x_k\rho x_k^\dagger$. Adding these emitted blocks gives
-the measured loop $\meas=\sem{\mathsf{while}_c\,\beta}$:
+\par\smallskip\noindent\begin{minipage}[c]{.56\linewidth}
+The first Hadamard sends amplitude $1/\sqrt2$ down each path. On
+the first call the bypass exits, and so does $3/5$ of the lower
+path's amplitude. Both carry the same \kw{exit} tag. At output $1$
+the second Hadamard takes their difference, giving amplitude
+$(1-3/5)/2=1/5$. The probability of exiting on this call and
+reading $1$ is $1/25$.
+\end{minipage}\hfill
+\begin{minipage}[c]{.415\linewidth}\centering
+\begin{tikzpicture}[kme
+circuit,>={Stealth[length=1.35mm,width=.95mm]}]
+  \node[kme gate] (call) at (0,0) {\code{bypassRound}};
+  \node[anchor=west] (exit) at (2.20,.49)
+    {$\dfrac{\ket0+(3/5)\ket1}{\sqrt2}$};
+  \node[anchor=west] (back) at (2.20,-.49)
+    {$\dfrac{4/5}{\sqrt2}\ket*$};
+  \draw[flipout,->] (call.east) to[out=0,in=180] (1.38,.49)
+    -- node[above,text=flipout] {\kw{exit}} (exit.west);
+  \draw[flipback,->] (call.east) to[out=0,in=180] (1.38,-.49)
+    -- node[below,text=flipback] {\kw{back}} (back.west);
+\end{tikzpicture}
+\end{minipage}\par\smallskip
+
+Only the lower path can give \kw{back}. Its returning amplitude is
+$(4/5)/\sqrt2$, so this outcome has probability $8/25$. Each further
+call returns again with probability $(3/5)^2$, so the loop eventually
+exits with probability one. Whenever it exits, its data is $\ket1$,
+and the second Hadamard gives $1$ half the time. The first tag
+measurement distinguishes the two ways of reading $1$. We therefore
+add their probabilities:
+\[
+ \underbrace{\frac{1}{25}}_{\text{exit on the first call}}
+ +\underbrace{\frac{8}{25}\cdot\frac12}_{\text{return on the first
+ call}}
+ =\frac15 .
+\]
+A short pulse gives the same result in the ring. Only the light
+that goes straight past the ring arrives together with the bypass
+(Appendix~\ref{sec:ring}).
+
+\paragraph{What one call measures.}
+In \code{while f}, the body supplies the return type $c$, as in
+\code{trace f}. After the call we copy its tag to a fresh bit.
+If the exit carries $x$ and the return carries $y$, the two clauses
+for the copy are
+\[
+ T:b+c\rightarrowtail(b+c)\otimes\kw{Qubit},\qquad
+ \mathsf{exit}\,x\mapsto\langle\mathsf{exit}\,x,0\rangle,\quad
+ \mathsf{back}\,y\mapsto\langle\mathsf{back}\,y,1\rangle .
+\]
+We then hide the bit, giving $\mathsf{hide}(\mathsf{arr}\,\beta;T)$.
+The bit distinguishes exit from return but carries no information
+about the payload within either tag. This is why both paths could
+still interfere on the first exit of \code{bypassRound}.
+Figure~\ref{fig:77-measured-sheet}(a) shows the copy on the tag wire.
+Appendix~\ref{app:readings} derives this body-first loop from the
+test-first loop of Ying and Feng when the external types
+agree~\cite[\S~3]{YingFeng10QuantumLoop}.
+
+\sheetpic{77-measured-sheet}{Read upwards. At left, when $a=b=c$,
+$\mathsf{factor}$ exposes the tag as a separate wire. The box
+$\widehat U$ is the body in these coordinates. We discard a copy of
+the tag before $\mathsf{dist}$ restores the two ports
+(Appendix~\ref{app:effect-rules}). At right, only the return block
+of $\Phi_U$ goes around again. This construction also works when the
+payload types differ.}{One panel follows the payload and tag through
+one measured call. The other connects the return block to the next
+call.}
+
+In Figure~\ref{fig:77-measured-sheet}(b) the return wire now carries
+a density block. We start with $(\rho,0)$ because the caller supplies
+the data and nothing has returned yet. More generally, if $\rho$
+enters from outside and $\sigma$ enters on the return wire, the
+measured call gives two output blocks,
+\[
+ \Phi_U(\rho,\sigma)=\bigl(
+ \underbrace{A\rho A^\dagger+B\sigma B^\dagger}_{\text{exit}},
+ \ \underbrace{C\rho C^\dagger+D\sigma
+ D^\dagger}_{\text{return}}\bigr).
+\]
+The inputs are positive operators with total trace at most one.
+The trace of each output block is the probability on that branch.
+The first call emits $A\rho A^\dagger$ and returns $C\rho C^\dagger$.
+We feed only the return block into the second call, so the second
+exit is $(BC)\rho(BC)^\dagger$. Here $A$ and $BC$ are the first two
+exit maps from Section~\ref{sec:trace}.
+
+\paragraph{Adding the measured exits.}
+An exit after $k$ returns has given \kw{back} on the first $k$ calls
+and \kw{exit} on the next. For any later exit, that same call gave
+\kw{back}. Measuring the tag therefore separates every pair of
+different exit counts. For instance, the first two exits of
+\code{guardRound} have amplitudes $3/5$ and $-16/25$. In the coherent
+loop they add to $-1/25$ so far. In the measured loop the probability
+of having exited by the second call is $(3/5)^2+(-16/25)^2$.
+Table~\ref{tab:rounds} follows the next three calls.
+
+After exactly $k$ returns the exit map is $x_k$, so on input $\rho$
+that exit contributes $x_k\rho x_k^\dagger$. We keep that
+weight when we add the exits. Equivalently, we can keep the exact
+count from the preceding subsection and hide it at the end:
 \begin{equation}\label{eq:meas}
  \meas(\rho)=\sum_{k\ge0}x_k\rho x_k^\dagger
-=\tr_{H_{\rm rec}}(R\rho R^\dagger).
+ =\tr_{H_{\rm rec}}(R\rho R^\dagger),
+ \qquad \meas=\sem{\mathsf{while}_c\,\beta}.
 \end{equation}
-The residual probability tends to zero by Theorem~\ref{thm:total}.
-Thus a measured run halts after finitely many calls with probability
-one, although there need not be a finite bound on its possible
-halting rounds. Its output is a density operator on $\sem b$, with no
-port tag or retained count. This differs from coherent evaluation,
-which solves for a completed map without sampling a halting round.
+The partial trace drops each term with two different count labels.
+Closing the return block of $\Phi_U$ gives this same sum. It is
+the trace $\Tr^{\operatorname{End}(Y)}_{\rm cl}(\Phi_U)$ for the
+classical sum in the category of completely positive
+trace-nonincreasing
+maps on finite
+$C^*$-algebras~\cite[Prop.~3.2.17]{AndresMartinez22Thesis}.
+For a finite unitary body, Theorem~\ref{thm:total} gives
+$\sum_k x_k^\dagger x_k=I$. For a normalized input the exit
+probabilities therefore sum to one.
+The measured run halts with probability one even when there is no
+last possible call.
 
-For \code{withReference} on $\rho=\ket+\bra+$, the immediate exit is
-the only one containing both paths. Its density matrix and the sum of
-all later contributions are
-\[
- \underbrace{\frac12\begin{pmatrix}1&t\\t&t^2\end{pmatrix}}_{\text
-{immediate
- exit}}
-+\underbrace{\frac{s^4}{2(1-t^2)}
-       \begin{pmatrix}0&0\\0&1\end{pmatrix}}_{\text{later exits}}
-=\frac12\begin{pmatrix}1&t\\t&1\end{pmatrix}.
-\]
-Here $s^4/(1-t^2)=s^2$, so the lower diagonal entry is
-$(t^2+s^2)/2=1/2$. A final Hadamard followed by reading $1$ tests the
-projection onto
-$\ket-$. Its measured probability is $(1-t)/2=1/5$, whereas
-the coherent output $\ket-$ gives probability one. Both predictions
-therefore follow from the same three clauses.
-
-Discarding the exact record gives the same mixture
-in~\eqref{eq:meas}: tracing out $\ket k\bra j$ removes $k\ne j$ and
-keeps $x_k\rho x_k^\dagger$ at $k=j$.
-
-For general payloads, let
-$(\rho,\sigma)$ be positive blocks on $X,Y$ with total trace at
-most one. Applying $U$ to their block-diagonal matrix and retaining
-the two diagonal output blocks gives the branching map
-\[
- \Phi_U(\rho,\sigma)=
-(A\rho A^\dagger+B\sigma B^\dagger,\quad C\rho C^\dagger+D\sigma
-D^\dagger).
-\]
-Its two outputs are a classical alternative: their traces are the
-weights on the exit and return branches. When $a=b=c$,
-$\mathsf{factor}:a+a\leftrightarrow a\otimes\kw{Qubit}$ exposes the
-tag. Its inverse $\mathsf{dist}$ restores the sum, so the left box in
-Figure~\ref{fig:77-measured-sheet} is
-$\widehat U=\sem{\mathsf{dist};\beta;\mathsf{factor}}$.
-\sheetpic{77-measured-sheet}{At left (for $X=X'=Y$), the copied tag
-is hidden inside each call, before the outgoing sheets separate. At
-right, closing the returning classical block of $\Phi_U$ gives the
-measured loop for general payloads.}{The copied tag is hidden inside
-every call, before the outgoing sheets separate.}
-
-Closing the return uses the established trace of completely positive
-trace-nonincreasing maps on finite $C^*$-algebras, with their
-classical sum~\cite[Prop.~3.2.17]{AndresMartinez22Thesis}:
-\[
- \sem{\mathsf{while}_c\,\beta}
-=\Tr^{\operatorname{End}(Y)}_{\rm cl}(\Phi_U)=\meas.
-\]
-Unrolling this trace gives the emitted blocks in~\eqref{eq:meas}.
-
-Our body-first convention is obtained by applying $U$ once before the
-published test-first loop~\cite[\S~3]{YingFeng10QuantumLoop}.
-Appendix~\ref{app:readings} gives the correspondence.
-
-Orthogonal exits in retained data can still have nonzero cross outer
-products. An ignored count removes those terms; the two-exit cycle in
-Appendix~\ref{app:programs} illustrates the distinction.
-
-Allocation alone preserves coherent
-feedback~\cite[Cor.~3.3.16]{AndresMartinez22Thesis}. Recording
-changes the body by adding a counter and successor. Measurement
-instead closes a classical alternative of operator blocks.
-
-\par\noindent\begin{minipage}{\linewidth}
-\begin{definition}[The three loop
-readings]\label[definition]{def:three-loops}
-Let $\beta:a+c\leftrightarrow b+c$ be finite, with exits $x_k$ and
-$K\ge1$. The right column specializes to \code{withReference} on
-$u=\ket+$ or $\rho=\ket+\bra+$, with $K=2$ and $t=3/5$.
+\par\smallskip\noindent\begin{minipage}{\linewidth}
+Now consider the same finite body $\beta:a+c\leftrightarrow b+c$
+in all three loops. Each uses the same exit maps $x_k$. In
+\code{trace} all the exits contribute to one sum. With a counter of
+$K\ge1$ values, exits add when they carry the same count modulo $K$.
+In \code{while} we measure the tag on each call and add the resulting
+density matrices. For \code{bypassRound} on $\ket+$, the last two
+columns show what each loop returns and how often the caller reads
+$1$ after the second Hadamard. Here $t=3/5$ and $K=2$. The caller
+hides the counter bit before applying the Hadamard.
 \par\smallskip\centering
 {\small\setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.15}
-\begin{tabular}{@{}lll@{}}
+\begin{tabular}{@{}lllc@{}}
+\emph{Loop and type} & \emph{General output} &
+\emph{\code{bypassRound}} & $\Pr(1)$\\[3pt]
 \textcolor{flipback}{$\mathsf{trace}_c\,\beta:a\leftrightarrow b$}
- & $\textcolor{flipback}{L}u=\sum_{k\ge0}x_ku$ & $\ket-$\\[5pt]
+ & $\textcolor{flipback}{L}u=\sum_{k\ge0}x_ku$ & $\ket-$ & $1$\\[5pt]
 \textcolor{equalcount}{$\mathsf{count}_K\,\beta:a\rightarrowtail
 [K]\otimes
 b$}
  & $\textcolor{equalcount}{R_K}u=\sum_{k\ge0}\ket{k\bmod K}\otimes
  x_ku$
  &
- $\dfrac{\textcolor{equalcount}{\ket0}\ket0-\textcolor
-{equalcount}{\ket1}\ket1}{\sqrt2}$\\[5pt]
+ $\dfrac{\textcolor{equalcount}{\ket0}\otimes\ket0-\textcolor
+{equalcount}{\ket1}\otimes\ket1}{\sqrt2}$ & $1/2$\\[5pt]
 \textcolor{accentwarm}{$\mathsf{while}_c\,\beta:a\rightsquigarrow b$}
  & $\textcolor{accentwarm}{\meas}(\rho)=\sum_{k\ge0}x_k\rho
  x_k^\dagger$
- & $\dfrac12\begin{pmatrix}1&t\\t&1\end{pmatrix}$
+ & $\dfrac12\begin{pmatrix}1&t\\t&1\end{pmatrix}$ & $1/5$
 \end{tabular}}
-\end{definition}
 \end{minipage}\par
 
 
 \FloatBarrier
 \section{When can a caller forget the
 difference?}\label{sec:agreement}
-The Hadamard test distinguished the measured and coherent loops using
-one output bit. We now ask when their channels are equal on
-\emph{every} input, including data entangled with a caller's
-reference. We call this \emph{free erasure} of the count. The
-unitary-channel criterion is the rank-one case of uniqueness of
-finite Kraus representations~\cite[Cor.~2.23]{Watrous18TQI}. Here its
-Kraus operators are the body's successive exits. Their shared finite
-return space makes the criterion a finite test on clauses. The scalar
-rotation gives a first case of agreement: its count state is fixed,
-so ignoring it cannot change the data. The following criterion
-determines when the same is true for a general external interface.
-\Needspace{9\baselineskip}
-\begin{theorem}[Agreement on the data]\label{thm:axis}
+Suppose the caller needs only the data. Measuring the tag on each
+call gives the same result as keeping the exact count and hiding it
+at the end. In either case we add the contributions from different
+counts as density matrices. Closing the wire adds their amplitudes
+instead. We want to know when either choice gives the caller the
+same data on every input.
+
+In \code{guardRound}, every exit carries \code{unit}. The first
+two exits multiply it by $3/5$ and $-16/25$, and each later exit
+picks up another factor of $3/5$. Their sum is
+$3/5-(16/25)/(1-3/5)=-1$. The caller
+therefore receives \code{unit} with certainty whether we close the
+wire or measure the tag. Adding the bypass changes what an exit
+does to the input. The first exit carries amplitude from both paths,
+but every later exit carries only the part that went through the
+rotation. A return therefore singles out the rotation path.
+
+For a general body, write $x_k u$ for the output after exactly $k$
+returns on input $u$. The coherent loop gives $Lu=\sum_k x_k u$.
+Suppose every $x_k$ applies this same gate to the data, up to a
+scalar $b_k$ that depends only on the count. Keeping the exact
+count then gives
+\[
+ Ru=\sum_{k\ge0}\ket k\otimes x_k u
+   =\Bigl(\sum_{k\ge0}b_k\ket k\Bigr)\otimes Lu .
+\]
+The count may vary from run to run, but its state is fixed across
+inputs. Hiding the count therefore leaves the caller with the
+coherent output $Lu$. We call this agreement between the measured and
+coherent loops \emph{free erasure}.
+
+\begin{theorem}[Agreement on the returned data]\label{thm:axis}
 Let $\beta:a+c\leftrightarrow b+c$ be a finite iso with nonempty
-external type. Put $m=|\mathcal B(c)|$. The following conditions are
-equivalent.
+external input type $a$. Let $m=|\mathcal B(c)|$ be the number of
+basis values on the return wire. The following are equivalent.
 \begin{enumerate}
-\item $\meas=\chan L$ as channels on the external data, where $\chan
-L(\rho)=L\rho L^\dagger$.
-\item There is a single unit vector $\xi\in\ell^2(\N)$ such that $R
-u=\xi\otimes Lu$ for every $u$.
-\item The $m+1$ operators $x_0,\ldots,x_m$ span a one-dimensional
-subspace in the space of maps from $X$ to $X'$.
+\item The loops agree on the returned data, $\meas(\rho)=L\rho
+L^\dagger$
+      for every input state $\rho$.
+\item One unit count vector $\xi\in\ell^2(\N)$ satisfies
+      $Ru=\xi\otimes Lu$ for every input $u$.
+\item One of $x_0,\ldots,x_m$ is nonzero and every map in this list
+      is a scalar multiple of it.
 \end{enumerate}
-In this case $x_k=b_kL$ for every $k$, with $\sum_k |b_k|^2=1$ and
-$\sum_k b_k=1$.
+In this case $x_k=b_kL$ for every $k$, where
+$\xi=\sum_k b_k\ket k$, $\sum_k b_k=1$ and $\sum_k|b_k|^2=1$.
 \end{theorem}
-For the scalar rotation, $Ru=\xi_{\rm rot}\otimes u =(-\xi_{\rm
-rot})\otimes Lu$ since $Lu=-u$, so the fixed state in condition~(2)
-is $-\xi_{\rm rot}$. For \code{withReference}, the return space still
-has dimension $m=1$, but the first two exits are
+
+To see why agreement forces this factorization, give the coherent
+loop a unit input $u$. A measurement along any direction orthogonal
+to $Lu$ has probability zero. In the measured loop each exit
+contributes its own nonnegative probability to that same outcome.
+For their sum to be zero, each $x_k u$ must lie along $Lu$.
+If an exit multiplied two basis outputs by different scalars,
+it would change their relative amplitudes on a superposition of
+those inputs. Thus at each count one scalar works for every input.
+For finitely many exits this also follows from the Kraus
+criterion~\cite[Cor.~2.23]{Watrous18TQI}. Appendix~\ref{app:axis}
+gives the proof for the full sequence.
+
+To check all the exits, we need only the four maps of the body.
+Write $A$ for the immediate exit and $C$ for the part of the first
+call that enters the return wire. On that wire $B$ leads out and $D$
+goes around
+again. The exits in order are therefore
 \[
-x_0=\operatorname{diag}(1,3/5),\qquad
-x_1=\operatorname{diag}(0,-16/25).
+ x_0=A,\qquad x_1=BC,\qquad x_2=BDC,\qquad
+ x_{j+1}=BD^jC\quad(j\ge0).
 \]
-They cannot be multiples of one another, since the first is identity
-on the bypass and the second is zero there. Thus the first two exits
-already certify the difference observed by the Hadamard test in
-Section~\ref{sec:effects}. Agreement also permits a loop to change
-its data. Applying
-$\mathsf X$ only on exit makes every exit a scalar multiple of
-$\mathsf X$ and their sum $-\mathsf X$, so this variant passes.
-Appendix~\ref{app:programs} gives its clauses and a two-section
-cascade that also passes on non-scalar data.
+If there are $m>0$ return values, $D$ is an $m$-by-$m$ matrix. By
+Cayley--Hamilton, every power from $D^m$ onward is a linear
+combination of $I,D,\ldots,D^{m-1}$. Multiplying on the left by
+$B$ and on the right by $C$ expresses every later exit as a linear
+combination of $x_1,\ldots,x_m$. When $m=0$ there is only $A$.
 
-Agreement concerns the specified interface. A channel identifies $I$
-and $-I$, whereas a coherent bypass distinguishes $I\oplus I$ from
-$I\oplus(-I)$. Such a bypass therefore has to be formed before
-channelization, which preserves neither that coherent sum nor its
-trace for arbitrary bodies~\cite[\S~3.3.3]{AndresMartinez22Thesis}.
+We can therefore stop at $x_m$, even when there is no last round.
+At least one of these maps is nonzero, since their span contains
+the unitary $L$. We choose a nonzero entry in one map. For each
+other map, we divide its corresponding entry by the chosen one
+and check whether this ratio works for every entry. With decidable
+equality of exact coefficients, this gives a finite test.
 
-The rank-one Kraus criterion gives $x_k=b_kL$, so $Ru=\xi\otimes Lu$
-and tracing out the fixed count preserves $L\rho L^\dagger$.
-Cayley--Hamilton then puts every later exit in the span of the first
-$m+1$; at $m=0$, only $x_0=L$ remains. Exact coefficients with
-decidable equality give the finite test, using any nonzero exit as
-reference. Appendix~\ref{app:axis} proves the equivalences.
+A counter with $m>0$ values can miss a difference that this test
+detects. An immediate exit and an exit after $m$ returns both leave
+the counter at zero, so their amplitudes add. Measuring the tag
+distinguishes them on the first call.
 
-Figure~\ref{fig:trace-comparison} puts the two constructions beside
-one another. Write $\operatorname{End}(X)$ for the matrix algebra on
-$X$. The lower path uses the classical sum
-$\operatorname{End}(X)\oplus\operatorname{End}(Y)$, whose inputs
-are pairs of positive blocks. It differs from the coherent Hilbert
-sum $X\oplus Y$ used on the upper path. The theorem says exactly when
-closing these different kinds of return gives the same channel on the
-external data.
 \begin{figure}[!htbp]\centering
-\begin{tikzpicture}[kme circuit,>={Stealth[length=1.3mm,width=.9mm]},
-entry/.style={align=center,inner sep=4pt},
-coh/.style={draw=flipback,line width=.7pt,->},
-obs/.style={draw=accentwarm,line width=.7pt,->}]
- \node[entry] (u) at (0,2.35)
-   {$U:X\oplus Y\to X'\oplus Y$\\the unitary body};
- \node[entry] (l) at (4.20,2.35)
-   {$L:X\to X'$\\the coherent loop};
- \node[entry] (e) at (9.00,2.35)
-   {$\chan L:\operatorname{End}(X)\to\operatorname{End}(X')$\\
-    $\rho\mapsto L\rho L^\dagger$};
- \node[entry] (p) at (0,0)
-   {$\Phi_U:\operatorname{End}(X)\oplus\operatorname{End}(Y)$\\
-    $\longrightarrow\operatorname{End}(X')\oplus\operatorname
-{End}(Y)$};
- \node[entry] (m) at (9.00,0)
-   {$\meas:\operatorname{End}(X)\to\operatorname{End}(X')$\\
-    $\rho\mapsto\sum_k x_k\rho x_k^\dagger$};
- \draw[coh] (u.east) -- node[above] {$\Tr^Y$} (l.west);
- \draw[coh] (l.east) -- node[above=3mm] {$V\mapsto\chan V$} (e.west);
- \draw[obs] (u.south) -- node[right,align=left,text=accentwarm]
-   {use classical\\tag blocks} (p.north);
- \draw[obs] (p.east) -- node[below,text=accentwarm]
-   {classical-sum trace over $\operatorname{End}(Y)$} (m.west);
- \draw[hairline,dashed] (e.south) -- (m.north);
- \node[fill=white,font=\Large] at (9.00,1.18) {$\stackrel{?}{=}$};
- \node[align=center] at (4.40,1.18)
-   {For $X\ne0$, equality holds exactly when\\[3pt]
-    $\dim\operatorname{span}\{x_0,\ldots,x_{\dim Y}\}=1$.};
+\begin{tikzpicture}[kme circuit,>={Stealth[length=1.45mm,width=1mm]},
+ route/.style={->,line width=.7pt,rounded corners=3pt},
+ action/.style={above=2pt,inner sep=1pt},
+ result/.style={anchor=west,inner xsep=4pt}]
+ \node[kme gate] (body) at (0,0) {$U$};
+ \node (gate) at (4.40,.72) {$L=\Tr^Y(U)$};
+ \node (call) at (4.40,-.72) {$\Phi_U$};
+ \node[result] (coherent) at (8.9,.72)
+   {$\chan L(\rho)=L\rho L^\dagger$};
+ \node[result] (measured) at (8.9,-.72)
+   {$\meas(\rho)=\sum_k x_k\rho x_k^\dagger$};
+
+ \node[draw=hairline,rounded corners=2pt,inner xsep=3pt,inner
+ ysep=5pt,
+       fit=(coherent)(measured)] (outputs) {};
+ \node[anchor=south,text=ink] at (outputs.north) {returned data};
+ \draw[route,flipback] (body.north) |- node[pos=.73,action]
+   {close the return wire} (gate.west);
+ \draw[route,accentwarm] (body.south) |- node[pos=.73,action]
+   {measure the tag} (call.west);
+ \draw[route,flipback] (gate.east) -- node[action]
+   {use the gate as a channel} (outputs.west |- coherent.west);
+ \draw[route,accentwarm] (call.east) -- node[action]
+   {feed back the return block} (outputs.west |- measured.west);
 \end{tikzpicture}
-\caption{Two constructions from one body. The upper path closes
-amplitudes before taking a data channel. The lower path uses
-classical tag alternatives and then closes their return.
-Theorem~\ref{thm:axis} decides whether the two resulting channels
-coincide.}\label{fig:trace-comparison}
-\Description{The coherent and classical trace paths end in two
-separately displayed channels, compared by the finite exit-span
-criterion. All maps have explicit domains and codomains.}
+\caption{Closing $U:X\oplus Y\to X'\oplus Y$ in $\mathsf{Unitary}$
+gives $L:X\to X'$. Measuring the tag gives
+$\Phi_U:\operatorname{End}(X)\oplus\operatorname{End}(Y)\to
+\operatorname{End}(X')\oplus\operatorname{End}(Y)$, whose return
+we close by the classical-sum trace. Both outputs are channels in
+$\mathsf{CPTP}$.}\label{fig:trace-comparison}
+\Description{Two routes leave the same unitary body. The upper route
+closes the return wire before forming a channel. The lower route
+measures the tag on each call and feeds back its return block. The
+right column gives the output of each channel on the same input.}
 \end{figure}
-\FloatBarrier
 
-\paragraph{A program transformation.}
-The Hadamard caller compares the loops as channels, using the
-syntactic embedding $E(\omega)=\mathsf{arr}(\mathsf{arr}\,\omega)$,
-which denotes $\chan{\sem\omega}$. Let
-$\mathsf{prep}_+:1\rightsquigarrow\kw{Qubit}$ allocate $0$, remove
-the unit factor and apply $H$, and let
-$\mathsf{read}_Z:\kw{Qubit}\rightsquigarrow\kw{Qubit}$ be the
-derived basis measurement, whose output records the classical
-outcome. The context
-\[
- \mathcal C[-]=\mathsf{prep}_+\,;\,[-]\,;\,E(H)\,;\,\mathsf{read}_Z
-\]
-has hole type $\kw{Qubit}\rightsquigarrow\kw{Qubit}$ and result type
-$1\rightsquigarrow\kw{Qubit}$. Plugging in
-$E(\kw{trace}\ \code{withReference})$ gives outcome $1$ with
-probability one, while $\kw{while}\ \code{withReference}$ gives it
-with probability $1/5$.
+\paragraph{Replacing the loop in a program.}
+When $x_k=b_kL$, the upper path in Figure~\ref{fig:trace-comparison}
+adds the exits to give $(\sum_k b_k)L=L$. On the lower path, exit
+$k$ contributes $|b_k|^2 L\rho L^\dagger$. These weights sum to one,
+so the caller receives $L\rho L^\dagger$ along either path.
 
-The permitted observers are channel contexts with one hole of type
-$a\rightsquigarrow b$. For fixed closed channels $h,h_j$, their
-grammar is
-\[
-\begin{aligned}
- \mathcal C&::=[-]\mid h;\mathcal C\mid\mathcal C;h
-     \mid h\otimes\mathcal C\mid\mathcal C\otimes h\\
- &\quad\mid\mathsf{case}\bigl(\Psi_i;\mathcal C,
-(\Psi_j;h_j)_{j\ne i}\bigr).
-\end{aligned}
-\]
-The last constructor uses an instrument with a finite outcome set
-$J$ and a chosen branch $i\in J$. Its completely positive maps
-$\Psi_j:\operatorname{End}(\sem c)\to
-\operatorname{End}(\sem{c_j})$ have output traces summing to one
-on a density input. The trace of $\Psi_j(\rho)$ is the probability of
-outcome $j$. Branch $i$ has payload type $c_i$, which the selected
-context accepts; the other continuations accept their respective
-$c_j$, and all branches return the same final type. The judgment
-$a\rightsquigarrow b\vdash\mathcal C:c\rightsquigarrow d$ means
-that plugging a program of the hole type gives a channel
-$c\rightsquigarrow d$. Sequence matches intermediate types, while
-tensor pairs the two inputs and the two outputs. The full rules are
-in Appendix~\ref{app:axis}. Branching uses classical outcomes, so
-these contexts supply no coherent control or coherent trace of the
-channel hole.
+A program with a hole for this channel is a \emph{channel context}.
+Equal channels give the same output probabilities even if the
+caller keeps a reference entangled with the input or runs the loop
+on one branch of a measurement. If they differ, some input and an
+output measurement distinguish them. A coherent bypass belongs to
+the body we test, before we give its channel to the
+caller~\cite[\S~3.3.3]{AndresMartinez22Thesis}.
 
-More generally, on density input $\rho$ an output test $0\le P\le I$
-has probability
-$\tr(P\,\sem{\mathcal C[h]}(\rho))$. Two channel programs are
-\emph{contextually equivalent} when these probabilities agree for
-every well-typed context, input and test. Equality of channels
-preserves them by induction on the grammar, including an entangled
-reference in a tensor factor. Conversely, unequal channels have a
-distinguishing input and output test already in the empty context.
-\Needspace{5\baselineskip}
-\begin{corollary}[Replacement]\label{cor:replace}
-Dropping the exact record always gives \kw{while}. On nonempty
-external data, an embedded \kw{trace} may replace \kw{while} in all
-channel contexts exactly when the test of Theorem~\ref{thm:axis}
-passes. Then dropping any finite clock gives the same channel. On
-empty external data all these data channels coincide.
+\begin{corollary}[Replacement in a caller]\label{cor:replace}
+Let $\beta$ be a finite iso with $m$ basis values on its return
+wire. Hiding the exact count always gives the measured loop. On a
+nonempty external input type, the measured loop may replace the
+coherent loop's data channel in every channel context if and only
+if $x_0,\ldots,x_m$ span a line. In that case, hiding the counter
+in $\mathsf{count}_K\,\beta$ gives the same channel for every
+$K\ge1$.
+On an empty external input type all these channels agree.
 \end{corollary}
-The exact record lies outside the finite grammar.
-Appendix~\ref{app:axis} covers semantic continuations that carry it
-without inspection and drop it on return.
-
-Reading a fixed count still adds an observable output. Even when
-$K=\dim Y$, a single clock can miss a failure of agreement.
-On an external qubit, a permutation can have only $x_0=\ket0\bra0$
-and
-$x_K=\ket1\bra1$ as nonzero exits. Both receive clock label $0$,
-so discarding that clock preserves $\ket+$, whereas measuring each
-call gives $I/2$. Appendix~\ref{app:axis} gives the permutation.
 
 \section{A count without a counter}\label{sec:phase}
 The agreement test concerns channels on returned data. We now keep
@@ -2016,7 +2274,7 @@ sep=1pt,font=\small}]
 \[
  \begin{aligned}
  \Theta_{\rm rot}(z)&=\frac{t-z}{1-tz},\\
- \Theta_{\rm ref}(z)&=\operatorname{diag}(1,\Theta_{\rm rot}(z)).
+ \Theta_{\rm bypass}(z)&=\operatorname{diag}(1,\Theta_{\rm rot}(z)).
  \end{aligned}
 \]
 \end{minipage}
@@ -2028,8 +2286,8 @@ sep=1pt,font=\small}]
 right, exit pair $k,j$ carries $z^{k-j}T_{kj}$. Averaging over the
 circle retains only the orange diagonal. The same cancellation
 applies to later exits. The displayed families $\Theta_{\rm rot}$ and
-$\Theta_{\rm ref}$ belong to \code{guardRound} and
-\code{withReference}.}\label{fig:75-phased-sheet}\label
+$\Theta_{\rm bypass}$ belong to \code{guardRound} and
+\code{bypassRound}.}\label{fig:75-phased-sheet}\label
 {fig:phase-grid}
 \Description{The phase-marked return loop stands beside the matrix of
 cross terms between exit counts. Its diagonal survives phase
@@ -2165,8 +2423,8 @@ probabilities. The table beside the circuit instead squares the
 summed return amplitudes, giving coherent weights $4$ and $1/4$.
 Averaging $Q(z)$ over all phases recovers the measured mean.
 
-The bypass in \code{withReference} makes no return, giving
-$N_{\rm ref}=\operatorname{diag}(0,1)$. Its measured mean on
+The bypass in \code{bypassRound} makes no return, giving
+$N_{\rm bypass}=\operatorname{diag}(0,1)$. Its measured mean on
 $\ket+$ is therefore $1/2$, the equal-weight average of bypass
 count zero and scalar-loop mean one.
 
@@ -2212,21 +2470,23 @@ $N(X)=(X,0)$ preserves the sum
 trace~\cite{JSV96,MalherbeScottSelinger12Partial}.
 Appendix~\ref{app:diagrams} draws the typed components of this
 bending.
-\begingroup\setlength{\intextsep}{6pt}
+\begingroup\setlength{\intextsep}{0pt}
 \begin{programfigure}
+\captionsetup{skip=4pt}
 \begin{tikzpicture}[kme circuit,
 stage/.style={draw=hairline,rounded corners=2pt,fill=white,
 align=center,text width=2.55cm,minimum height=1.05cm,inner sep=4pt}]
  \node[stage] (p) at (0,0)
    {$\Pi\quad\mathbf{FinBij}$\\$a\leftrightarrow b$ bijections};
  \node[stage,draw=flipback] (u) at (3.40,0)
-   {$\mathsf{iso}\quad\mathbf U$\\$a\leftrightarrow b$ unitaries};
+   {$\mathsf{iso}\quad\mathsf{Unitary}$\\$a\leftrightarrow b$
+   unitaries};
  \node[stage,draw=equalcount] (i) at (6.80,0)
-   {$\mathsf{iso}_a\quad\mathbf I\simeq R[\mathbf
-   U]$\\$a\rightarrowtail b$ isometries};
+   {$\mathsf{iso}_a\quad\mathsf{Isometry}$\\$a\rightarrowtail b$
+   isometries};
  \node[stage,draw=accentwarm] (q) at (10.20,0)
-   {$\mathsf{iso}_a^\chi\quad\mathbf Q\simeq L[\mathbf
-   I]$\\$a\rightsquigarrow b$ channels};
+   {$\mathsf{iso}_a^\chi\quad\mathsf{CPTP}$\\$a\rightsquigarrow b$
+   channels};
  \draw[->] (p.east) -- (u.west);
  \draw[->] (u.east) -- (i.west);
  \draw[->] (i.east) -- (q.west);
@@ -2252,6 +2512,8 @@ align=center,text width=2.55cm,minimum height=1.05cm,inner sep=4pt}]
 \caption{Finite source extensions and coherent trace laws for
 endomorphisms~\cite
 {HeunenKaarsgaard22Effects,JSV96,Bartha14QuantumTuringAutomata}.
+Allocation gives $R[\mathsf{Unitary}]\simeq\mathsf{Isometry}$
+and hiding gives $L[\mathsf{Isometry}]\simeq\mathsf{CPTP}$.
 Here $L=\sum_kx_k$ for each body, with returns kept in that body and
 canonical
 reassociations.}\label{fig:pi-constructions}\label{fig:sheet-laws}
@@ -2271,11 +2533,13 @@ takes full responsibility for its content.
 
 \par\addvspace{\smallskipamount}\noindent\textbf{Data-Availability
 Statement.}
-The paper and appendix contain rules, proofs and examples.
+The finite iso interpreter uses floating-point arithmetic and cyclic
+recording. We intend to submit it and its examples for Artifact
+Evaluation.
 
 \clearpage
 
-\begin{thebibliography}{23}
+\begin{thebibliography}{28}
 
 
 \ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
@@ -2469,15 +2733,24 @@ Science}}
 \bibinfo{person}{Robin
 Kaarsgaard}.} \bibinfo{year}{2022}\natexlab{}.
 \newblock \showarticletitle{Quantum information effects}.
-\newblock \bibinfo{journal}{\emph{Proceedings of the ACM on
-Programming
-Languages}} \bibinfo{volume}{6}, \bibinfo{number}{POPL}
+\newblock \bibinfo{journal}{\emph{Proc. ACM Program. Lang.}}
+\bibinfo{volume}{6}, \bibinfo{number}{POPL}
 (\bibinfo{year}{2022}), \bibinfo{pages}{2:1--2:27}.
 \newblock
 \showeprint[arxiv]{2107.12144}
 \href{https://doi.org/10.1145/3498663}{doi:\nolinkurl
 {10.1145/3498663}}
 
+
+\bibitem[Huot and Staton(2019)]{HuotStaton18}
+\bibfield{author}{\bibinfo{person}{Mathieu Huot} {and}
+\bibinfo{person}{Sam Staton}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Universal Properties in Quantum Theory}.
+In \emph{Proceedings of the 15th International Conference on Quantum
+Physics and Logic (QPL 2018)}, EPTCS~287, 213--223.
+\newblock
+  \href{https://doi.org/10.4204/EPTCS.287.12}
+  {doi:\nolinkurl{10.4204/EPTCS.287.12}}
 
 \bibitem[James and Sabry(2013)]{JamesSabry13Interpreters}
 \bibfield{author}{\bibinfo{person}{Roshan~P. James} {and}
@@ -2571,6 +2844,22 @@ Algebra}}
 {10.1016/j.jpaa.2012.03.026}}
 
 
+\bibitem[Microsoft(2025)]{QSharpDocsLoops}
+Microsoft. 2025. Conditional loops in Q\#. \emph{Microsoft Learn}.
+\newblock
+\begingroup
+\endlinechar=-1
+\url{https://learn.microsoft.com/en-us/azure/quantum/user-guide/
+language/expressions/conditionalloops}
+\endgroup.
+
+\bibitem[OpenQASM(n.d.)]{OpenQASMClassicalInstructions}
+OpenQASM. Classical instructions. \emph{OpenQASM Language
+Specification},
+section on while loops.
+\newblock
+  \url{https://openqasm.com/language/classical.html#while-loops}.
+
 \bibitem[Raymer and McKinstrie(2013)]{RaymerMcKinstrie13Cavity}
 \bibfield{author}{\bibinfo{person}{M.~G. Raymer} {and}
 \bibinfo{person}{C.~J.
@@ -2603,6 +2892,28 @@ control}. In \bibinfo{booktitle}{\emph{FoSSaCS 2018}}.
 \href{https://doi.org/10.1007/978-3-319-89366-2_19}{doi:\nolinkurl
 {10.1007/978-3-319-89366-2_19}}
 
+
+\bibitem[Smith(1960)]{Smith60LifetimeMatrix}
+\bibfield{author}{\bibinfo{person}{Felix T. Smith}.}
+\bibinfo{year}{1960}\natexlab{}.
+\newblock \showarticletitle{Lifetime Matrix in Collision Theory}.
+\newblock \emph{Physical Review} 118, 1 (1960), 349--356.
+\newblock
+  \href{https://doi.org/10.1103/PhysRev.118.349}
+  {doi:\nolinkurl{10.1103/PhysRev.118.349}}
+
+\bibitem[Wang et~al\mbox{.}(2025)]{Wang25Interleaver}
+Songli Wang, Yuyang Wang, Swarnava Sanyal, Robert Parsons, Xingchen
+Ji,
+Yoshitomo Okawachi, Xiang Meng, Michal Lipson, Alexander Gaeta, and
+Keren Bergman. 2025.
+\newblock Automated tuning of a ring-assisted MZI-based interleaver
+for
+Kerr frequency combs.
+\newblock \emph{Optics Letters} 50, 2 (2025), 698--701.
+\newblock
+  \href{https://doi.org/10.1364/OL.546772}
+  {doi:\nolinkurl{10.1364/OL.546772}}
 
 \bibitem[Watrous(2018)]{Watrous18TQI}
 \bibfield{author}{\bibinfo{person}{John Watrous}.}
@@ -2655,9 +2966,8 @@ in quantum programming}.
 \newblock \showarticletitle{Quantum register machine: efficient
 implementation
 of quantum recursive programs}.
-\newblock \bibinfo{journal}{\emph{Proceedings of the ACM on
-Programming
-Languages}} \bibinfo{volume}{9}, \bibinfo{number}{PLDI}, Article
+\newblock \bibinfo{journal}{\emph{Proc. ACM Program. Lang.}}
+\bibinfo{volume}{9}, \bibinfo{number}{PLDI}, Article
   \bibinfo{articleno}{180} (\bibinfo{year}{2025}),
   \bibinfo{numpages}{26}~pages.
 \newblock
@@ -2675,7 +2985,8 @@ Languages}} \bibinfo{volume}{9}, \bibinfo{number}{PLDI}, Article
 \centering
 \(\begin{aligned}
 a,b &::= 0\mid 1\mid a+b\mid a\otimes b\\ v &::= *\mid
-x\mid\mathrm{left}\ v\mid\mathrm{right}\ v\mid\langle v,v\rangle
+x\mid\mathrm{left}\ v\mid\mathrm{right}\ v
+\mid\langle v_1,v_2\rangle
        \mid\mathsf{exit}\ v\mid\mathsf{back}\ v\\
 p,q &::= *\mid x\mid\langle p,q\rangle\\ e &::= v\mid
 {\textstyle\sum_i}\alpha_i e_i
@@ -2702,7 +3013,8 @@ This rewrite preserves payloads and nesting, and is performed before
 matching or typing by the core rules below. The remaining executable
 abbreviations are those of Section~\ref{sec:iso}: \kw{Unit},
 \code{unit}, \kw{Qubit} and its basis values, bracketed scalar
-combinations, flow composition and \code{on} application. Listings
+combinations, combinator composition and \code{on} application.
+Listings
 typeset the source token \code{<->} as $\leftrightarrow$ and pair
 delimiters \code{<}, \code{>} as $\langle$, $\rangle$.
 
@@ -2774,8 +3086,11 @@ $\Delta\vdash v:a$ when a basis pattern is well typed. The rules are
  \isorule{\Delta_1\vdash v:a\\\Delta_2\vdash w:b}
        {\Delta_1,\Delta_2\vdash\langle v,w\rangle:a\otimes b}.
 \end{mathpar}
-For a context $\Delta$, let $\mathcal B(\Delta)$ be its basis
-assignments and $\mathcal H(\Delta)=\mathbb C^{\mathcal B(\Delta)}$.
+The basis assignments for a context $\Delta$ form
+$\mathcal B(\Delta)=\prod_{(x:a)\in\Delta}\mathcal B(a)$.
+The empty product contains the unique empty assignment. If any
+variable has an empty basis, the product is empty. Write
+$\mathcal H(\Delta)=\mathbb C^{\mathcal B(\Delta)}$.
 A product pattern $p$ with $\Delta\vdash p:b$ gives a bijection
 $\gamma\mapsto p[\gamma]$ from $\mathcal B(\Delta)$ to $\mathcal
 B(b)$. For unit it maps the unique empty assignment to $*$. For a
@@ -2860,7 +3175,8 @@ For $M\in\C^{\mathcal B(b)\times\mathcal B(a)}$ the atom rule is
  \frac{|\mathcal B(a)|=|\mathcal B(b)|\qquad M^\dagger M=I}
       {[M]:a\leftrightarrow b}.
 \]
-Omit the common $\Sigma$ in the following rules. A bound name has the
+Write $u,v$ for reversible programs and omit the common $\Sigma$ in
+the following rules. A bound name has the
 type at its declaration. For finite types we have the structural isos
 of $\Pi$ as abbreviations for the corresponding permutation clauses,
 including identity, symmetries and distributivity. The reversible
@@ -3020,14 +3336,11 @@ the linear denotation; the trace case uses the feedback theorem.
 Linearity then gives the same result on arbitrary superpositions,
 including assignments entangled with a retained factor.
 
-The executable listings use a finite clause frontend and a flow
-frontend for the surrounding combinators. Their flow spellings are
-$;$ for sequence, $+$ for direct sum and $*$ for tensor. Adjoint is
-available mathematically by transposing and conjugating the ground
-table. Unit and nested local patterns, the empty type and the empty
-table belong to the mathematical grammar; the listings use variable
-or flat-tuple local bindings and inhabited finite types. Native
-numerical evaluation uses floating-point coefficients and may refuse
+The executable accepts unit and nested local patterns, empty types
+and tables, and the \code{dagger} combinator for adjoint. Its
+combinator spellings are $;$ for sequence, $+$ for direct sum and $*$
+for tensor. Native numerical evaluation uses floating-point
+coefficients and may refuse
 a coupled near-unit pivot; it is not the exact field-arithmetic
 procedure of Proposition~\ref{prop:elim}.
 
@@ -3043,7 +3356,7 @@ for $(1+1)\otimes a$. Thus controlling a global phase can change a
 relative phase. The types above deliberately do not provide this
 operation on an arbitrary channel.
 
-\subsection{Effect extensions}
+\subsection{Effect extensions}\label{app:effect-rules}
 \paragraph{Syntax.}
 Write $u$ for a reversible iso, $v$ for an isometry program and $h$
 for a channel program. The two upper grammars are
@@ -3091,21 +3404,29 @@ round.
         {\mathsf{while}_c\,\beta:a\rightsquigarrow b}.
 \end{mathpar}
 \paragraph{Denotation.}
-An $R[\mathbf U]$ representative $U:X\oplus H\to X'$ exposes
+An $R[\mathsf{Unitary}]$ representative $U:X\oplus H\to X'$ exposes
 $u\mapsto U(u,0)$, identifying changes confined to the unused
-summand. An $L[\mathbf I]$ representative $V:X\to X'\otimes G$
+summand. An $L[\mathsf{Isometry}]$ representative $V:X\to X'\otimes
+G$
 exposes $\rho\mapsto\tr_G(V\rho V^\dagger)$, identifying isometric
 relabelings of the hidden factor and the equivalence relation they
 generate~\cite[Prop.~7, Thm.~22]{HeunenKaarsgaard22Effects}.
 \pic{54-completions}{Allocation exposes an input summand of a larger
 reversible map. Hiding exposes one output factor of an isometry.
 Preprocessing the unused summand or isometrically relabeling the
-hidden factor preserves the exposed map.}{The two diagrams show the
+hidden factor preserves the exposed map. Here $\mathcal
+C=\mathsf{Unitary}$
+in $R[\mathcal C]$ and $\mathcal C=\mathsf{Isometry}$ in $L[\mathcal
+C]$.}{The two diagrams show the
 heap and the garbage and the relations that identify
 representatives.}
-The allocation permutation uses heap $[K-1]\otimes a$. The basis
-copier uses a heap with $|\mathcal B(b)|^2-|\mathcal B(b)|$ basis
-values, completing the diagonal injection to a permutation. An
+For $0\le j<K$, the allocation permutation
+$p_j:a+([K-1]\otimes a)\leftrightarrow[K]\otimes a$ maps
+$\mathrm{left}\,x$ to $\langle j,x\rangle$, taking $[0]=0$.
+Then $\mathsf{alloc}_j=\mathsf{lift}\,p_j$. The basis
+copier for inhabited $b$ uses heap $[|\mathcal B(b)|-1]\otimes b$,
+with $|\mathcal B(b)|^2-|\mathcal B(b)|$ basis values, completing the
+diagonal injection to a permutation. An
 embedded unitary is the same map viewed as an isometry. An embedded
 isometry $V$ is the channel $\chan V$, distinct from the syntactic
 elaboration $\mathcal E_\Sigma$. For $\mathsf{lift}$ and
@@ -3122,7 +3443,7 @@ proving~\eqref{eq:count}. To hide the counter in the displayed
 syntax, compose with $\mathsf{arr}\,\sigma_{[K],b}$ before
 $\mathsf{hide}$. Native \code{count K beta} returns data before
 counter, so its following \code{discard} hides the counter. Appending
-\code{swap} instead gives our displayed order. In the flow frontend,
+\code{swap} instead gives our displayed order. In the executable,
 \code{discard} is the derived first projection,
 $I_a\otimes\mathsf{discard}_b;\mathsf{unit}_\otimes$, rather than the
 whole-register operation $\mathsf{discard}_b:b\rightsquigarrow1$.
@@ -3210,7 +3531,8 @@ flowchart
 semantics~\cite[Prop.~3.10]{GluckKaarsgaard18Flowchart}\cite
 [Prop.~5.3]{KaarsgaardRennela21JIRC}.
 \begin{programfigure}
-\includegraphics[width=.94\linewidth]{figures/48-paths-cycles.pdf}
+\includegraphics
+[width=.94\linewidth]{figures/48-paths-cycles.pdf}
 \caption{A reversible loop with two external paths and an internal
 cycle. The two nonzero exit maps have disjoint domains and their sum
 is a swap.}\label{fig:48-paths-cycles}
@@ -3371,9 +3693,9 @@ every other entry in both its row and column is zero. Hence
 $b_q=c_q=0$, any $\lambda$ solves the wire equation, and the output
 is $Mw$. These cases are exhaustive. In particular $d_q=-1$ or
 $d_q=i$ uses the first branch, with $b_q=c_q=0$; no divergent
-geometric series is invoked. Theorem~\ref{thm:total} applied with
-these remaining ports external proves unitarity of this intermediate
-table in either case.
+geometric series is invoked. This intermediate table is $\Tr^Q(U)$,
+with $E_{\rm in}$ and $E_{\rm out}$ as its external spaces.
+Theorem~\ref{thm:total} proves its unitarity in either case.
 
 Figures~\ref{fig:28-sheets} and~\ref{fig:42-elim-flip} apply this
 calculation to the scalar rotation and the two return patterns of the
@@ -3412,6 +3734,48 @@ resulting emissions, residuals and sums. The squared length
 $|\ell_n|^2$ can fall and rise as later emissions interfere.
 The measured halting weight $p_n$ only increases, because each call
 adds a nonnegative probability.
+\begin{table}[!htbp]\centering
+\small
+\begin{tabular}{c r r r r r}
+\toprule
+ & \multicolumn{2}{c}{one call}
+ & \multicolumn{2}{c}{coherent feedback}
+ & guard measured\\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(l){6-6}
+call $n$ & \shortstack{emitted\\$x_{n-1}$}
+ & \shortstack{still returning\\$r_n$}
+ & \shortstack{sum emitted\\$\ell_n$}
+ & \shortstack{squared length\\$|\ell_n|^2$}
+ & \shortstack{halted so far\\$p_n$}\\
+\midrule
+1 & $\textcolor{flipout}{\tfrac35}$
+  & $\textcolor{flipback}{\tfrac45}$ & $\tfrac35$ & $0.3600$
+  & $\textcolor{accentwarm}{0.3600}$\\[3pt]
+2 & $\textcolor{flipout}{-\tfrac{16}{25}}$
+  & $\textcolor{flipback}{\tfrac{12}{25}}$ & $-\tfrac1{25}$ &
+  $0.0016$
+  & $\textcolor{accentwarm}{0.7696}$\\[3pt]
+3 & $\textcolor{flipout}{-\tfrac{48}{125}}$
+  & $\textcolor{flipback}{\tfrac{36}{125}}$ & $-\tfrac{53}{125}$ &
+  $0.1798$
+  & $\textcolor{accentwarm}{0.9171}$\\[3pt]
+4 & $\textcolor{flipout}{-\tfrac{144}{625}}$
+  & $\textcolor{flipback}{\tfrac{108}{625}}$ & $-\tfrac{409}{625}$ &
+  $0.4282$
+  & $\textcolor{accentwarm}{0.9701}$\\[3pt]
+5 & $\textcolor{flipout}{-\tfrac{432}{3125}}$
+  & $\textcolor{flipback}{\tfrac{324}{3125}}$ & $-\tfrac{2477}{3125}$
+  & $0.6283$
+  & $\textcolor{accentwarm}{0.9893}$\\[3pt]
+$n\to\infty$ & $0$ & $0$ & $-1$ & $1$ & $1$\\
+\bottomrule
+\end{tabular}
+\caption{\code{guardRound} on $\ket*$. Coherent feedback adds
+emissions, while guard measurement adds their squared magnitudes. A
+record keeps emission $x_{n-1}$ with label $n-1$. Only $p_n$ is a
+halting probability; decimal entries are rounded to four
+places.}\label{tab:rounds}
+\end{table}
 \paragraph{A table and an unknown gate.} There is also no uniform
 approximation guarantee for an unknown body given only as a gate. For
 a scalar rotation with cosine $t$ the trace is $t-(1-t^2)/(1-t)=-1$
@@ -3470,8 +3834,8 @@ e^{-ik\varphi}\Theta(e^{i\varphi})\,d\varphi .
 Expanding $\Theta(z)\rho\Theta(z)^\dagger$ and integrating term by
 term removes all unequal indices, proving~\eqref{eq:haar}.
 
-Definition~\ref{def:three-loops} in Section~\ref{sec:effects}
-collects the resulting maps on the reference example. For the
+The table at the end of Section~\ref{sec:effects} gives these maps
+for \code{bypassRound}. For the
 classical trace, let
 $\theta(\rho,\sigma)=\operatorname{diag}(\rho,\sigma)$ insert the
 two operator blocks and let $\varphi$ extract the diagonal output
@@ -3531,9 +3895,17 @@ This proves all implications.
 
 \paragraph{Channel contexts.}
 Fix the hole type $a\rightsquigarrow b$ and abbreviate it by
-$\mathcal H$ to the left of a context judgment. The single hole,
-sequential and tensor constructors in Section~\ref{sec:agreement}
-have rules
+$\mathcal H$ to the left of a context judgment. For fixed closed
+channels $h,h_j$, the contexts are generated by
+\[
+\begin{aligned}
+ \mathcal C&::=[-]\mid h;\mathcal C\mid\mathcal C;h
+     \mid h\otimes\mathcal C\mid\mathcal C\otimes h\\
+ &\quad\mid\mathsf{case}\bigl(\Psi_i;\mathcal C,
+(\Psi_j;h_j)_{j\ne i}\bigr).
+\end{aligned}
+\]
+The rules for the hole, sequence and tensor are
 \begin{mathpar}
  \isorule{}{\mathcal H\vdash[-]:a\rightsquigarrow b}
  \and\isorule{h:e\rightsquigarrow c\\\mathcal H\vdash\mathcal
@@ -3793,7 +4165,8 @@ The command returns $\ket*$, since $f(1)^2=1$. A period-two clock
 also returns label $0$: both $f(1)^2$ and $f(-1)^2$ are one, so the
 odd residue sum is zero.
 
-{\renewcommand{\picdir}{figures}\pic{72-peel}{Two specified scalar
+{\renewcommand{\picdir}{figures}\pic
+{72-peel}{Two specified scalar
 sections give response $f(z)^2$. The numerical matrix is the open
 body of this cascade in external-first order.}{Two rotation loops and
 their rational three-by-three open body.}}
@@ -3911,7 +4284,8 @@ continuing joint components.}
 columns of the payload-flipping body, in external-first order. This
 is $R_\theta\otimes\mathsf X$.}{An expanded four-clause matrix has
 orthonormal input columns.}}
-{\renewcommand{\picdir}{figures}\pic{05-flip-walk}{On input $\ket0$,
+{\renewcommand{\picdir}{figures}\pic
+{05-flip-walk}{On input $\ket0$,
 the left panel adds exit amplitudes in the data space. The right
 panel keeps the exit rounds distinct and plots their probabilities.
 Calls are numbered from one.}{The amplitude path approaches minus the
@@ -3919,7 +4293,7 @@ input. The probability bars are nonnegative and the remaining weight
 decreases at every round.}}
 
 
-\paragraph{Which exits does the flip add?}
+\paragraph{The exit maps of \code{flipRound}.}
 Put $t=3/5$ and $s=4/5$. The two clauses of \code{flipRound} give
 $A=t\mathsf X$, $C=s\mathsf X$ on entry and $B=-s\mathsf X$,
 $D=t\mathsf X$ on return. Hence $x_0=t\mathsf X$ and $x_1=BC=-s^2 I$.
@@ -3948,8 +4322,8 @@ groups all emissions into their even and odd bins.}
 
 The numerical elimination also gives a finite calculation of this
 loop. Unlike \code{guardRound}, it has two returning basis patterns.
-Figure~\ref{fig:42-elim-flip} in the main text gives both elimination
-steps and every new coefficient.
+Figure~\ref{fig:42-elim-flip} in the main text shows the remaining
+clauses after each elimination.
 \Needspace{10\baselineskip}
 The first substitution in Figure~\ref{fig:42-elim-flip} removes
 \code{back 0} and leaves coefficient $(3/5)^2=9/25$ on the remaining
@@ -4032,10 +4406,11 @@ f_\theta(M)=M(cI-M)(I-cM)^{-1}.
 \]
 On an eigenvector of $M$ with eigenvalue $w$, the equation
 $f_\theta(w)=1$ reduces to $w^2-2cw+1=0$, while $f_\theta(w)=-1$
-reduces to $w^2=1$. Hence taking $M$ to be the real rotation of angle
-$-\theta$ gives the identity. When $|c|=1$, the guard never enters
-and the immediate exit gives the same conclusion for that rotation.
-Taking $M=\mathsf X$ gives $-I$ for $|c|<1$.
+reduces to $w^2=1$. The eigenvalues of $R_{-\theta}$ are $c\mp is$,
+the roots of the first polynomial, so $f_\theta(R_{-\theta})=I$. When
+$|c|=1$, the guard never enters and the immediate exit gives the same
+conclusion for that rotation. The eigenvalues of $\mathsf X$ are
+$\pm1$, so $f_\theta(\mathsf X)=-I$ for $|c|<1$.
 
 Here is the inverse-rotation instance at $c=3/5$, including its
 invocation. The first declaration supplies $M=R_{-\theta}$; the
@@ -4338,7 +4713,8 @@ exits immediately. Control $1$ flips $c$ twice and exits after one
 return. The exit operators are $\ket0\bra0$ and $\ket1\bra1$, whose
 sum is the identity on the control. These computations even have
 different types of interpretation.
-{\renewcommand{\picdir}{figures}\pic{09-two-traces}{A tensor-factor
+{\renewcommand{\picdir}{figures}\pic
+{09-two-traces}{A tensor-factor
 partial trace and a summand feedback trace of controlled-$\mathsf X$
 evaluate different diagrams.}{The left computation produces twice a
 projection, while the right produces identity.}}
@@ -4442,7 +4818,8 @@ product gives the convolution $\sum_{j=0}^k x_{k-j}^{(2)}x_j^{(1)}$
 at total count $k$. The adjoint of a coherent loop is the loop of the
 adjoint body: its blocks give exactly $x_k^\dagger$ as exits and the
 series is absolutely convergent (Figure~\ref{fig:65-dagger}).
-{\renewcommand{\picdir}{figures}\pic{40-pi-trace}{Distributivity
+{\renewcommand{\picdir}{figures}\pic
+{40-pi-trace}{Distributivity
 makes the guard a summand. A case with a separate untouched arm
 distributes over the trace of the other arm.}{A guard is carried into
 a sum, and one branch remains outside the loop.}}
@@ -4454,12 +4831,14 @@ internal wires.}
 sliding, superposing and vanishing are typed equations for coherent
 loops. In panel (a), $P,P\prime:X\to X$.}{String diagrams depict four
 identities of the additive trace.}}
-{\renewcommand{\picdir}{figures}\pic{64-yanking}{The swap is between
+{\renewcommand{\picdir}{figures}\pic
+{64-yanking}{The swap is between
 two copies of $X$. Its coherent trace returns the input. For $\dim
 X>0$ and $K\ge2$, a recording loop distinguishes one return from an
 immediate exit.}{Yanking the coherent wire and the wire with a clock
 produce different record labels.}}
-{\renewcommand{\picdir}{figures}\pic{65-dagger}{Reversing a coherent
+{\renewcommand{\picdir}{figures}\pic
+{65-dagger}{Reversing a coherent
 body exchanges entry and exit and takes the adjoint of each exit
 amplitude.}{The reflected coherent trace computes the adjoint of the
 first.}}
@@ -4714,9 +5093,11 @@ coherent sum.}
 
 
 Putting the bypass beside the ring gives the exits of
-\code{withReference}. Prepare its external qubit in $\ket+$, run the
-two arms, and apply $H$ to compare them. At resonance $z=1$, the
-single-frequency response is $-1$ and the difference port has
+\code{bypassRound}. Prepare its external qubit in $\ket+$, run the
+two paths, and apply $H$ to compare them. At a frequency for which
+one trip around the ring brings the wave back in phase with itself,
+the round-trip factor is $z=1$. This is resonance. The ring response
+is then $-1$ and the difference port has
 probability $|1-(-1)|^2/4=1$. For a short pulse the first time bin
 contributes $(1-t)^2/4$ to this port, and the later bins contribute
 their probabilities separately:
@@ -4743,7 +5124,7 @@ For a fixed $|z|=1$, the phase iso $P_z^c=\{s\leftrightarrow z\cdot
 s\}_{s\in\mathcal B(c)}:c\leftrightarrow c$ gives the marked source
 body $\beta;(I_b\oplus P_z^c)$. The bypass caller is
 \[
-H;\mathsf{trace}_1\bigl(\code{withReference}; (I_{\kw{Qubit}}\oplus
+H;\mathsf{trace}_1\bigl(\code{bypassRound}; (I_{\kw{Qubit}}\oplus
 P_z^1)\bigr);H.
 \]
 Thus the phase variation used in the body of the paper is an ordinary
