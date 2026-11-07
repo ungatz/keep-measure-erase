@@ -472,9 +472,6 @@ forgetting it. Forgetting gives the coherent data exactly when history is indepe
 With decidable coefficient equality, a compiler can test this. Finally, an ideal ring resonator computes the scalar trace.
 For any given finite unitary body, a lossless optical multiport with
 its return ports fed back computes the trace at a chosen frequency.
-This gives the trace a physical meaning that recent work had left open,
-and it opens a new front for quantum programming: loops that run as
-optical feedback.
 \end{abstract}
 \maketitle
 \hypersetup{citecolor=ink,linkcolor=ink,urlcolor=muted}
@@ -506,9 +503,9 @@ goes around the ring and splits again each time it comes back.
 Some light leaves after one trip, some after
 two, some after a hundred. Under steady illumination at a single
 frequency, all these contributions reach the same outgoing mode, so
-their amplitudes add~\cite[Eq.~(6)]{Alsing17RingLoss}. The execution
-formula from geometry of interaction adds the exits of a loop in
-just this way~\cite{AbramskyHaghverdiScott02GoI,Bartha14QuantumTuringAutomata}.
+their amplitudes add~\cite[Eq.~(6)]{Alsing17RingLoss}. In this plane-wave reading
+of feedback~\cite[\S~5.3]{AndresMartinez22Thesis}, the execution formula of
+geometry of interaction adds the exits that reach this mode~\cite{AbramskyHaghverdiScott02GoI,Bartha14QuantumTuringAutomata}.
 \end{minipage}\hfill
 \begin{minipage}[c]{.28\linewidth}\centering
 \begin{tikzpicture}[x=8.1mm,y=8.1mm,>={Stealth[length=1.2mm,width=.85mm]},
@@ -540,7 +537,7 @@ Measuring the guard on each round tells an early exit from a late one.
 Arrival time can do the same in the ring. Send in a pulse shorter
 than one round trip. The pulse that goes straight through has passed the
 output before the first return arrives.
-Each further trip gives a separate pulse~\cite[Eqs.~(30)--(33)]{RaymerMcKinstrie13Cavity}.
+Each further trip gives a separate pulse~\cite[Eqs.~(30)--(33)]{RaymerMcKinstrie13Cavity}~\cite[\S~3.4]{AndresMartinez22Thesis}.
 
 A quantum language has three choices for what to do with a loop's history:
 \begin{itemize}
@@ -556,7 +553,7 @@ constructs, and a language that provides only one has chosen for its
 programmers.
 
 We make this choice explicit in iso, a reversible language in the
-$\Pi$ family. We write the body once using symmetric pattern-matching
+$\Pi$ family~\cite{CaretteEtAl24}. We write the body once using symmetric pattern-matching
 clauses~\cite[\S\S~3--5]{SabryValironVizzotto18}, with an exit and a
 back edge, and close it in three ways. The coherent loop
 \code{trace} connects the back edge, $\mathsf{count}_K$ counts
@@ -587,9 +584,8 @@ can use:
   circulates and the input comes back with its sign flipped.
 
 \item \textbf{An ideal ring realizes the scalar loop.}
-  Fairbanks and Selinger ask whether a device can take the trace of a
-  unitary supplied as a black box~\cite[App.~B]{FairbanksSelinger25Traces}.
-  For a given matrix, we can build its optical network.
+  Fairbanks and Selinger ask about tracing a black-box unitary~\cite[App.~B]{FairbanksSelinger25Traces}.
+  We build the network from its matrix.
   The ring is a familiar model of feedback~\cite{Czachor19Ring}. Each
   trip gives the corresponding exit amplitude of our scalar \code{trace}. For a frequency-independent coupler and phase proportional
   to frequency, the circulating weight for unit input times the round-trip
@@ -1807,14 +1803,13 @@ Without the counter, all exits reach one output and their amplitudes add.}
 \Description{The same counting loop drawn closed and unrolled, beside the coherent loop.
 The successor acts only on the return. The three exits carry zero, one and two.}
 \end{programfigure}
-To hide the counter we swap it into the last position and apply $\mathsf{hide}$.
-Exits with the same label have already added. Allocation followed by a unitary
-gives an isometry $R_K$. With an exact count we get
-$Ru=\sum_k\ket k\otimes x_ku$ in $H_{\rm rec}\otimes X'$, where
-$H_{\rm rec}=\ell^2(\N)$ and $\|Ru\|^2=\sum_k\|x_ku\|^2=\|u\|^2$.
-Embedding the $K$ labels as the first $K$ counts gives $R_K\to R$ in operator
-norm (Appendix~\ref{app:readings}). Arrival time can also distinguish these
-counts~\cite[\S~3.4]{AndresMartinez22Thesis}.
+To hide the counter we swap it to the last position and apply $\mathsf{hide}$.
+Exits with the same label have already added. With an exact count we get
+$Ru=\sum_k\ket k\otimes x_ku$ with $H_{\rm rec}=\ell^2(\N)$. Both $R_K$ and $R$
+are isometries. Embedding the first $K$ labels gives $R_K\to R$ in operator norm
+(Appendix~\ref{app:readings}). Ying's coin loop records a one for each
+return and a zero for the exit. The word $1^k0$ thus records $k$ returns~\cite[Eq.~(34)]{Ying14QuantumRecursion}. Assolini and Di Pierro
+copy the guard into a fresh qubit at each test~\cite[\S~4]{AssoliniDiPierro25Loops}.
 
 In the bounded loop of Yuan et al., an input register says how many
 times to apply an operation. A branch that finishes early executes
@@ -1908,8 +1903,10 @@ For external input $\rho$ and returning input $\sigma$, one call gives
 \]
 Their traces give the probabilities on normalized input. The first call on $(\rho,0)$
 emits $A\rho A^\dagger$. Its return $C\rho C^\dagger$ gives $(BC)\rho(BC)^\dagger$
-on the next exit. For equal external types, Appendix~\ref{app:readings} relates this
-to the test-first loop~\cite[\S~3]{YingFeng10QuantumLoop}.
+on the next exit. Ying and Feng test the guard first~\cite{YingFeng10QuantumLoop}.
+When the external types agree, we run $U$ once and then enter their loop.
+Each unfolding adds one more measured exit. Their sum gives Ying's least
+fixed point~\cite[Prop.~5.1]{Ying11Hoare} (Appendix~\ref{app:readings}).
 
 \paragraph{Adding the measured exits.}
 After $k$ returns, one exit gives \kw{exit} on call $k+1$ while
@@ -2039,10 +2036,10 @@ other map, we divide its corresponding entry by the chosen one
 and check whether this ratio works for every entry. With decidable
 equality of exact coefficients, this gives a finite test.
 
-One finite counter can miss a difference. Suppose $\ket0$ exits unchanged at once
-and $\ket1$ returns $m>0$ times before exiting unchanged
-(Appendix~\ref{app:axis}). A counter modulo $m$ gives both exits label zero,
-so $\ket+$ survives. Measuring the first tag tells the two exits apart and leaves $I/2$.
+Suppose $\ket0$ exits at once and $\ket1$ exits after $m>0$ returns, both unchanged
+(Appendix~\ref{app:axis}). A counter modulo $m$ labels both exits zero, so $\ket+$
+survives. Measurement leaves $I/2$. The first $m$ exit maps are multiples of
+$x_0$. Only $x_m$ reveals the difference.
 
 \begin{figure}[!htbp]\centering
 \begin{tikzpicture}[kme circuit,>={Stealth[length=1.45mm,width=1mm]},
@@ -2081,6 +2078,8 @@ right column gives the output of each channel on the same input.}
 \end{figure}
 
 \paragraph{Replacing the loop in a program.}
+Andr\'es-Mart\'inez gives an example where the two routes differ~\cite[\S~3.3.3]{AndresMartinez22Thesis}.
+Theorem~\ref{thm:axis} tells us exactly when they agree.
 When $x_k=b_kL$, the upper path in Figure~\ref{fig:trace-comparison}
 adds the exits to give $(\sum_k b_k)L=L$. On the lower path, exit
 $k$ contributes $|b_k|^2 L\rho L^\dagger$. These weights sum to one,
@@ -2090,9 +2089,8 @@ Leaving a hole in the caller where it uses the loop's data channel gives a \emph
 Equal channels give the same output probabilities even if the
 caller keeps a reference entangled with the input or runs the loop
 on one branch of a measurement. If they differ, some input and an
-output measurement distinguish them. A coherent bypass belongs to
-the body we test, before we give its channel to the
-caller~\cite[\S~3.3.3]{AndresMartinez22Thesis}.
+output measurement distinguish them. A coherent bypass belongs to the body we test
+before we give its channel to the caller.
 
 \begin{corollary}[Replacement in a caller]\label{cor:replace}
 Let $\beta$ be a finite iso with $m$ basis values on its return
@@ -2286,20 +2284,19 @@ $\sum_k k\|x_ku\|^2$~\cite[\S~3, Eq.~(8)]{Bourgain14Subspace}.
 Appendix~\ref{app:deriv} sums these means over an orthonormal input basis.
 The sum is $\dim Y_1$, the dimension of the part of the return space that can emit.
 
-At the output, the same phase average keeps
-each term $x_k\rho x_k^\dagger$ and cancels all terms between different exits.
-Averaging thus gives the measured loop on every input.
+If we forget which phase we chose, terms from different counts cancel at the output too.
+The caller gets the data it would get by measuring the guard on every round.
 \begin{equation}\label{eq:haar}
  \frac1{2\pi}\int_0^{2\pi}\Theta(e^{i\varphi})\rho
        \Theta(e^{i\varphi})^\dagger\,d\varphi=\meas(\rho).
 \end{equation}
-With the bypass, the caller reads $1$ with certainty at $z=1$ and with
-probability $1/5$ after averaging. For \code{guardRound} alone, the
-weight changes with the phase, yet the caller always gets \code{unit}.
-The test in Section~\ref{sec:agreement} tells us when every phase setting
-gives the same data channel. If all exit maps are multiples of one gate,
-varying $z$ changes only its overall phase. Conversely, a channel that is
-the same at every setting agrees at $z=1$ with its average, $\meas$.
+With the bypass the caller reads $1$ with certainty at $z=1$, with probability
+$1/2$ for an equal choice of $+1$ or $-1$ (hidden parity), and with probability
+$1/5$ over the full circle. For \code{guardRound} alone the weight varies, yet
+the caller always gets \code{unit}. By Section~\ref{sec:agreement},
+when all exits are multiples of one gate, $z$ changes only its overall phase.
+Conversely, a channel that is the same at every setting agrees at $z=1$ with
+its average, $\meas$.
 
 \section{What the caller can tell}\label{sec:family}
 
@@ -2371,7 +2368,7 @@ searches and brainstorming, verified the results and takes responsibility for th
 \par\addvspace{\smallskipamount}\noindent\textbf{Data Availability.}
 We plan to submit iso and its examples for Artifact Evaluation.
 
-\begin{thebibliography}{32}
+\begin{thebibliography}{38}
 
 
 \ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
@@ -2445,6 +2442,14 @@ and weak while loops}}.
 {10.48550/arXiv.2212.05371}}
 
 
+\bibitem[Assolini and {Di Pierro}(2025)]{AssoliniDiPierro25Loops}
+\bibfield{author}{\bibinfo{person}{Nicola Assolini} {and}
+  \bibinfo{person}{Alessandra {Di Pierro}}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \bibinfo{title}{A Denotational Semantics for Quantum Loops}.
+\newblock \bibinfo{howpublished}{arXiv:2506.23320 [cs.PL]}.
+\newblock
+\href{https://doi.org/10.48550/arXiv.2506.23320}{doi:\nolinkurl{10.48550/arXiv.2506.23320}}
+
 \bibitem[Bartha(2014)]{Bartha14QuantumTuringAutomata}
 \bibfield{author}{\bibinfo{person}{Mikl{\'o}s Bartha}.}
   \bibinfo{year}{2014}\natexlab{}.
@@ -2493,6 +2498,18 @@ Physics}}
 \href{https://doi.org/10.1007/s00220-014-1929-9}{doi:\nolinkurl
 {10.1007/s00220-014-1929-9}}
 
+
+\bibitem[Carette et~al\mbox{.}(2024)]{CaretteEtAl24}
+\bibfield{author}{\bibinfo{person}{Jacques Carette}, \bibinfo{person}{Chris
+  Heunen}, \bibinfo{person}{Robin Kaarsgaard}, {and} \bibinfo{person}{Amr
+  Sabry}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{How to Bake a Quantum {$\Pi$}}.
+\newblock \bibinfo{journal}{\emph{Proceedings of the ACM on Programming
+  Languages}} \bibinfo{volume}{8}, \bibinfo{number}{ICFP}, Article
+  \bibinfo{articleno}{236} (\bibinfo{year}{2024}),
+  \bibinfo{numpages}{29}~pages.
+\newblock
+\href{https://doi.org/10.1145/3674625}{doi:\nolinkurl{10.1145/3674625}}
 
 \bibitem[Childs(2013)]{Childs13Hadamard}
 \bibfield{author}{\bibinfo{person}{Andrew~M. Childs}.}
@@ -2601,6 +2618,18 @@ Science}}
 \newblock
 \href{https://doi.org/10.1007/s00220-008-0698-8}{doi:\nolinkurl{10.1007/s00220-008-0698-8}}
 
+
+\bibitem[Hasegawa(1997)]{Hasegawa97}
+\bibfield{author}{\bibinfo{person}{Masahito Hasegawa}.}
+  \bibinfo{year}{1997}\natexlab{}.
+\newblock \showarticletitle{Recursion from Cyclic Sharing: Traced Monoidal
+  Categories and Models of Cyclic Lambda Calculi}. In
+  \bibinfo{booktitle}{\emph{Typed Lambda Calculi and Applications}}
+  \emph{(\bibinfo{series}{Lecture Notes in Computer Science},
+  Vol.~\bibinfo{volume}{1210})}. \bibinfo{publisher}{Springer},
+  \bibinfo{pages}{196--213}.
+\newblock
+\href{https://doi.org/10.1007/3-540-62688-3_37}{doi:\nolinkurl{10.1007/3-540-62688-3_37}}
 
 \bibitem[Heunen and Kaarsgaard(2022)]{HeunenKaarsgaard22Effects}
 \bibfield{author}{\bibinfo{person}{Chris Heunen} {and}
@@ -2796,6 +2825,24 @@ Information}}.
 \href{https://doi.org/10.1017/9781316848142}{doi:\nolinkurl
 {10.1017/9781316848142}}
 
+
+\bibitem[Ying(2011)]{Ying11Hoare}
+\bibfield{author}{\bibinfo{person}{Mingsheng Ying}.}
+  \bibinfo{year}{2011}\natexlab{}.
+\newblock \showarticletitle{{Floyd--Hoare} Logic for Quantum Programs}.
+\newblock \bibinfo{journal}{\emph{ACM Transactions on Programming Languages and
+  Systems}} \bibinfo{volume}{33}, \bibinfo{number}{6}, Article
+  \bibinfo{articleno}{19} (\bibinfo{year}{2011}), \bibinfo{numpages}{49}~pages.
+\newblock
+\href{https://doi.org/10.1145/2049706.2049708}{doi:\nolinkurl{10.1145/2049706.2049708}}
+
+\bibitem[Ying(2014)]{Ying14QuantumRecursion}
+\bibfield{author}{\bibinfo{person}{Mingsheng Ying}.}
+  \bibinfo{year}{2014}\natexlab{}.
+\newblock \bibinfo{title}{Quantum Recursion and Second Quantisation}.
+\newblock \bibinfo{howpublished}{arXiv:1405.4443 [quant-ph]}.
+\newblock
+\href{https://doi.org/10.48550/arXiv.1405.4443}{doi:\nolinkurl{10.48550/arXiv.1405.4443}}
 
 \bibitem[Ying and Feng(2010)]{YingFeng10QuantumLoop}
 \bibfield{author}{\bibinfo{person}{Mingsheng Ying} {and}
@@ -3716,6 +3763,19 @@ compares the operators produced by finite bodies. The map that folds
 all square-summable sequences into residue classes would be
 unbounded, as would the map that sums their entries at phase one.
 
+In Ying's free coin histories~\cite[Eq.~(34)]{Ying14QuantumRecursion}, let $J\ket k$
+be the word $\ket{1^k0}$ in the sector with $k+1$ coins. These words
+are orthonormal. Thus $J$ is an isometry from the exact register onto
+their closed span. For matched exit maps the recorded state is
+$(J\otimes I)Ru$. Tracing out either record therefore gives the same
+data. This identifies the labels of completed histories. Ying's
+principal-system semantics also specifies an initial coin state and
+uses the symmetric semantics~\cite[Def.~9]{Ying14QuantumRecursion}.
+Assolini and Di Pierro keep a qubit from each test. Their unitary approximations
+can fail to converge while a branch keeps running. Restricting the output to
+completed branches gives a convergent sequence on each input~\cite[\S~4.1,
+Thm.~5.9]{AssoliniDiPierro25Loops}.
+
 For an input of the form $\ket u\bra v$, tracing the exact record
 over its orthonormal basis leaves $\sum_k x_k\ket u\bra v
 x_k^\dagger$. Such operators span the input matrix algebra,
@@ -3730,7 +3790,13 @@ x_k=\frac1{2\pi}\int_0^{2\pi}
 e^{-ik\varphi}\Theta(e^{i\varphi})\,d\varphi .
 \]
 Expanding $\Theta(z)\rho\Theta(z)^\dagger$ and integrating term by
-term removes all unequal indices, proving~\eqref{eq:haar}.
+term removes all unequal indices, proving~\eqref{eq:haar}. For a uniform
+choice among the $K$th roots, a pair of exits $k,j$ acquires the factor
+$K^{-1}\sum_{z^K=1}z^{k-j}$. This geometric sum is one when
+$k\equiv j\pmod K$ and zero otherwise. The surviving terms are exactly
+$\sum_{r<K}G_r\rho G_r^\dagger$, the channel of the hidden $K$-counter.
+If $D^n=0$, only counts $0,\ldots,n$ can occur, so $n+1$ equally spaced
+phases give the measured loop exactly.
 
 The table at the end of Section~\ref{sec:effects} gives these maps
 for \code{bypassRound}. For the
@@ -3752,6 +3818,21 @@ exit map on call $n$ is
 $\iota_X^\dagger U((I-P)U)^{n-1}\iota_X=x_{n-1}:X\to X$. Thus the
 monitored-return count includes the initial call and is one more than
 our number of returns~\cite[\S~2]{Bourgain14Subspace}.
+
+To see why this sum gives the least fixed point, put $Q=I-P$ and
+write $V=UQ$ for a return followed by another call. On a state $\sigma$
+just before the test, Ying's unfolding sends a map $G$ to the map
+$\sigma\mapsto P\sigma P+G(V\sigma V^\dagger)$~\cite[Prop.~5.1(6),
+Cor.~5.1]{Ying11Hoare}. Starting at the zero map and unfolding $n$ times
+gives $\sum_{j=0}^{n-1}PV^j\sigma(V^j)^\dagger P$. Each term is
+positive for positive $\sigma$. Since $V^\dagger V=Q=I-P$, the trace
+of the sum is $\tr\sigma-\tr(V^n\sigma(V^n)^\dagger)$. The sums
+therefore increase and converge in finite dimension. Their limit solves
+the unfolding equation. Every positive solution bounds zero and, by
+unfolding, bounds each partial sum. The limit is thus the least solution
+in the pointwise order on positive inputs. Starting it on
+$U\iota_X\rho\iota_X^\dagger U^\dagger$ and reading the external block
+gives $\sum_{k\ge0}x_k\rho x_k^\dagger=\meas(\rho)$.
 
 \section{Agreement and replacement}\label{app:axis}
 \begin{proof}[Proof of Theorem~\ref{thm:axis}]
@@ -4769,6 +4850,13 @@ for the category's chosen product $\odot$~\cite{JSV96}. Here it is
 $\oplus$. The usual tensor trace on finite linear maps is a
 different operation and need not send a unitary to a unitary: tracing
 the factor $\C^2$ out of $I_X\otimes I_{\C^2}$ gives $2I_X$.
+
+Bartha's finite unitary trace satisfies the trace laws for every body,
+including ones with a trapped return~\cite[Thms.~7--8]{Bartha14QuantumTuringAutomata}~\cite[Cor.~3.3.16]{AndresMartinez22Thesis}.
+For a cartesian product the trace also gives a Conway fixed-point
+operator~\cite[Thm.~3.1]{Hasegawa97}. For the direct sum the diagonal
+$u\mapsto(u,u)$ doubles the squared norm of every nonzero $u$, so it
+cannot be a unitary in our language.
 
 Consider the iso swapping external and internal copies of $a$
 (Figure~\ref{fig:64-yanking}). Its input makes one return and comes
