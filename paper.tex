@@ -472,6 +472,9 @@ forgetting it. Forgetting gives the coherent data exactly when history is indepe
 With decidable coefficient equality, a compiler can test this. Finally, an ideal ring resonator computes the scalar trace.
 For any given finite unitary body, a lossless optical multiport with
 its return ports fed back computes the trace at a chosen frequency.
+This gives the trace a physical meaning that recent work had left open,
+and it opens a new front for quantum programming: loops that run as
+optical feedback.
 \end{abstract}
 \maketitle
 \hypersetup{citecolor=ink,linkcolor=ink,urlcolor=muted}
@@ -584,8 +587,9 @@ can use:
   circulates and the input comes back with its sign flipped.
 
 \item \textbf{An ideal ring realizes the scalar loop.}
-  Fairbanks and Selinger ask about tracing a black-box unitary~\cite[App.~B]{FairbanksSelinger25Traces}.
-  We build the network from its matrix.
+  Fairbanks and Selinger ask whether a device can take the trace of a
+  unitary supplied as a black box~\cite[App.~B]{FairbanksSelinger25Traces}.
+  For a given matrix, we can build its optical network.
   The ring is a familiar model of feedback~\cite{Czachor19Ring}. Each
   trip gives the corresponding exit amplitude of our scalar \code{trace}. For a frequency-independent coupler and phase proportional
   to frequency, the circulating weight for unit input times the round-trip
