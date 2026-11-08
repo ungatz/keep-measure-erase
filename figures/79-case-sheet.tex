@@ -1,0 +1,21 @@
+\documentclass[border=3pt]{standalone}
+\usepackage{sheet-style}
+\begin{document}
+\begin{tikzpicture}[sheet drawing]
+\begin{scope}
+  \SheetPanel{1.32}{0.43}
+  \ExternalPort{port}{0.5/ink}{0}{0}{2.3}
+  \ReturnLoop{again}{0.5/ink}{0}{0}{1.8}{1.28}
+  \SheetSurface{port}{0.5/ink}{0.5}{(-2.54,-1.15) -- (-2.54,1.15)}
+  \PaintSheets
+
+  \node[anchor=north] at (-2.54,-1.44) {$H_0$};
+  \node[anchor=south] at (-2.54,1.45) {$H_0$};
+  \node[anchor=north] at (-0.75,-1.44) {$H_1$};
+  \node[anchor=south] at (-0.75,1.45) {$H_1$};
+  \draw[ink,line width=.85pt] (-0.66,-0.215) -- (0.66,0.215);
+  \node[draw=ink,fill=white,circle,inner sep=1.5pt,seam label] at (0,0) {$U$};
+  \node[anchor=west,text=again] at (2.57,0) {$Y$};
+\end{scope}
+\end{tikzpicture}
+\end{document}

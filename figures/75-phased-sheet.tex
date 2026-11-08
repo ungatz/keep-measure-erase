@@ -1,0 +1,18 @@
+\documentclass[border=3pt]{standalone}
+\usepackage{sheet-style}
+\begin{document}
+\begin{tikzpicture}[sheet drawing]
+\begin{scope}
+  \SheetPanel{1.32}{0.43}
+  \ExternalPort{port}{0.5/ink}{0}{0}{3}
+  \ReturnLoop{again}{0.5/ink}{0}{0}{2}{1.28}
+  \PaintSheets
+
+  \draw[ink,line width=.85pt] (-0.66,-0.215) -- (0.66,0.215);
+  \node[draw=ink,fill=white,circle,inner sep=1.5pt,seam label] at (0,0) {$U$};
+  \node[anchor=north] at (-0.75,-1.79) {$u$};
+  \node[anchor=south] at (-0.75,1.8) {$\Theta(z)u$};
+  \node[tag,draw=again] at (2,0) {$zI_Y$};
+\end{scope}
+\end{tikzpicture}
+\end{document}

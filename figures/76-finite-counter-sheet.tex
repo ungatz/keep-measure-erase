@@ -1,0 +1,23 @@
+\documentclass[border=3pt]{standalone}
+\usepackage{sheet-style}
+\begin{document}
+\begin{tikzpicture}[sheet drawing,large sheet labels]
+\begin{scope}
+  \SheetPanel{1.32}{0.43}
+  \ExternalPort{port}{0.32/counter, 0.85/ink}{0}{0}{3.2}
+  \ReturnLoop{again}{0.32/counter, 0.85/ink}{0}{0}{2.28}{1.24}
+  \PaintSheets
+
+  \draw[ink,line width=.85pt] (-0.66,-0.215) -- (0.66,0.215);
+  \node[draw=ink,fill=white,circle,inner sep=1.5pt,seam label] at (0.462,0.1505) {$U$};
+  \node[tag,draw=counter,text=counter] at (2.0424,-0.0774) {$S_K$};
+  \node[anchor=north,text=again] at (1.2,-1.72) {$\textcolor{counter}{\mathbb C^K}\otimes Y$};
+  \node[anchor=south] at (-0.72,2) {$\mathbb C^K\otimes X'$};
+  \node[tag] (alloc) at (-.75,-2.20) {$\mathrm{alloc}_0$};
+  \draw[counter] ([xshift=-2mm]alloc.north) -- (-0.9876,-1.6774);
+  \draw[ink] ([xshift=2mm]alloc.north) -- (-0.288,-1.4495);
+  \node[anchor=north,yshift=-4mm] (input) at (alloc.south) {$u$};
+  \draw[ink,-{Stealth[length=1.4mm]},shorten >=.4pt] (input.north) -- (alloc.south);
+\end{scope}
+\end{tikzpicture}
+\end{document}

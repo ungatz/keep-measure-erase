@@ -1,0 +1,41 @@
+\ProvidesPackage{sheet-style}
+\RequirePackage{fontspec}
+\RequirePackage{unicode-math}
+\setmainfont{Libertinus Serif}
+\setsansfont{Libertinus Sans}
+\setmathfont{Libertinus Math}[Scale=MatchUppercase]
+\RequirePackage{amsmath}
+\RequirePackage{tikz}
+\usetikzlibrary{arrows.meta,calc,shadings}
+\definecolor{ink}{HTML}{1F2328}
+\definecolor{muted}{HTML}{5B6470}
+\definecolor{port}{HTML}{007A59}
+\definecolor{again}{HTML}{7A3E65}
+\definecolor{counter}{HTML}{006A91}
+\definecolor{readout}{HTML}{9A5B00}
+\newcommand{\ket}[1]{\lvert #1\rangle}
+
+\tikzset{
+  sheet drawing/.style={
+    x=1cm, y=1cm, line cap=round, line join=round,
+    every node/.style={font=\small,inner sep=1.5pt},
+    seam label/.style={font=\small},
+    head/.style={font=\small\sffamily,text=ink},
+    tag/.style={draw=ink,fill=white,rounded corners=.7pt,inner sep=2.3pt,font=\small}
+  },
+  large sheet labels/.style={
+    every node/.append style={font=\large},
+    head/.append style={font=\large\sffamily},
+    tag/.append style={font=\large},
+    seam label/.style={font=\large}
+  }
+}
+
+\directlua{sheet = dofile(kpse.find_file("sheet-drawing.lua"))}
+\newcommand{\SheetPanel}[2]{\directlua{sheet.panel(#1,#2)}}
+\newcommand{\SheetSurface}[4]{%
+  \directlua{sheet.surface("#1", "\luaescapestring{#4}", "#2", "#3")}%
+}
+\newcommand{\PaintSheets}{\directlua{sheet.paint()}}
+\newcommand{\ExternalPort}[5]{\directlua{sheet.external("#1","#2",#3,#4,#5)}}
+\newcommand{\ReturnLoop}[6]{\directlua{sheet.returning("#1","#2",#3,#4,#5,#6)}}

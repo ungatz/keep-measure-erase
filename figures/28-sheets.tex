@@ -1,0 +1,40 @@
+\documentclass[border=3pt]{standalone}
+\usepackage{sheet-style}
+\begin{document}
+\begin{tikzpicture}[sheet drawing]
+\begin{scope}
+  \SheetPanel{1.32}{0.43}
+  \ExternalPort{port}{0.5/ink}{0}{0}{3}
+  \SheetSurface{again}{0.5/ink}{0.22}{
+    (0.8,-1.5)
+    .. controls (0.8,-0.6) and (0.14,-0.45) .. (0,0)
+  }
+  \SheetSurface{again}{0.5/ink}{0.78}{
+    (0,0)
+    .. controls (0.14,0.45) and (0.8,0.6) .. (0.8,1.5)
+  }
+  \PaintSheets
+
+  \draw[ink,line width=.85pt] (-0.66,-0.215) -- (0.66,0.215);
+  \node[draw=ink,fill=white,circle,inner sep=1.5pt,seam label] at (0,0) {$U$};
+  \node[anchor=north] at (-0.75,-1.79) {$X$};
+  \node[anchor=south] at (-0.75,1.8) {$X'$};
+  \node[anchor=north] at (0.8,-1.79) {$Y$};
+  \node[anchor=south] at (0.8,1.8) {$Y$};
+  \node[head] at (0.12,2.62) {(a) One body call};
+\end{scope}
+\begin{scope}[xshift=5.1cm]
+  \SheetPanel{1.32}{0.43}
+  \ExternalPort{port}{0.5/ink}{0}{0}{3}
+  \ReturnLoop{again}{0.5/ink}{0}{0}{1.8}{1.28}
+  \PaintSheets
+
+  \draw[ink,line width=.85pt] (-0.66,-0.215) -- (0.66,0.215);
+  \node[draw=ink,fill=white,circle,inner sep=1.5pt,seam label] at (0,0) {$U$};
+  \node[anchor=north] at (-0.75,-1.79) {$u$};
+  \node[anchor=south] at (-0.75,1.8) {$Lu$};
+  \node[anchor=west,text=again] at (2.62,0.15) {$Y$};
+  \node[head] at (0.5,2.62) {(b) Close the $Y$ sheet};
+\end{scope}
+\end{tikzpicture}
+\end{document}

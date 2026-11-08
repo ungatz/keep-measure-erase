@@ -1,0 +1,37 @@
+\documentclass[border=3pt]{standalone}
+\usepackage{sheet-style}
+\begin{document}
+\begin{tikzpicture}[sheet drawing]
+\begin{scope}[every node/.append style={font=\large}]
+\begin{scope}
+  \SheetPanel{1.65}{0.43}
+  \SheetSurface{port}{0.5/ink}{0.25}{
+    (-0.85,-1.72)
+    .. controls (-0.85,-1.21) and (-0.29,-1.1) .. (0,-0.85)
+  }
+  \SheetSurface{port}{0.5/ink}{0.77}{
+    (0,0.85)
+    .. controls (-0.29,1.1) and (-0.85,1.21) .. (-0.85,1.72)
+  }
+  \SheetSurface{port}{0.24/ink, 0.76/ink}{0.88}{(0,-0.85) -- (0,0.85)}
+  \SheetSurface{again}{0.5/ink}{0.5}{
+    (0,0.85)
+    .. controls (0.68,1.46) and (2.6,1.7) .. (2.6,0.03)
+    .. controls (2.6,-1.62) and (0.68,-1.46) .. (0,-0.85)
+  }
+  \PaintSheets
+
+  \draw[ink,line width=.85pt] (-0.825,-1.065) -- (0.825,-0.635);
+  \draw[ink,line width=.85pt] (-0.825,0.635) -- (0.825,1.065);
+  \node[tag,minimum width=1.12cm,shade,top color=white,bottom color=ink!5!white,font=\Large] at (0,0) {$\widehat\beta_g$};
+  \node[anchor=east,font=\Large] at (-1.6,-0.9) {$F_g$};
+  \draw[muted,densely dotted] (-1.56,-0.9) -- (-0.825,-1.065);
+  \node[anchor=south,font=\Large] at (1.2,1.9) {$F_g^{-1}$};
+  \draw[muted,densely dotted] (1.2,1.87) -- (0.825,1.065);
+  \node[anchor=north] at (-0.85,-2.01) {$P$};
+  \node[anchor=south] at (-0.85,2.02) {$P$};
+  \node[text=again,anchor=west] at (3.45,0) {$P$};
+\end{scope}
+\end{scope}
+\end{tikzpicture}
+\end{document}

@@ -1,0 +1,36 @@
+\documentclass[border=3pt]{standalone}
+\usepackage{sheet-style}
+\begin{document}
+\begin{tikzpicture}[sheet drawing]
+\begin{scope}
+  \SheetPanel{1.32}{0.43}
+  \SheetSurface{port}{0.5/ink}{0.5}{
+    (-0.75,-3.28)
+    .. controls (-0.75,-2.3) and (-0.3,-2.08) .. (0,-1.64)
+  }
+  \SheetSurface{port}{0.5/ink}{0.54}{
+    (0,-1.64)
+    .. controls (-0.3,-1.2) and (-0.75,-0.92) .. (-0.75,0)
+    .. controls (-0.75,0.92) and (-0.3,1.2) .. (0,1.64)
+  }
+  \SheetSurface{port}{0.5/ink}{0.5}{
+    (0,1.64)
+    .. controls (-0.3,2.08) and (-0.75,2.3) .. (-0.75,3.28)
+  }
+  \ReturnLoop{again}{0.5/ink}{0}{-1.64}{2.25}{1.2}
+  \ReturnLoop{again}{0.5/ink}{0}{1.64}{2.25}{1.2}
+  \PaintSheets
+
+  \draw[ink,line width=.85pt] (-0.66,-1.855) -- (0.66,-1.425);
+  \node[draw=ink,fill=white,circle,inner sep=1.8pt,font=\large] at (0,-1.64) {$R_\theta$};
+  \node[tag,draw=again,text=again,font=\large] at (2.25,-1.64) {$z$};
+  \draw[ink,line width=.85pt] (-0.66,1.425) -- (0.66,1.855);
+  \node[draw=ink,fill=white,circle,inner sep=1.8pt,font=\large] at (0,1.64) {$R_\theta$};
+  \node[tag,draw=again,text=again,font=\large] at (2.25,1.64) {$z$};
+  \node[text=port,anchor=east,font=\large] at (-1.58,-3.28) {$1$};
+  \node[text=port,anchor=east,font=\large] at (-1.58,0) {$-1$};
+  \node[text=port,anchor=east,font=\large] at (-1.58,3.28) {$1$};
+  \node[anchor=east,font=\large] at (-1.58,3.88) {$z=1$};
+\end{scope}
+\end{tikzpicture}
+\end{document}

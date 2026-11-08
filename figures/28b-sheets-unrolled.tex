@@ -1,0 +1,63 @@
+\documentclass[border=3pt]{standalone}
+\usepackage{sheet-style}
+\begin{document}
+\begin{tikzpicture}[sheet drawing,large sheet labels]
+\begin{scope}
+  \SheetPanel{1.32}{0.43}
+  \SheetSurface{port}{0.85/ink, 0.32/counter}{0.75}{
+    (0,0)
+    .. controls (-0.3,0.25) and (-1.05,0.2) .. (-1.55,0.37)
+  }
+  \SheetSurface{again}{0.32/counter, 0.85/ink}{0.5}{
+    (0,0)
+    .. controls (0.48,0.36) and (-0.48,0.89) .. (0,1.25)
+  }
+  \SheetSurface{port}{0.85/ink, 0.32/counter}{0.75}{
+    (0,1.25)
+    .. controls (-0.3,1.5) and (-1.05,1.45) .. (-1.55,1.62)
+  }
+  \SheetSurface{again}{0.32/counter, 0.85/ink}{0.5}{
+    (0,1.25)
+    .. controls (0.48,1.61) and (-0.48,2.14) .. (0,2.5)
+  }
+  \SheetSurface{port}{0.85/ink, 0.32/counter}{0.75}{
+    (0,2.5)
+    .. controls (-0.3,2.75) and (-1.05,2.7) .. (-1.55,2.87)
+  }
+  \SheetSurface{again}{0.32/counter, 0.85/ink}{0.5}{
+    (0,2.5)
+    .. controls (0.48,2.86) and (-0.48,3.39) .. (0,3.75)
+  }
+  \SheetSurface{port}{0.32/counter, 0.85/ink}{0.5}{(0,-0.8) -- (0,0)}
+  \PaintSheets
+
+  \node[anchor=east] at (-2.3,0.35) {$\textcolor{counter}{\ket{0}}\otimes x_0u$};
+  \draw[ink,line width=.85pt] (-0.66,-0.215) -- (0.66,0.215);
+  \node[draw=ink,fill=white,circle,inner sep=1.5pt,seam label] at (0.462,0.1505) {$U$};
+  \node[tag,draw=counter,text=counter] at (-0.2376,0.5476) {$S_K$};
+  \node[anchor=east] at (-2.3,1.6) {$\textcolor{counter}{\ket{1}}\otimes x_1u$};
+  \draw[ink,line width=.85pt] (-0.66,1.035) -- (0.66,1.465);
+  \node[draw=ink,fill=white,circle,inner sep=1.5pt,seam label] at (0.462,1.4005) {$U$};
+  \node[tag,draw=counter,text=counter] at (-0.2376,1.7976) {$S_K$};
+  \node[anchor=east] at (-2.3,2.85) {$\textcolor{counter}{\ket{2}}\otimes x_2u$};
+  \draw[ink,line width=.85pt] (-0.66,2.285) -- (0.66,2.715);
+  \node[draw=ink,fill=white,circle,inner sep=1.5pt,seam label] at (0.462,2.6505) {$U$};
+  \node[tag,draw=counter,text=counter] at (-0.2376,3.0476) {$S_K$};
+  \node[anchor=north] at (0,-1.03) {$\mathrm{alloc}_0(u)=\textcolor{counter}{\ket0}\otimes u$};
+  \draw[ink,-{Stealth[length=1.5mm,width=.85mm]}] (0.462,3.9005) -- (0.462,4.1005);
+  \node at (0.462,4.3005) {$\vdots$};
+  \node[anchor=west] at (0.9,3.58) {$\textcolor{counter}{\ket3}\otimes D^2Cu$};
+\end{scope}
+\begin{scope}[xshift=5.3cm]
+  \SheetPanel{1.32}{0.43}
+  \ExternalPort{port}{0.5/ink}{0}{1.35}{4.3}
+  \ReturnLoop{again}{0.5/ink}{0}{1.35}{2.1}{1.55}
+  \PaintSheets
+
+  \draw[ink,line width=.85pt] (-0.66,1.135) -- (0.66,1.565);
+  \node[draw=ink,fill=white,circle,inner sep=1.5pt,seam label] at (0,1.35) {$U$};
+  \node[anchor=north] at (-0.75,-1.09) {$u$};
+  \node[anchor=south] at (-0.75,3.8) {$Lu=\sum_{k\geq0} x_ku$};
+\end{scope}
+\end{tikzpicture}
+\end{document}
