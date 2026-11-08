@@ -455,71 +455,146 @@
 \affiliation{\institution{}\city{}\country{}}
 \begin{abstract}
 Quantum loops have a reputation for paradox. We trace the paradoxes to
-a single fact: the history of a quantum loop, the record of how many
-times its body ran, is itself quantum information. A loop can erase
-its history, keep it, or measure it, and these choices give three
-different programs. Existing accounts make this choice implicitly. We make the choice explicit in iso, a
-reversible language in the $\Pi$ family, and the paradoxes dissolve.
-The coherent loop, which erases its history, is the trace of its body:
-for every finite body it is total and unitary and compiles exactly
-into loop-free code, so the question of when it halts disappears. The
-other two loops come from the coherent one through two universal
-constructions on quantum processes: $R$, which adds allocation, yields
-the loop that keeps its history, and $L$, which then adds hiding,
-yields the loop that measures it. Measuring the guard on every round
-gives the same data as keeping the exact number of returns and then
-forgetting it. Forgetting gives the coherent data exactly when history is independent of data.
-With decidable coefficient equality, a compiler can test this. Finally, an ideal ring resonator computes the scalar trace.
-For any given finite unitary body, a lossless optical multiport with
-its return ports fed back computes the trace at a chosen frequency.
-This gives the trace a physical meaning that recent work had left open,
-and it opens a new front for quantum programming: loops that run as
-optical feedback.
+a single fact: the history of a quantum loop, i.e., the record of how
+many times its body ran, is itself quantum information. A loop can
+erase its history, keep it, or measure it, and these choices lead to
+three different semantics. Existing languages and calculi each adopt
+one of these choices, usually implicitly. We make the management of
+the loop history explicit in a small quantum language in the $\Pi$
+family. The coherent loop, which erases its history, semantically
+corresponds to the trace of its body: for every finite body it is
+total and unitary and compiles exactly into loop-free code. We resolve
+the open problem of the physical meaning of the trace semantics by
+connecting it to optical resonators. The other two loops come from the
+coherent one through two universal constructions on quantum processes:
+$R$, which adds allocation, yields the loop that keeps its history,
+and $L$, which then adds hiding, yields the loop that measures
+it. Measuring the guard on every round gives the same data as keeping
+the exact number of returns and then forgetting it. Forgetting gives
+the coherent data exactly when the history is independent of the data.
+A finite test on the loop body decides when this holds, so a compiler
+can check when a measured loop may replace a coherent one, even for
+callers whose data is entangled with the loop's input. Conversely,
+averaging the coherent loop over a random phase on its returning state
+yields the measured loop, so the coherent loop already determines what
+measuring would report. We implement the language with all three loops
+and run the paper's examples in it.
+% Finally, an ideal ring resonator computes the scalar trace.  For any
+% given finite unitary body, a lossless optical multiport with its
+% return ports fed back computes the trace at a chosen frequency.
+% This gives the trace a physical meaning that recent work had left
+% open, and it opens a new front for quantum programming: loops that
+% run as optical feedback.
 \end{abstract}
 \maketitle
 \hypersetup{citecolor=ink,linkcolor=ink,urlcolor=muted}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
 
 Can a quantum computer run a loop? The question sounds settled, yet
-the answers on record contradict one another. Let the loop's guard be
-in superposition, so that one branch exits after three rounds while
-another keeps going. One answer says the computer then cannot halt
-without spoiling its computation~\cite{LindenPopescu98Halting}. A
-second says the loop must measure its guard on every round, which
-leaves a classical loop running over quantum
-data~\cite{YingFeng10QuantumLoop}. A third keeps the guard coherent
-but bounds the rounds and pads every branch until all of them finish
+the answers on record are incompatible with one another. Let the
+loop's guard be in superposition, so that one branch exits after three
+rounds while another keeps going. One approach says the execution
+cannot halt without spoiling its
+computation~\cite{LindenPopescu98Halting}. A second says the loop must
+measure its guard on every round, which leaves a classical loop
+running over quantum data~\cite{YingFeng10QuantumLoop}. A third keeps
+the guard coherent but bounds the rounds and pads every branch until
+all of them finish
 together~\cite{YuanVillanyiCarbin24QCM,ZhangYing25QRM}. A fourth
-defines the loop as a trace, an infinite sum over the paths of its
-control
-flow~\cite{Bartha14QuantumTuringAutomata,AndresMartinez22Thesis}. We
-claim that all four answers are right about the loops they describe.
-We compare them by following the history of a loop, the record of how
-many times its body ran, through to the output.
+defines the loop as an infinite sum over the paths of its control
+flow~\cite{Bartha14QuantumTuringAutomata,AndresMartinez22Thesis}.
 
-\noindent\begin{minipage}[c]{.70\linewidth}
-Physics has a loop that nobody counts. An ideal lossless ring
-resonator has a straight waveguide beside a ring. Their fields overlap
-across the narrow gap. This is the coupler. Part of the incoming light goes straight through. The rest
-goes around the ring and splits again each time it comes back.
-Some light leaves after one trip, some after
-two, some after a hundred. Under steady illumination at a single
-frequency, all these contributions reach the same outgoing mode, so
-their amplitudes add~\cite[Eq.~(6)]{Alsing17RingLoss}. In this plane-wave reading
-of feedback~\cite[\S~5.3]{AndresMartinez22Thesis}, the execution formula of
-geometry of interaction adds the exits that reach this mode~\cite{AbramskyHaghverdiScott02GoI,Bartha14QuantumTuringAutomata}.
+Each answer corresponds to a particular interpretation of a quantum
+loop. In our approach, the differences arise from a single design choice,
+namely what to do with the iteration count:
+\begin{itemize}
+\item \textbf{Keep it.} Allocate a special variable that counts the
+  number of iterations, loosely like a classical \textsc{for-loop}.
+\item \textbf{Measure it.} Measure the guard after every iteration and
+  continue or exit according to the outcome, loosely like a classical
+  \textsc{while-loop}.
+\item \textbf{Erase it.} Leave the count implicit and pass the state of
+  each iteration directly to the next, loosely like a classical
+  \textsc{tail call}. A tail call reuses its caller's frame, so the
+  number of calls made so far is lost.
+\end{itemize}
+For classical programs the three coincide on the returned data
+when the count is ignored, which is why classical languages never
+had to choose.
+For quantum programs they give three different loop constructs, and a
+language that provides only one has chosen for its programmers.
+
+Why should the count matter when nobody reads it? A quantum loop can
+exit after three iterations and after five at once, in superposition,
+and both exits can reach the same output. There the two contributions
+combine as complex amplitudes, which behave like signed weights: they
+can reinforce or cancel, so the final answer depends on both. A
+counter tags each contribution with its iteration number, and
+contributions with different tags stay apart whether or not anyone
+reads the tags. Untagged, the contributions of all iteration counts
+add into a single map, the infinite sum of the fourth answer.
+Category theory calls this map the trace of the loop
+body~\cite{JSV96,Bartha14QuantumTuringAutomata}, and the geometry of
+interaction computes it with its execution
+formula~\cite{AbramskyHaghverdiScott02GoI}. Reversible programmers
+will recognize the count as
+garbage: information that a computation leaves behind and that blocks
+interference until it is uncomputed. The three choices are the three
+things a program can do with this garbage: keep it, throw it away, or
+leave it implicit. Throwing away garbage that is entangled with the
+data affects the data exactly as measuring the garbage would, which is
+why the second choice is measurement.
+
+Seen this way, the four answers above are these choices in disguise.
+A machine whose clock stamps the moment each branch exits keeps the
+count in that stamp, which is why its branches cannot be
+merged~\cite{LindenPopescu98Halting}. A loop that measures its guard
+every round throws the count away; this is the loop that Q\# and
+OpenQASM~3 provide, since their \code{while} loops test a classical
+condition~\cite{YingFeng10QuantumLoop,QSharpDocsLoops,OpenQASMClassicalInstructions}.
+Padding every branch to the same length makes all branches exit
+together, so the exit time is the same for every count, much as
+constant-time code pads branches so that timing is the same for every
+secret; this works when the number of rounds has a known
+bound~\cite{YuanVillanyiCarbin24QCM,ZhangYing25QRM}. The infinite sum
+leaves the count implicit from the
+start~\cite{Bartha14QuantumTuringAutomata,AndresMartinez22Thesis}.
+
+\medskip\noindent\begin{minipage}[c]{.70\linewidth}
+Leaving the count implicit may look exotic, yet optical devices do it
+routinely. A ring resonator is a closed loop of optical waveguide,
+much like a ring of optical fiber, placed beside a straight waveguide
+(right). Where the two pass close together, light arriving on the
+straight guide either continues along it or crosses into the ring,
+and light already in the ring either goes around again or crosses
+back out. This junction plays the role of a loop body with an exit
+and a way back. Light that leaves after one trip, after two or after
+a hundred all reaches the same output. Under a steady beam of a single
+color, these contributions add as
+amplitudes~\cite[Eq.~(6)]{Alsing17RingLoss}~\cite[\S~5.3]{AndresMartinez22Thesis},
+just like the exits of a loop that leaves its count implicit, so the
+ring computes a trace. The ring is the smallest case of a general
+recipe: any finite loop body can be built as an optical
+network~\cite{ReckEtAl94Multiport}, and feeding its returning outputs
+back through fibers of the right length makes the network compute the
+trace of the body (Section~\ref{sec:light}). This answers a question of Fairbanks and Selinger,
+who asked whether any physical device computes the
+trace~\cite[App.~B]{FairbanksSelinger25Traces}.
+A short flash behaves differently: its trips leave one after another,
+and the arrival time of each pulse records the
+count~\cite[Eqs.~(30)--(33)]{RaymerMcKinstrie13Cavity}~\cite[\S~3.4]{AndresMartinez22Thesis}.
 \end{minipage}\hfill
 \begin{minipage}[c]{.28\linewidth}\centering
 \begin{tikzpicture}[x=8.1mm,y=8.1mm,>={Stealth[length=1.2mm,width=.85mm]},
  every node/.style={font=\footnotesize,inner sep=1pt}]
- \sideCoupledRing
- \node[text=flipback] at (0,1.39) {ring};
- \node[anchor=west] at (-2.02,.44) {in};
- \node[anchor=west] at (1.54,.44) {out};
- \node[anchor=east,text=muted] (gap) at (-1.05,.88) {gap};
- \draw[muted,line width=.38pt] (gap.east) -- (-.54,.32) -- (-.24,.25);
- \foreach \xx/\amp/\col/\lab in {-1.47/.6/flipout/direct,0/-1.6/flipback/returns,1.47/-1/ink/out}{
+  \sideCoupledRing \node[text=flipback] at (0,1.39) {ring};
+  \node[anchor=west] at (-2.02,.44) {in}; \node[anchor=west] at
+  (1.54,.44) {out}; \node[anchor=east,text=muted] (gap) at (-1.05,.88)
+       {gap}; \draw[muted,line width=.38pt] (gap.east) -- (-.54,.32)
+       -- (-.24,.25); \foreach \xx/\amp/\col/\lab in
+       {-1.47/.6/flipout/direct,0/-1.6/flipback/returns,1.47/-1/ink/out}{
    \begin{scope}[shift={(\xx,-.91)}]
      \draw[muted!45] (-.50,0)--(.50,0);
      \fill[\col!16] (-.50,0) -- plot[samples=36,domain=-.50:0]
@@ -534,69 +609,59 @@ geometry of interaction adds the exits that reach this mode~\cite{AbramskyHaghve
 \end{tikzpicture}
 \end{minipage}\par\medskip
 
-In Q\# and OpenQASM~3, a \code{while} loop tests a classical
-condition~\cite{QSharpDocsLoops,OpenQASMClassicalInstructions}.
-Measuring the guard on each round tells an early exit from a late one.
-Arrival time can do the same in the ring. Send in a pulse shorter
-than one round trip. The pulse that goes straight through has passed the
-output before the first return arrives.
-Each further trip gives a separate pulse~\cite[Eqs.~(30)--(33)]{RaymerMcKinstrie13Cavity}~\cite[\S~3.4]{AndresMartinez22Thesis}.
-
-A quantum language has three choices for what to do with a loop's history:
-\begin{itemize}
-\item \textbf{Keep it.} Return a count register with the data.
-\item \textbf{Measure it.} Measure the guard after each call to decide whether to continue.
-\item \textbf{Erase it.} Add the amplitudes from different rounds at the same output, as the ring does.
-\end{itemize}
-
-For classical programs the three coincide on the returned data
-when the count is ignored, which is why classical languages never
-had to choose. For quantum programs they give three different loop
-constructs, and a language that provides only one has chosen for its
-programmers.
-
-We make this choice explicit in iso, a reversible language in the
-$\Pi$ family~\cite{CaretteEtAl24}. We write the body once using symmetric pattern-matching
-clauses~\cite[\S\S~3--5]{SabryValironVizzotto18}, with an exit and a
-back edge, and close it in three ways. The coherent loop
-\code{trace} connects the back edge, $\mathsf{count}_K$ counts
-returns modulo $K$ (zero for an immediate exit), and \code{while}
-measures the guard after each call. Each choice comes with something a compiler
-can use:
+We make the choice explicit in a small quantum language based on
+reversible pattern
+matching~\cite{CaretteEtAl24,SabryValironVizzotto18}
+(Section~\ref{sec:iso}). A loop body has the shape of the ring's
+junction: a program fragment with two inputs and two outputs. Data
+enters on one input and leaves on one output; the other output carries
+the state that continues, and the loop feeds it back into the other
+input for the next iteration. The language closes this feedback in
+three ways: \code{trace} feeds the state straight back,
+$\mathsf{count}_K$ also counts the returns modulo~$K$, and \code{while}
+measures the guard after each call. We call these the coherent,
+counting and measured loops. This design yields four results:
 
 \begin{itemize}
-\item \textbf{Coherent loops compile away.}
-  Eliminating one returning basis value at a time gives a finite
-  clause table with exact coefficients and no back edge, even when
-  infinitely many rounds contribute~\cite[Thm.~3.3.15]{AndresMartinez22Thesis}.
+\item \textbf{Coherent loops compile away}
+  (Section~\ref{sec:trace}). For a finite body, the coherent loop is a
+  total unitary map even when infinitely many iterations
+  contribute~\cite[Thm.~3.3.15]{AndresMartinez22Thesis}. Solving for
+  the returning state one basis value at a time turns it into a
+  loop-free program with exact coefficients.
 
-\item \textbf{Forgetting can be certified.}
-  Each exit map gives the part of the output that leaves after a given
-  number of returns. With $m$ returning basis values and a nonempty input type,
-  we check whether the first $m+1$ maps are multiples of one map.
-  With decidable equality of exact coefficients, this decides when the
-  measured loop can replace the coherent data channel, even for a caller
-  who keeps a reference entangled with the input.
+\item \textbf{Keeping and measuring come from two universal
+  constructions} (Section~\ref{sec:effects}). Allocation, the $R$
+  construction, supplies the counter of $\mathsf{count}_K$, and
+  hiding, the $L$ construction, lets the caller discard
+  it~\cite{HeunenKaarsgaard22Effects,HuotStaton18}. Discarding an
+  exact count gives \code{while}: measuring is keeping the garbage and
+  then throwing it away.
 
-\item \textbf{We can probe the coherent loop without a counter.}
-  Each trip picks up a phase on the back edge. One control qubit lets us
-  compare two nearby phases and estimate how much weight circulates.
-  Averaging over the phase gives the measured mean number of returns.
-  For the rotation with $\cos\theta=3/5$ and $\sin\theta=4/5$, that
-  mean is one. With no added phase, four times the input weight
-  circulates and the input comes back with its sign flipped.
+\item \textbf{Forgetting can be certified}
+  (Section~\ref{sec:agreement}). The measured loop returns the same
+  data as the coherent loop exactly when the history, the loop's
+  garbage, is independent of the data. With $m$ returning basis
+  values, it suffices to check that the first $m+1$ exit maps, which
+  give the output after each number of returns, are multiples of one
+  map. With exact coefficients a compiler can decide this, and the
+  measured loop may then replace the coherent one, even for a caller
+  who holds other qubits entangled with the input.
 
-\item \textbf{An ideal ring realizes the scalar loop.}
-  Fairbanks and Selinger ask whether a device can take the trace of a
-  unitary supplied as a black box~\cite[App.~B]{FairbanksSelinger25Traces}.
-  For a given matrix, we can build its optical network.
-  The ring is a familiar model of feedback~\cite{Czachor19Ring}. Each
-  trip gives the corresponding exit amplitude of our scalar \code{trace}. For a frequency-independent coupler and phase proportional
-  to frequency, the circulating weight for unit input times the round-trip
-  time gives the Wigner--Smith delay~\cite{Smith60LifetimeMatrix}.
+\item \textbf{The coherent loop can be probed without a counter}
+  (Section~\ref{sec:phase}). A phase placed on the returning state
+  marks each iteration in the amplitude itself. Comparing two nearby
+  phases with one control qubit estimates how much weight circulates
+  in the loop, and averaging that weight over all phases gives the
+  measured loop's mean number of returns. In an ideal ring, this
+  weight is the delay that light spends inside, measured in trips
+  around the ring~\cite{Smith60LifetimeMatrix}.
+
 \end{itemize}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Finite programs in iso}\label{sec:iso}
+
 An iso $\omega:a\leftrightarrow b$ is a reversible program from data
 type $a$ to data type $b$. We use the finite types of $\Pi$: $0$ has
 no values, $1$ has the value $*$, $a+b$ holds a tagged value, and
@@ -898,6 +963,7 @@ In the sequence above, we passed both output coordinates to the
 next call. To form a loop, we let the \kw{exit} amplitude leave
 and feed only the \kw{back} amplitude into the next call.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{What the coherent loop computes}\label{sec:trace}
 
 Closing \code{guardRound} leaves the caller with a single output
@@ -1071,14 +1137,8 @@ $L$ is unitary, and $\sum_kx_k^\dagger x_k=I_X$~\cite[Thms.~4, 7,
 8]{Bartha14QuantumTuringAutomata}~\cite[Thm.~3.3.15,
 Cor.~3.3.16]{AndresMartinez22Thesis}.
 
-To realize Figure~\ref{fig:28-sheets} with light, we build a multiport
-for the given finite unitary $U$, with one optical mode per basis value.
-Beam splitters and phase shifters implement its matrix~\cite{ReckEtAl94Multiport}.
-We connect each return output to its matching input by a lossless delay line,
-choosing its length so that the field comes back in phase at the working
-frequency. The field supplied on those inputs must then satisfy
-$y=Cu+Dy$. The steady field on the external outputs is $Au+By=Lu$,
-just what the loop returns on input $u$ (Appendix~\ref{sec:ring}).
+Section~\ref{sec:light} builds this loop in light, where delay lines
+impose the same wire equation.
 
 \begin{programfigure}
 \begin{minipage}{.70\linewidth}\centering
@@ -1566,8 +1626,64 @@ An exit after one return and an exit after two both reach the second
 splitter on the same path. To tell them apart there, we can carry a
 record around the loop.
 
-\section{What allocation and hiding do to the
-loop}\label{sec:effects}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{The coherent loop in light}\label{sec:light}
+
+Fairbanks and Selinger ask whether any physical device computes the
+trace of a unitary, and they cite the jump in the trace of the
+rotation as evidence against
+one~\cite[App.~B]{FairbanksSelinger25Traces}. Optical feedback
+computes the trace of every finite body, and the jump has a physical
+reading.
+
+\begin{proposition}[Optical feedback]\label{prop:optical}
+Let $U:X\oplus Y\to X'\oplus Y$ be a finite unitary body. Build $U$
+as a lossless optical network with one mode for each basis
+value~\cite{ReckEtAl94Multiport}, and connect each returning output
+to its matching input with a lossless delay line that brings light
+back in phase at a working frequency. Under steady illumination at
+that frequency, the network sends each external input $u$ to $Lu$.
+\end{proposition}
+
+\begin{proof}
+At the working frequency each delay line returns its field unchanged.
+The steady amplitudes $y$ on the returning inputs and $v$ on the
+external outputs therefore satisfy $y=Cu+Dy$ and $v=Au+By$, the wire
+equations of Section~\ref{sec:trace}. By Theorem~\ref{thm:total},
+every solution gives $v=Lu$.
+\end{proof}
+
+The ring of Figure~\ref{fig:ring-model} is the scalar case. Each trip
+around the network is a call of the body: exit $k+1$ has amplitude
+$BD^kCu$, the light that enters through $C$, circulates $k$ more times
+and leaves through $B$. The construction uses the matrix of $U$ to
+set the optical elements. When $U$ is supplied as an optical device
+instead, only the delay lines need to be built, and they are the same
+for every $U$.
+
+The jump in the trace is the limit of a delay. In
+Section~\ref{sec:trace}, the ring switched on empty reaches the trace
+only after many trips when the coupling is weak. At resonance the
+field circulating in the ring has magnitude $s/(1-t)$ for unit input,
+so its weight is $s^2/(1-t)^2=\cot^2(\theta/2)$, which grows without
+bound as $\theta\to0$. For a coupler independent of frequency, this
+weight times the round-trip time is the Wigner--Smith delay of the
+ring~\cite{Smith60LifetimeMatrix}, the time light lingers inside, and
+Section~\ref{sec:phase} shows that its average over phases is the
+measured mean number of returns. The trace is thus the long-time
+response of a device whose delay diverges where the trace jumps.
+
+Czachor uses the ring as a model of looped quantum
+evolution~\cite{Czachor19Ring}, and Gough and James obtain the same
+block formula for quantum feedback networks in the limit of zero delay
+when $I-D$ is invertible~\cite[Thm.~12]{GoughJames09Feedback}. Short
+pulses in the same ring keep the count in their arrival times, as
+Section~\ref{sec:effects} shows, and Appendix~\ref{sec:ring} works out
+the scalar ring in detail.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{What allocation and hiding do to the loop}\label{sec:effects}
+
 \newsavebox{\parityview}
 \sbox{\parityview}{\begin{tikzpicture}[kme circuit,>={Stealth[length=1.35mm,width=1mm]}]
   \node[anchor=east] at (-.21,.93) {returns};
@@ -1962,8 +2078,10 @@ b$}
 
 
 \FloatBarrier
-\section{When can a caller forget the
-difference?}\label{sec:agreement}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{When can a caller forget the difference?}\label{sec:agreement}
+
 Suppose the caller needs only the data. Hiding the exact count adds one
 density matrix for each exit. Closing the wire adds the exit amplitudes.
 We want a test on the body that tells us whether the two loops give the caller the same state on every input.
@@ -2135,7 +2253,10 @@ ret/.style={draw=flipback,line width=.8pt}]
  \draw[accentwarm,double,double distance=.65pt,->] (m.east) --
  (7.75,0) node[right] {$b$};
 \end{tikzpicture}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{A count without a counter}\label{sec:phase}
+
 The caller who receives only the data from \code{guardRound} gets
 \code{unit} whether we close the wire or measure the tag. Even the
 coherent gate alone tells us little about the returns. A clause that
@@ -2189,7 +2310,7 @@ adds $\tau_0\Delta\omega$ to the return phase. With a frequency-independent coup
 the output phase changes by $4\tau_0\Delta\omega$ to first order, giving a
 Wigner--Smith delay of $4\tau_0$ relative to the direct path~\cite{Smith60LifetimeMatrix}.
 For a weaker coupling the weight $\sin^2\theta/(1-\cos\theta)^2=\cot^2(\theta/2)$
-grows without bound as $\theta\to0$ (Appendix~\ref{sec:ring}).
+grows without bound as $\theta\to0$ (Section~\ref{sec:light}).
 
 \paragraph{From one return wire to a finite body.}
 On input $u$, the successive returns just before the phase gate are
@@ -2302,6 +2423,7 @@ when all exits are multiples of one gate, $z$ changes only its overall phase.
 Conversely, a channel that is the same at every setting agrees at $z=1$ with
 its average, $\meas$.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{What the caller can tell}\label{sec:family}
 
 We close two copies of \code{guardRound} and feed the output of the first
@@ -2900,7 +3022,10 @@ of quantum recursive programs}.
 \end{thebibliography}
 
 \appendix
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Typing and interpreting the clauses}\label{app:rules}
+
 \subsection{Syntax}
 \begin{figure}[!htbp]
 \centering
@@ -3436,7 +3561,9 @@ Conversely a given finite unitary $V$ has as a definition the table
 $s\leftrightarrow\sum_t V_{ts}t$. Each column satisfies the typing
 rule since $V^\dagger V=I$, including the empty case.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Convergence, probability and elimination}\label{app:total}
+
 For a finite permutation, an external input follows a single path. It
 cannot revisit an internal basis value: unique predecessors would
 identify its original external input with an internal value. It
@@ -3699,7 +3826,7 @@ Hadamard. A fixed finite circuit built by continuously composing the
 supplied body has a continuous response; eliminating a given clause
 table can branch on an exact
 equality~\cite[Remark~B.1]{FairbanksSelinger25Traces}.
-Appendix~\ref{sec:ring} follows the light from its first trip around an empty ring.
+Section~\ref{sec:trace} follows the light from its first trip around an empty ring.
 
 There is also a trace elimination result for diagrams built from
 polarizing beam splitters. Each path traverses a given feedback
@@ -3709,9 +3836,9 @@ diagram~\cite[Prop.~26]{ClementPerdrix20PBS}. In \code{guardRound},
 a single input contributes to infinitely many exits. Eliminating
 its one return value sums all of them.
 
-
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Records, measurement and phase}\label{app:readings}
+
 For a common payload
 $H=X=X'=Y$, the guard-first transport is
 $F_g=\mathsf{factor};\sigma_{H,\mathsf{Qubit}}:H+H\leftrightarrow\kw
@@ -3838,7 +3965,9 @@ in the pointwise order on positive inputs. Starting it on
 $U\iota_X\rho\iota_X^\dagger U^\dagger$ and reading the external block
 gives $\sum_{k\ge0}x_k\rho x_k^\dagger=\meas(\rho)$.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Agreement and replacement}\label{app:axis}
+
 \begin{proof}[Proof of Theorem~\ref{thm:axis}]
 Assume $\meas=\chan L$. For each unit input $u$, test the output on
 any $w$ orthogonal to $Lu$. The sum of the nonnegative numbers
@@ -4040,7 +4169,9 @@ $\ket+=(\ket0+\ket1)/\sqrt2$, whereas a measurement on every return
 dephases $\ket+$ in that basis. Checking just this clock would accept
 the replacement incorrectly.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{The derivative and its average}\label{app:deriv}
+
 Define
 \[
 Y_0=\{y\in Y\mid BD^jy=0\text{ for every }j\ge0\},\qquad
@@ -4172,7 +4303,10 @@ data channel unchanged.
 \setcounter{totalnumber}{8}
 \renewcommand{\floatpagefraction}{.55}
 \renewcommand{\textfraction}{.05}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Clause programs and their observations}\label{app:programs}
+
 Many small loop bodies can be written as two clauses with a variable
 for the payload. We give their definitions here so that one can
 reproduce each diagram directly from an iso. Each program closes its
@@ -4730,7 +4864,10 @@ respectively.
   \includegraphics[max width=\linewidth]{\picdir/#1.pdf}
   \captionsetup{hypcap=false,type=figure}\caption{#2}\label
 {fig:#1}\Description{#3}\end{minipage}\par\addvspace{\medskipamount}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Reading the feedback diagrams}\label{app:diagrams}
+
 The sheet diagrams read from bottom to top. Each summand has a
 separate surface. Looking along the depth of one surface reveals the
 wires of its tensor factors, so two registers on one sheet can be
@@ -5059,7 +5196,9 @@ discarded.}
 
 \FloatBarrier
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{A ring realization of the same exits}\label{sec:ring}
+
 In Figure~\ref{fig:ring-model}, light stays in its waveguide with
 amplitude $t=3/5$ and crosses to the other waveguide with amplitude
 $is=4i/5$. This coupler is the rotation from \code{guardRound} in
@@ -5116,67 +5255,7 @@ before channelization, an operation unavailable to a channel context.
 For a finite pulse, the interference depends on how much the delayed
 pulses overlap in the observed output mode.
 
-\paragraph{Switching on the light.}
-Fairbanks and Selinger vary the angle of this same rotation. Its
-trace jumps from $+1$ at $\theta=0$ to $-1$ for
-$0<\theta<2\pi$~\cite[Remark~B.1]{FairbanksSelinger25Traces}.
-To see the jump in the ring, start with the ring empty and switch
-on a wave of unit amplitude at resonance. Write $t=\cos\theta$
-and $s=\sin\theta$. Before light has had time to go around once,
-the output is $t$. After $n$ round trips the first $n$ delayed
-exits have reached the output. For $0<\theta<\pi/2$ they give
-\[
- t-s^2(1+t+\cdots+t^{n-1})=-1+(1+t)t^n \qquad(n\ge1).
-\]
-At any fixed $n$ the output approaches $+1$ as $\theta$ approaches
-zero. At any fixed angle in this interval the output approaches
-$-1$ as more trips arrive. Thus the jump appears when we let the ring settle at each angle
-before taking the coupling to zero. At any fixed observation time the
-output varies continuously with the coupling. At zero coupling no light enters
-the ring and the output stays at $+1$.
-
-For the steady response at resonance, the first crossing contributes
-$is$ on the return wire and each further trip multiplies it by $t$.
-On unit input the field there is $is/(1-t)$. Its squared magnitude is
-the weight from Section~\ref{sec:phase},
-$Q(1)=s^2/(1-t)^2=\cot^2(\theta/2)$ for $0<\theta<\pi/2$.
-It grows without bound as the coupling tends to zero. If each trip takes time $\tau_0$ and
-the coupler is independent of frequency, changing the angular
-frequency $\omega$ changes the return phase by
-$d\varphi/d\omega=\tau_0$. The Wigner--Smith delay at resonance
-is therefore $-i\Theta^\dagger d\Theta/d\omega=\tau_0 Q(1)$
-~\cite{Smith60LifetimeMatrix}.
-
-\paragraph{More than one return port.}
-For a given finite unitary body $U:X\oplus Y\to X'\oplus Y$,
-use one optical mode for each basis value. Reck et al. give a
-construction of the open $U$ from beam splitters and phase
-shifters~\cite{ReckEtAl94Multiport}. Connect each return output to
-its matching input with an ideal lossless delay line. Choose the
-lengths so that each line returns light with phase $1$ at the
-working frequency. If $u$ enters the external ports and $y$ comes
-back along the lines, the amplitudes at the coupler network obey
-\[
- y=Cu+Dy,\qquad v=Au+By.
-\]
-These are the evaluator's wire equations. Even when a return mode
-can circulate in isolation, every solution gives the same external
-output $v=Lu$ (Section~\ref{sec:trace}). Thus the steady response
-of this network at the chosen frequency realizes the direct-sum
-trace of the given body. The construction uses its matrix to set
-the optical elements. The rotation above shows why no fixed
-number of trips suffices for all couplings.
-
-Czachor uses the ring as a model of looped quantum evolution in a
-study of time travel
-~\cite[Appendix]{Czachor19Ring}. Gough and James obtain the same
-block formula for scattering in the zero-delay limit when the
-internal inverse exists~\cite[Thm.~12, Eq.~(12)]{GoughJames09Feedback}. Here the
-program fixes what each trip contributes. Its exit after $k+1$
-returns has amplitude $BD^kCu$, exactly the amplitude that enters
-through $C$, circulates $k$ more times and leaves through $B$.
-
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Observing the response}\label{app:observing}
 
 For a fixed $|z|=1$, the phase iso $P_z^c=\{s\leftrightarrow z\cdot
@@ -5295,4 +5374,3 @@ first-order expansion at $\delta=0$. This specializes
 Figure~\ref{fig:relative-hadamard} to the controlled body
 $W_{1,\delta}$.
 \end{document}
-
