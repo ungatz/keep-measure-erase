@@ -992,68 +992,43 @@ $\sem{\mathsf{trace}_c\,\beta}=L=\sum_{k\ge0}x_k$~\cite{Girard95GoI,AbramskyHagh
 In the ring, $x_0$ gives the direct path and $x_k$ the light that made $k$ trips.
 
 
-To sum these exits we need to know how much of the input can still be
-circulating after many calls. A state with $Dv=\lambda v$ and $|\lambda|=1$
-returns with its whole norm, so $Bv=0$. Such states span a space $Y_0$ that
-$U$ maps onto itself. External inputs are orthogonal to $Y_0$ and stay so
-under $U$. On the remaining return space the powers of $D$ decay geometrically.
+To sum these exits we need to know how much amplitude from $u$ can still
+be circulating after many calls. If $Dv=\lambda v$ with $|\lambda|=1$, the
+whole norm of $v$ returns, so $Bv=0$. These states span a space $Y_0$ on
+which $D$ is unitary. An external input is orthogonal to $Y_0$ and stays
+so under $U$. Its returns therefore lie in $Y_1=Y_0^\perp$, where the
+powers of $D$ decay geometrically.
 
 \subsection{Computing the sum without a last round}
 
-On input \code{unit}, the first call to \code{guardRound} sends $4/5$ back.
-Each later call returns $3/5$ of what it receives (Figure~\ref{fig:scalar-loop}).
-Write $y$ for the sum on the return wire. After the first term, the sum is $(3/5)y$.
+On input \code{unit}, \code{guardRound} sends $4/5$ back on its first call
+and $3/5$ of what it receives on each later call (Figure~\ref{fig:scalar-loop}).
+If $y$ is the sum of the returns, the terms after the first sum to $(3/5)y$.
 \[
  y=\frac45+
    \underbrace{\frac{12}{25}+\frac{36}{125}+\frac{108}{625}+
                \frac{324}{3125}+\cdots}_{(3/5)y}
    =\frac45+\frac35y.
 \]
-This is the \emph{wire equation}. Subtracting $(3/5)y$ gives
-$(2/5)y=4/5$, so the returns sum to $y=2$. The first call sends
-$3/5$ straight to the output, and the \kw{back} clause sends $-4/5$
-of each return there. Their sum is $3/5-(4/5)y=-1$, so
-$\code{trace guardRound on unit}\Downarrow-\ket*$.
-
-For input $u$, the first return is $Cu$ and each further call applies $D$.
-Sending their sum through $B$ and adding the immediate exit $Au$ gives
-\[
- y=Cu+DCu+D^2Cu+\cdots=Cu+Dy,\qquad Lu=Au+By.
-\]
-\begin{theorem}[Finite feedback]\label{thm:total}
-For a finite unitary body, $Y_0$ and $Y_1=Y_0^\perp$ reduce $D$, $C$ maps into $Y_1$, and
-the powers of $D|_{Y_1}$ decay geometrically. The exits sum absolutely to a unitary $L$ and
-satisfy $\sum_k x_k^\dagger x_k=I_X$. Every input $u$ admits a solution of $y=Cu+Dy$, and
-each solution gives $Lu=Au+By$.
-\end{theorem}
-Because the remaining weight $\|D^kCu\|^2$ tends to zero, the squared exit norms telescope
-to $\|u\|^2$. Closing the return wire gives $U(u,y)=(Lu,y)$, hence $\|Lu\|=\|u\|$. Since
-$X$ and $X'$ have equal dimension, $L$ is unitary, as in the finite trace
-theorems~\cite[Thms.~4, 7, 8]{Bartha14QuantumTuringAutomata}~\cite[Thm.~3.3.15,
-Cor.~3.3.16]{AndresMartinez22Thesis}. Appendix~\ref{app:total} proves the decay bound.
-
-For each basis input $\ket s$, put the sum of the returns in column $s$ of $F$.
-The wire equations then read $(I_Y-D)F=C$, and column $s$ of $A+BF$ gives the output on $\ket s$.
-\[
- \frac{\kappa\Downarrow U\quad U=\left(\begin{smallmatrix}A&B\\C&D\end{smallmatrix}\right)
- \quad F:X\to Y\quad (I_Y-D)F=C}
- {\mathsf{trace}_c\,\kappa\Downarrow A+BF}.
-\]
+This is the \emph{wire equation} for \code{guardRound}. In general, $Cu$ first
+enters the return wire and each later call applies $D$, so the sum satisfies
+$y=Cu+DCu+D^2Cu+\cdots=Cu+Dy$. The caller receives the immediate exit
+$Au$ together with $By$, as Figure~\ref{fig:28-sheets} illustrates.
 
 \begin{figure}[!htbp]\centering
-\begin{minipage}[c]{.65\linewidth}\centering
+\begin{minipage}[c]{.59\linewidth}\centering
 \includegraphics[width=\linewidth]{figures/28-sheets.pdf}
 \end{minipage}\hfill
-\begin{minipage}[c]{.32\linewidth}\raggedright
-For \code{guardRound} on \code{unit}, the input amplitude is $u=1$.
-Both ends of the purple sheet carry the same $\textcolor{flipback}{y}$, so
+\begin{minipage}[c]{.38\linewidth}\raggedright
+Both ends of the purple sheet carry the same amplitude $y$.
+For $u=1$ the wire equation gives
 \[
- y=\tfrac45+\tfrac35y \quad\Longrightarrow\quad \textcolor{flipback}{y=2}.
+ \tfrac25y=\tfrac45,\qquad \textcolor{flipback}{y=2}.
 \]
-The green sheet carries the output
-$\tfrac35-\tfrac45\cdot\textcolor{flipback}{2}=\textcolor{flipout}{-1}$.
+The green output receives $3/5$ directly and $-4/5$ of each return,
+giving $3/5-(4/5)y=\textcolor{flipout}{-1}$. Thus
 \[
- R_\theta\binom{\textcolor{flipout}{1}}{\textcolor{flipback}{2}}
+ R_\theta\binom{1}{\textcolor{flipback}{2}}
    =\binom{\textcolor{flipout}{-1}}{\textcolor{flipback}{2}}.
 \]
 \end{minipage}
@@ -1067,12 +1042,36 @@ so both ends of the purple sheet carry two. The external output is 3/5 minus
 (4/5) times two, or minus one.}
 \end{figure}
 
+\begin{theorem}[Finite feedback]\label{thm:total}
+For a finite unitary body, $Y_0$ and $Y_1=Y_0^\perp$ reduce $D$, $C$ maps into $Y_1$, and
+the powers of $D|_{Y_1}$ decay geometrically. The exits sum absolutely to a unitary $L$ and
+satisfy $\sum_k x_k^\dagger x_k=I_X$. Every input $u$ admits a solution of $y=Cu+Dy$, and
+each solution gives $Lu=Au+By$.
+\end{theorem}
+The first call splits $\|u\|^2$ into $\|Au\|^2+\|Cu\|^2$. The next
+splits $\|Cu\|^2$ into $\|BCu\|^2+\|DCu\|^2$. Since the remaining
+weight tends to zero, the squared exit norms sum to $\|u\|^2$.
+Closing the wire gives $U(u,y)=(Lu,y)$, so canceling $\|y\|^2$ shows
+$\|Lu\|=\|u\|$. Equal external dimensions make $L$ unitary, as in
+Bartha's finite trace theorem~\cite[Thms.~4, 7--8]{Bartha14QuantumTuringAutomata}.
+Appendix~\ref{app:total} proves the decay bound.
+
+For each basis input $\ket s$, put the sum of the returns in column $s$ of $F$.
+The wire equations then read $(I_Y-D)F=C$, and column $s$ of $A+BF$ gives the output on $\ket s$.
+\[
+ \frac{\kappa\Downarrow U\quad U=\left(\begin{smallmatrix}A&B\\C&D\end{smallmatrix}\right)
+ \quad F:X\to Y\quad (I_Y-D)F=C}
+ {\mathsf{trace}_c\,\kappa\Downarrow A+BF}.
+\]
+
+
+
 \paragraph{An undetermined return.}
 For \code{guardRound} we divided by $1-3/5$. To see why $I_Y-D$
 can have no inverse, keep the original return on \code{back 1} and
 let a second value, \code{back 0}, return to itself.
 
-\par\smallskip\noindent\begin{minipage}[c]{.65\linewidth}
+\par\smallskip\noindent\begin{minipage}[c]{.645\linewidth}
 \begin{lstlisting}[xleftmargin=0pt]
 round extraPort : Unit + Qubit = {
   exit unit <-> [ 3/5 . exit unit + 4/5 . back 1];
@@ -1081,30 +1080,34 @@ round extraPort : Unit + Qubit = {
 }
 \end{lstlisting}
 \end{minipage}\hfill
-\begin{minipage}[c]{.33\linewidth}\centering
-\begin{tikzpicture}[kme circuit,>={Stealth[length=1.2mm,width=.8mm]}]
- \node[kme gate,minimum width=.78cm,minimum height=.8cm] (r) at (0,0) {$R_\theta$};
- \node[kme gate,minimum width=.66cm] (i) at (2.18,-.19) {$I_1$};
- \draw[flipout,->] (-.98,.19) -- (r.west |- 0,.19);
- \draw[flipout,->] (r.east |- 0,.19) -- (.98,.19);
- \node[above,text=flipout] at (0,.42) {\code{exit unit}};
- \foreach \gate/\cx in {r/0,i/2.18} {
-   \begin{scope}[shift={(\cx,0)}]
-   \draw[flipback,->] (\gate.east |- 0,-.19) -- (.64,-.19)
-     arc[start angle=90,end angle=-90,radius=.25] -- (-.64,-.69)
-     arc[start angle=-90,end angle=-270,radius=.25] -- (\gate.west |- 0,-.19);
-   \draw[flipback,->] (.20,-.69) -- (-.14,-.69);
-   \end{scope}
- }
- \node[text=flipback,below] at (0,-.74) {\code{back 1}};
- \node[text=flipback,below] at (2.18,-.74) {\code{back 0}};
+\begin{minipage}[c]{.345\linewidth}\centering
+\begin{tikzpicture}[kme circuit,x=.78cm,>={Stealth[length=1.3mm,width=.9mm]}]
+  \node[kme gate,minimum height=7mm] (live) at (0,0) {$R_\theta$};
+  \node[kme gate,minimum height=7mm] (trapped) at (3.05,0) {$I_1$};
+  \draw[flipout,->] (-1.26,.18) node[above] {$u$} -- (live.west |- 0,.18);
+  \draw[flipout,->] (live.east |- 0,.18) -- (1.19,.18) node[above] {$Lu$};
+  \foreach \gate/\x/\wireColour/\returnSpace in {live/0/flipback/Y_1{=}Y_0^\perp,trapped/3.05/quiet/Y_0} {
+    \begin{scope}[shift={(\x,0)}]
+      \draw[\wireColour] (\gate.east |- 0,-.17) -- (.93,-.17)
+        arc[start angle=90,end angle=-90,radius=2.5mm] -- (-.93,-.67)
+        arc[start angle=-90,end angle=-270,radius=2.5mm] -- (\gate.west |- 0,-.17);
+      \draw[\wireColour,->] (.19,-.67) -- (-.12,-.67);
+      \node[below,text=\wireColour] at (0,-.70) {$\returnSpace$};
+    \end{scope}
+  }
+  \node[text=flipback,below] at (0,-1.09) {\code{back 1}};
+  \node[text=quiet,below] at (3.05,-1.09) {\code{back 0}};
+  \node at (1.54,-.16) {$\oplus$};
 \end{tikzpicture}
-\end{minipage}\par
-
-In the order \code{exit unit}, \code{back 1}, \code{back 0}, the matrix is $R_\theta\oplus I_1$.
-The equation $y_1=\tfrac45u+\tfrac35y_1$ fixes $y_1=2u$, while $y_0=y_0$ leaves $y_0$ free.
-Here $I_Y-D=\operatorname{diag}(2/5,0)$ has no inverse. No call from $u$ reaches \code{back 0}, so $y_0=0$ in the sum,
-but any $y_0$ gives the same exit $(3/5)u-(4/5)y_1=-u$.
+\end{minipage}\par\smallskip
+Here \code{back 0} spans the trapped space $Y_0$ of
+Theorem~\ref{thm:total}, and \code{back 1} spans its orthogonal
+complement $Y_1=Y_0^\perp$. The rotation gives
+$y_1=\tfrac45u+\tfrac35y_1$, so $y_1=2u$. The identity gives
+$y_0=y_0$ for every $y_0$, so $I_Y-D=\operatorname{diag}(2/5,0)$
+has no inverse. Starting from $u$ gives $y_0=0$ because no call reaches
+\code{back 0}. Only \code{back 1} feeds the exit, so every choice of
+$y_0$ gives $(3/5)u-(4/5)y_1=-u$.
 
 \begin{wrapfigure}{r}{.28\linewidth}\centering
 \begin{tikzpicture}[kme circuit,>={Stealth[length=1.25mm,width=.85mm]}]
@@ -1117,38 +1120,50 @@ but any $y_0$ gives the same exit $(3/5)u-(4/5)y_1=-u$.
    {$\|w\|^2=\textcolor{flipout}{\|Bw\|^2}+\textcolor{flipback}{\|w\|^2}$};
 \end{tikzpicture}
 \end{wrapfigure}
-To see why the output is unique for any finite unitary body, fix the input $u$.
-Summing its returns gives a solution $y$ of $y=Cu+Dy$. If $y+w$ is another, both
-wire equations have the same $Cu$, so their difference satisfies $w=Dw$.
-The inset follows $w$ alone through the body. It returns unchanged,
-which accounts for its full norm. Since $U$ preserves norm, nothing
-is left at the exit ($Bw=0$), and adding $w$ to $y$ leaves the caller's
-output $Au+By$ unchanged (Appendix~\ref{app:total}, Figure~\ref{fig:feedback-proof}).
+For input $u$, the sum of the returns gives one solution $y$. If
+$y+w$ is another, the outputs differ by $Bw$. Subtracting the wire
+equations cancels the common first return $Cu$, leaving $Dw=w$.
+As the inset shows, one call returns the whole difference unchanged.
+Since $U$ preserves norm, nothing remains at the exit ($Bw=0$),
+so both solutions give the caller $Au+By$.
 
-In \code{guardRound} the wire carries amplitude from one call to the next.
-Czachor uses it to model a wormhole by feeding one port's later output
-back to its earlier input~\cite[Eqs.~(6)--(7)]{Czachor19Ring}.
+So far our wire has fed amplitude from one call to the next. Czachor
+uses the same connection to model a wormhole, feeding one port's later
+output back to its earlier input~\cite[Eqs.~(6)--(7)]{Czachor19Ring}.
 The grandfather paradox imagines a traveler who goes back and prevents
-their own departure. In Czachor's model the returning wave meets the incoming
-wave at the entrance, where all round trips contribute to the outgoing state.
-When $I_Y-D$ is invertible, the particle leaves on the outside path with
-probability one. Czachor calls this reflection at the entrance. The traveler
-leaves without meeting their earlier self~\cite[Thm.~1 and \S~IV]{Czachor19Ring}.
+their own departure. At the entrance to Czachor's wormhole, the incoming wave meets the
+wave that has gone around the loop. For a lossless loop with $I_Y-D$
+invertible, their interference gives a unitary external map. To a
+traveler who tries to enter, it is as if the universe had placed a
+mirror across the doorway: the traveler is reflected with probability
+one. Suppose, however, that a perfect absorber inside the wormhole
+intercepts the returning wave. Nothing comes back to interfere at the
+entrance, so the traveler now has a chance to step through. If they
+do, it is a one-way ticket: the very absorber that let them in stops
+them before they can complete the trip around this loop~\cite[Thm.~1 and
+\S~IV]{Czachor19Ring}.
 
-When a single complex amplitude returns unchanged, Czachor finds that its
-port is isolated, just like \code{back 0}. He asks what happens with more return modes~\cite[arXiv v8, after Eq.~(45)]{Czachor19Ring}.
-In~finite~dimensions the outside state is still unique because $Bw=0$.
-Even if two solutions differ inside the loop, none of that difference can reach the caller.
-Bartha proved for finite isometries that the external map equals the sum over
-paths to the exit~\cite[Thm.~8]{Bartha14QuantumTuringAutomata}.
+Hawking and Visser ask what could prevent a time machine from
+forming~\cite{Hawking92Chronology,Visser93Chronology}. In Czachor's model
+the wormhole already exists. He calls reflection a form of \emph{chronology
+protection} because unitarity rules out the contradictory history for
+any lossless dynamics along the loop~\cite[\S~I]{Czachor19Ring}.
+
+When a single complex amplitude returns unchanged, Czachor observes
+that its port is isolated, just like \code{back 0}. He asks what happens
+with more return ports~\cite[arXiv v8, after Eq.~(45)]{Czachor19Ring}.
+Bartha's work on quantum Turing automata gives the finite answer:
+he proved that the paths to the exit sum to an isometry for any finite
+isometric body, even if $I_Y-D$ is singular~\cite[Eq.~(1), Thm.~8]{Bartha14QuantumTuringAutomata}.
+Here $Bw=0$ shows why the caller gets the same output from any solution.
 
 \subsection{Compiling away the loop}\label{sec:eliminate}
-Building on Bartha's proof, Andr\'es-Mart\'inez eliminates return values one at
-a time for finite contractions~\cite[Thm.~3.3.15, pp.~165--166]{AndresMartinez22Thesis}.
-We use this elimination to write the clauses of $L=A+BF$.
-In \code{guardRound}, the first clause sends $3/5$ to \code{exit unit}
-and $4/5$ to \code{back unit}. From there one call sends $B=-4/5$ to
-the exit and $D=3/5$ back to the same port.
+Building on Bartha's proof, Andr\'es-Mart\'inez eliminates one return
+value at a time for finite contractions~\cite[Thm.~3.3.15, Cor.~3.3.16,
+pp.~165--166]{AndresMartinez22Thesis}. We use that construction to write
+the clauses of $L=A+BF$. In \code{guardRound} the first clause sends
+$3/5$ to \code{exit unit} and $4/5$ to \code{back unit}. To replace
+\code{back unit} in that clause, we sum the exits from that port.
 
 \par\smallskip\noindent
 \begin{minipage}[c]{.49\linewidth}\centering
@@ -1257,13 +1272,13 @@ $\mathbb F\subseteq\C$ with decidable equality. Eliminating the $|\mathcal B(c)|
 values in any order, one per step, gives a loop-free table over $\mathbb F$ denoting $L$.
 \end{proposition}
 To recover the original wire equations we put back the value we substituted,
-choosing any value at an isolated port. Each step preserves unitarity, so we can
+choosing any value when $d=1$. Each step preserves unitarity, so we can
 continue until only the external clauses remain (Appendix~\ref{app:elim}).
 Dropping the outer \kw{exit} tags gives a loop-free table. In \code{kickbackExact},
 for example, eliminating the returns gives $I\otimes X$: the data bit flips
 even on inputs entangled with the ancilla (Appendix~\ref{app:kickback}).
 
-Summing the trips from a port back to itself when $d\ne1$ gives Mason's signal-flow reduction~\cite[\S\S~3.1--3.2]{Mason53Flow},
+Solving the scalar wire equation when $d\ne1$ gives Mason's signal-flow reduction~\cite[\S\S~3.1--3.2]{Mason53Flow},
 also used for zero-delay feedback when $I-D$ is invertible~\cite[Thm.~12, Eq.~(12)]{GoughJames09Feedback}
 and for optical networks~\cite[App.~A, Eq.~(A1)]{Tezak12QHDL}.
 With $n$ external and $m$ returning values, $m$ steps each update at most $(n+m)^2$
@@ -2268,7 +2283,7 @@ turns the probe by $k\delta$, just as if we had measured $k$. Hiding the probe g
  \meas(\rho)=\frac1{2\pi}\int_0^{2\pi}\Theta(e^{i\varphi})\rho
        \Theta(e^{i\varphi})^\dagger\,d\varphi .
 \end{equation}
-The bypass caller reads $1$ one time in five over the circle and half the time over $\{1,-1\}$
+Without the probe, the bypass caller reads $1$ one time in five over the circle and half the time over $\{1,-1\}$
 (hidden parity, Appendix~\ref{app:readings}). When all exits are multiples of one gate, as in \code{guardRound},
 varying $z$ changes only its overall phase. Conversely, if the channel stays fixed as we vary $z$, its value at $z=1$
 is the coherent channel and its average is $\meas$, so the two agree (Appendix~\ref{app:deriv}).
@@ -2641,6 +2656,11 @@ Recurrence for Discrete Time Unitary Evolutions.
 \newblock
 \href{https://doi.org/10.1007/3-540-62688-3_37}{doi:\nolinkurl{10.1007/3-540-62688-3_37}}
 
+\bibitem[Hawking(1992)]{Hawking92Chronology}
+S. W. Hawking. 1992. Chronology protection conjecture.
+\emph{Physical Review D} 46, 2 (1992), 603--611.
+\href{https://doi.org/10.1103/PhysRevD.46.603}{doi:10.1103/PhysRevD.46.603}.
+
 \bibitem[Heebner and Boyd(1999)]{HeebnerBoyd99Ring}
 John E. Heebner and Robert W. Boyd. 1999. Enhanced all-optical switching by use of a nonlinear fiber ring resonator.
 \emph{Optics Letters} 24, 12, 847--849. \href{https://doi.org/10.1364/OL.24.000847}{doi:10.1364/OL.24.000847}.
@@ -2840,6 +2860,11 @@ and Hideo Mabuchi. 2012. Specification of photonic circuits using
 Quantum Hardware Description Language.
 \emph{Philosophical Transactions of the Royal Society A} 370, 5270--5290.
 \href{https://doi.org/10.1098/rsta.2011.0526}{doi:10.1098/rsta.2011.0526}.
+
+\bibitem[Visser(1993)]{Visser93Chronology}
+Matt Visser. 1993. From wormhole to time machine: Remarks on Hawking's chronology protection conjecture.
+\emph{Physical Review D} 47, 2 (1993), 554--565.
+\href{https://doi.org/10.1103/PhysRevD.47.554}{doi:10.1103/PhysRevD.47.554}.
 
 \bibitem[Wang et~al\mbox{.}(2025)]{Wang25Interleaver}
 Songli Wang, Yuyang Wang, Swarnava Sanyal, Robert Parsons, Xingchen Ji,
@@ -3479,59 +3504,8 @@ is a swap.}\label{fig:48-paths-cycles}
 blocks. Edge labels one, two and three count calls, starting at one.
 Two internal points form an inaccessible cycle.}
 \end{programfigure}
-To prove Theorem~\ref{thm:total}, we identify the trapped states and bound
-how much amplitude can remain on their orthogonal complement.
-\begin{programfigure}
-\begin{minipage}{.43\linewidth}\centering
-\begin{tikzpicture}[kme circuit,>={Stealth[length=1.3mm,width=.9mm]}]
- \draw[kme gate,fill=ink!4] (.35,.9) rectangle (1.10,1.95);
- \node at (.725,1.43) {$U_1$};
- \draw[flipout,->,line width=.7pt] (-.55,1.72) -- (.35,1.72);
- \draw[flipout,->,line width=.7pt] (1.10,1.72) -- (2.05,1.72);
- \node[above] at (-.40,1.84) {$u$};
- \node[above] at (1.87,1.84) {$Lu$};
- \draw[flipback,line width=.7pt]
-(1.10,1.11) -- (1.35,1.11) .. controls (1.85,1.11) and (1.85,.43) ..
-(1.35,.43) -- (-.05,.43) .. controls (-.55,.43) and (-.55,1.11) ..
-(-.05,1.11) -- (.35,1.11);
- \draw[flipback,->,line width=.7pt] (-.05,1.11) -- (.35,1.11);
- \draw[flipback,->,line width=.7pt] (.95,.43) -- (.55,.43);
- \node[text=flipback,below] at (.73,.30) {$Y_1$};
- \node at (2.30,1.35) {$\oplus$};
- \draw[kme gate,draw=quiet] (3.02,1.0) rectangle (3.76,1.85);
- \node[text=quiet] at (3.39,1.43) {$D_0$};
- \draw[quiet,line width=.7pt]
-(3.76,1.19) -- (3.92,1.19) .. controls (4.42,1.19) and (4.42,.43) ..
-(3.92,.43) -- (2.87,.43) .. controls (2.37,.43) and (2.37,1.19) ..
-(2.87,1.19) -- (3.02,1.19);
- \draw[quiet,->,line width=.7pt] (2.87,1.19) -- (3.02,1.19);
- \draw[quiet,->,line width=.7pt] (3.65,.43) -- (3.20,.43);
- \node[text=quiet,below] at (3.40,.30) {$Y_0$};
- \node[above,text=quiet] at (3.40,1.99) {no external ports};
-\end{tikzpicture}
-\end{minipage}\hfill
-\begin{minipage}{.54\linewidth}\centering
-\[
- \begin{aligned}
- \|u\|^2&=\textcolor{flipout}{\|Au\|^2}
-+\textcolor{flipback}{\|Cu\|^2},\\[3pt]
- \textcolor{flipback}{\|Cu\|^2}
-   &=\textcolor{flipout}{\|BCu\|^2}
-+\textcolor{flipback}{\|DCu\|^2},\\[3pt]
- \textcolor{flipback}{\|DCu\|^2}
-   &=\textcolor{flipout}{\|BDCu\|^2}
-+\textcolor{flipback}{\|D^2Cu\|^2}.
- \end{aligned}
-\]
-\end{minipage}
-\caption{An internal basis change separates $U_1$ from the
-unreachable $D_0$. The three norm identities telescope because each
-return term supplies the next call.}\label{fig:feedback-proof}
-\Description{The accessible unitary body has an external wire and its
-own returning wire, while a separate closed component has no external
-ports. Three norm identities follow the original input and its next
-two continuations.}
-\end{programfigure}
+We now justify the split illustrated by \code{extraPort} in Section~\ref{sec:trace} and bound the
+weight that remains after each call.
 \begin{proof}[Proof of Theorem~\ref{thm:total}]
 \setlength{\parindent}{\appendixindent}
 If we start with $y$ on the return wire, the next call emits $By$ and
@@ -3543,7 +3517,11 @@ Sz.-Nagy--Foia\c{s} decomposition~\cite[Thm.~3.3.7]{AndresMartinez22Thesis}.
 For $y\in Y_0$ the whole output of $U$ is $(0,Dy)$, with $Dy\in Y_0$.
 Preservation of norm makes $D$ an isometry on $Y_0$, hence onto there
 by finite dimensionality. Since $U$ carries $0\oplus Y_0$ onto itself,
-it takes the orthogonal complement $X\oplus Y_1$ onto $X'\oplus Y_1$,
+its restriction there is a unitary $D_0$ whose eigenvectors span $Y_0$.
+Conversely, if $Dv=\lambda v$ with $|\lambda|=1$, norm preservation gives
+$Bv=0$, hence $BD^jv=0$ for every $j$. This identifies the two
+descriptions of $Y_0$. On the orthogonal complement, $U$ restricts
+to the unitary $U_1$ that takes $X\oplus Y_1$ onto $X'\oplus Y_1$,
 where $Y_1=Y_0^\perp$. In particular, the first return $Cu$ lies in
 $Y_1$ and $D$ keeps every later return there.
 
@@ -4197,8 +4175,8 @@ $Q(w)=F_w^\dagger F_w$.
 
 To average this weight over phase, expand $F_z=\sum_{j\ge0}z^jD_1^jC$.
 In $F_z^\dagger F_z$ the term indexed by $m,n$ has phase $z^{n-m}$.
-Only terms with $m=n$ survive integration around the circle
-(Figure~\ref{fig:phase-grid}). The geometric bound permits termwise
+Integration around the circle keeps only terms with $m=n$, just as it
+does for the channel in Figure~\ref{fig:phase-grid}. The geometric bound permits termwise
 integration, so the average is $\sum_j T_j$, where
 $T_j=(D_1^jC)^\dagger D_1^jC$ is the weight still returning after call $j+1$.
 
