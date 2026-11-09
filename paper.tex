@@ -592,8 +592,11 @@ every context exactly when the first $m+1$ exit maps span a line
 (Section~\ref{sec:agreement}).
 
 \item \textbf{A phase probe reads the circulating weight.}
-  One control qubit compares nearby phases on the return wire, as in a
-  Larmor clock~\cite{Buttiker83Larmor,Steinberg95Dwell}. Averaging this weight over the phase gives the measured mean number of returns (Section~\ref{sec:phase}).
+A qubit picks up a small relative phase each time amplitude returns.
+  Reading that qubit lets us estimate the weight on the return wire.
+  Averaged over the return phase, this weight gives the measured mean
+  number of returns (Section~\ref{sec:phase}).
+
 \end{itemize}
 
 \section{Finite programs in \textsc{iso}}\label{sec:iso}
@@ -989,9 +992,11 @@ $\sem{\mathsf{trace}_c\,\beta}=L=\sum_{k\ge0}x_k$~\cite{Girard95GoI,AbramskyHagh
 In the ring, $x_0$ gives the direct path and $x_k$ the light that made $k$ trips.
 
 
-If $Dv=\lambda v$ with $|\lambda|=1$, the whole norm returns and $Bv=0$. These eigenvectors
-span a space $Y_0$ that $U$ maps onto itself. Unitarity keeps external inputs orthogonal to
-$Y_0$ on every call. On the remaining return space the powers of $D$ decay geometrically.
+To sum these exits we need to know how much of the input can still be
+circulating after many calls. A state with $Dv=\lambda v$ and $|\lambda|=1$
+returns with its whole norm, so $Bv=0$. Such states span a space $Y_0$ that
+$U$ maps onto itself. External inputs are orthogonal to $Y_0$ and stay so
+under $U$. On the remaining return space the powers of $D$ decay geometrically.
 
 \subsection{Computing the sum without a last round}
 
@@ -1256,7 +1261,7 @@ for example, eliminating the returns gives $I\otimes X$: the data bit flips
 even on inputs entangled with the ancilla (Appendix~\ref{app:kickback}).
 
 This applies elimination for finite contractions~\cite[Thm.~3.3.15]{AndresMartinez22Thesis}
-to clause tables. The step with $d\ne1$ is Mason's signal-flow reduction~\cite[\S\S~3.1--3.2]{Mason53Flow},
+to clause tables. Summing the trips from a port back to itself when $d\ne1$ gives Mason's signal-flow reduction~\cite[\S\S~3.1--3.2]{Mason53Flow},
 also used for zero-delay feedback when $I-D$ is invertible~\cite[Thm.~12, Eq.~(12)]{GoughJames09Feedback}
 and for optical networks~\cite[App.~A, Eq.~(A1)]{Tezak12QHDL}.
 With $n$ external and $m$ returning values, $m$ steps each update at most $(n+m)^2$
@@ -1787,14 +1792,15 @@ Allocating the counter and applying the enlarged unitary makes $R_K$ an
 isometry. The exact record, $Ru=\sum_k\ket k\otimes x_ku$ in
 $\ell^2(\N)\otimes X'$, lies outside the finite language. It too preserves
 the norm since $\sum_k\|x_ku\|^2=\|u\|^2$ (Theorem~\ref{thm:total}).
-Embedding the first $K$ labels gives $R_K\to R$ in operator norm
-(Appendix~\ref{app:readings}). Ying, Yu and Feng keep a fresh coin at each
-unfolding~\cite[\S~6]{YingYuFeng12Control}. In Ying's coin loop the word $1^k0$ records
-$k$ returns followed by an exit~\cite[Eq.~(34)]{Ying14QuantumRecursion}.
-Assolini and Di Pierro copy the guard into a fresh qubit at each
-test~\cite[\S~4]{AssoliniDiPierro25Loops}.
+Until the counter wraps, its labels agree with the exact ones. The remaining
+exits have vanishing total norm as $K$ grows, so embedding the first $K$
+labels gives $R_K\to R$ in operator norm (Appendix~\ref{app:readings}).
+A fresh coin at each unfolding can encode the same count~\cite[\S~6]{YingYuFeng12Control}:
+in Ying's loop, $k$ returns followed by an exit spell $1^k0$~\cite[Eq.~(34)]{Ying14QuantumRecursion}.
+Copying each guard test into a fresh qubit likewise leaves a record of the
+outcomes~\cite[\S~4]{AssoliniDiPierro25Loops}.
 
-In the bounded loop of Yuan et al., an input register gives the number
+In the bounded loop of Yuan et al., the count is already an input giving the number
 of repetitions. Shorter branches execute no-ops until all reach the same
 control state at the same step~\cite[\S~6.1, Fig.~7]{YuanVillanyiCarbin24QCM}.
 The input retains the original count. Register-machine compilation also
@@ -1832,9 +1838,10 @@ Each further call returns with probability $9/25$, so this part eventually
 exits. It carries $\ket1$, which the second Hadamard sends to $1$ half
 the time. Adding the first and later exits gives $1/25+(8/25)(1/2)=1/5$.
 
-We match the bypass to the direct pulse in Figure~\ref{fig:22-pulses},
-so only that pulse interferes with it. Half of each later pulse reaches
-the difference port, giving the same $1/5$ in total. Under steady illumination
+Arrival time can distinguish the same exits in the ring. Matching the bypass
+to the direct pulse in Figure~\ref{fig:22-pulses} lets those two amplitudes
+interfere. Each later pulse arrives alone and splits equally between the ports,
+so the difference port again receives $1/5$ in total. Under steady illumination
 at the frequency of Figure~\ref{fig:ring-model}, all the light reaches
 that port~\cite[Eqs.~(30)--(33)]{RaymerMcKinstrie13Cavity}.
 
@@ -1883,8 +1890,8 @@ For external input $\rho$ and return $\sigma$, hiding the copy leaves two diagon
 \]
 For a normalized input the block traces give the two probabilities.
 On $(\rho,0)$ the first exit is $A\rho A^\dagger$ and the next is
-$(BC)\rho(BC)^\dagger$. Ying and Feng test the guard first~\cite{YingFeng10QuantumLoop}.
-When the external types agree, we apply $U$ once before their first test.
+$(BC)\rho(BC)^\dagger$. Ying and Feng test the guard first~\cite{YingFeng10QuantumLoop},
+so when the external types agree we run $U$ once before their loop.
 Each unfolding then adds one more of our exits, so Ying's least fixed
 point~\cite{Ying11Hoare} gives their sum, also the trace over a classical
 sum~\cite[\S~6.4]{Selinger04QPL} (Appendix~\ref{app:readings}).
@@ -1934,8 +1941,6 @@ b$}
  & $\dfrac12\begin{pmatrix}1&t\\t&1\end{pmatrix}$ & $1/5$
 \end{tabular}}
 \end{minipage}\par
-
-
 
 \section{When can a caller forget the
 difference?}\label{sec:agreement}
@@ -2041,9 +2046,10 @@ right column gives the output of each channel on the same input.}
 \end{figure}
 
 \paragraph{Replacing the loop in a program.}
-Andr\'es-Mart\'inez compares the two traces on a body where they differ and studies weak
-guard measurements~\cite[\S\S~3.3.3, 4.2]{AndresMartinez22Thesis}. We can now test
-the two paths in Figure~\ref{fig:trace-comparison} on a given program.
+The two paths in Figure~\ref{fig:trace-comparison} can give different data on
+the same body, as Andr\'es-Mart\'inez shows in comparing the traces and studying
+weak guard measurements~\cite[\S\S~3.3.3, 4.2]{AndresMartinez22Thesis}.
+The exit maps tell a compiler which bodies allow the replacement.
 In \code{flipRound}, the first two exits are $(3/5)\mathsf X$ and $-(16/25)I$,
 so they span two directions. In \code{flipOnExit}, we flip the data only as it
 leaves. With $t=3/5$ and $s=4/5$, the immediate exit is $t\mathsf X$.
@@ -2185,18 +2191,25 @@ $CC^\dagger=I-D_1D_1^\dagger$ gives
 \]
 where consecutive terms cancel and $D_1^j$ tends to zero.
 
-An exit after $k$ returns took $k+1$ calls. Counting the initial call therefore
-gives $I_X+N$. When $X'=X$, its trace $\dim X+\dim Y_1$ is the sum of the
-monitored mean return times over an orthonormal input basis, as in Bourgain et al.~\cite[Eq.~(8), Thm.~3.2]{Bourgain14Subspace}.
+In a monitored first return the initial call counts too, so an exit after
+$k$ returns takes $k+1$ calls. For $X'=X$, summing the mean number of
+calls over an orthonormal input basis gives
+$\tr(I_X+N)=\dim X+\dim Y_1$, as in Bourgain et al.~\cite[Eq.~(8), Thm.~3.2]{Bourgain14Subspace}.
 
 If every exit makes $k$ returns, then $\Theta(e^{i\varphi})=e^{ik\varphi}L$
 and $Q(z)=kI$. When exits from different rounds interfere, the derivative
 instead gives $\langle u,Q(z)u\rangle=\|F_z u\|^2$ for unit input $u$ (Appendix~\ref{app:deriv}).
 
 \paragraph{Reading the weight with one qubit.}
-In a Larmor clock, a spin turns while the particle is inside a region~\cite{Buttiker83Larmor,Steinberg95Dwell}.
-In Figure~\ref{fig:phase-probe} we prepare a qubit in $(\ket0+\ket1)/\sqrt2$.
-Each return applies $z$ on the first branch and $ze^{i\delta}$ on the second.
+We let a qubit turn a little each time amplitude crosses the return wire.
+The idea comes from the Larmor clock, which probes the time a particle
+spends in a region by letting a weak magnetic field turn its spin only
+there~\cite{Buttiker83Larmor,Steinberg95Dwell}.
+
+We prepare the qubit in $(\ket0+\ket1)/\sqrt2$ (Figure~\ref{fig:phase-probe}). On each return
+the $\ket0$ branch picks up $z$ and the $\ket1$ branch picks up
+$ze^{i\delta}$, so after $k$ returns the extra phase on $\ket1$ is $e^{ik\delta}$.
+
 \begin{figure}[!htbp]\centering
 \begin{minipage}[c]{.54\linewidth}\centering
 \phaseReadout{.85cm}
@@ -2227,8 +2240,10 @@ The curve gives the weight for \code{guardRound} and the dashed line its phase a
 \Description{A probe qubit controls the extra return phase. At zero phase the weight is four; its average over the full circle is one.}
 \end{figure}
 
-Applying $S^\dagger$ and $H$ before reading the probe gives the imaginary
-part of the overlap~\cite[p.~1, following Eq.~(3)]{Childs13Hadamard}:
+Once the exits have added on each branch, we compare the two outputs.
+Multiplying the second branch by $-i$ with $S^\dagger$ before the final
+Hadamard makes the difference in output probabilities equal to the
+imaginary part of their overlap~\cite[p.~1, following Eq.~(3)]{Childs13Hadamard}.
 \[
  \Pr(b=0)-\Pr(b=1)
  =\operatorname{Im}\langle\Theta(z)u,\Theta(ze^{i\delta})u\rangle
@@ -2240,9 +2255,9 @@ of the two bit frequencies divided by $\delta$ estimates the weight $4$,
 with bias $O(\delta)$ and variance at most $1/(n\delta^2)$ (Appendix~\ref{app:observing}).
 
 \paragraph{Averaging over the phase.}
-We choose one angle uniformly per run and use it on every return.
-A cross term between $j$ and $k$ returns carries $z^{k-j}$, which averages
-to zero for $j\ne k$. In $|s+stz+st^2z^2+\cdots|^2$ this leaves the
+To recover the measured mean, we choose one angle uniformly for each run
+and use it on every return. A cross term between $j$ and $k$ returns then
+carries $z^{k-j}$, whose average vanishes unless $j=k$. In $|s+stz+st^2z^2+\cdots|^2$ this leaves the
 measured mean $s^2+s^2t^2+\cdots=1$. At the output only equal counts
 survive. The probe keeps the relative phase $e^{ik\delta}$, as if we had
 measured $k$ and rotated the probe by $k\delta$. Tracing out the probe gives
@@ -2258,13 +2273,14 @@ is the coherent channel and its average is $\meas$, so the two agree (Appendix~\
 
 \section{What the caller can tell}\label{sec:family}
 
-When we feed one closed \code{guardRound} into another, the second
-undoes the sign change of the first. The caller sees a straight wire. To see the returns add, we put a phase on each
-return wire before closing either loop.
-
-\begin{wrapfigure}[10]{r}{.28\linewidth}\centering
+\begin{wrapfigure}[9]{r}{.26\linewidth}\centering
+\vspace{-\intextsep}
 \includegraphics[width=\linewidth]{figures/80-sequenced-sheets.pdf}
 \end{wrapfigure}
+With no added phase, two closed \code{guardRound} loops in sequence
+each change the sign, so the caller sees a straight wire. To see how the
+returns add, we vary the phase on both return wires together.
+
 Follow the green sheet from the first loop's output to the second loop's
 input. Each return on a purple sheet picks up $z$. One trip below and two
 above therefore carry the same $z^3$ as three below, so their amplitudes
@@ -2926,6 +2942,8 @@ In \code{trace guardRound on unit}, \code{trace guardRound} closes
 the return wire of the named table and \code{on} applies the resulting
 iso to \code{unit}. Figure~\ref{fig:syntax} gives the grammar.
 Types are built from $0$ and $1$ by sum and tensor, written \code{+} and \code{x} in source types.
+In programs, \code{;} denotes sequence, \code{+} direct sum, \code{*}
+tensor and \code{dagger} the adjoint.
 \begin{figure}[!htbp]
 \centering
 \(\begin{aligned}
@@ -3064,23 +3082,19 @@ domain. Writing $\Sigma\vdash t:a$ for a closed term, its rules are
 This suffices for feeding a superposition of ground values to a
 program.
 
-For a matrix $M$ with input columns $s$ and output rows $t$, row $s$
-of $M^\dagger$ is the conjugate of column $s$ of $M$. Consequently
-its Gram matrix has entries
+To check whether the table is reversible, we evaluate the clause that
+matches each basis input $s$ and use its output as column $s$ of $M$.
+Row $s$ of $M^\dagger$ is the conjugate of that column, so
 \[
 (M^\dagger M)_{ss'}=
  \sum_{t\in\mathcal B(b)}\overline{M_{ts}}M_{ts'}.
 \]
-Each product pairs amplitudes in the same output row. At $s=s'$ it
-contributes to the squared norm of one column; at $s\ne s'$ it
-contributes to the inner product between two columns.
+The diagonal entries give the squared column norms and the off-diagonal
+entries give the inner products between distinct columns. We can therefore
+check orthogonality on the expanded outputs. Forming this matrix for a
+dense $d$-by-$d$ table takes $O(d^3)$ arithmetic operations, where
+$d=2^q$ for a register of $q$ qubits.
 
-Let $M$ have one column for each $s\in\mathcal B(a)$, filled with the
-coefficients of the expression in the uniquely matching clause under
-its ground substitution. The following rule imposes a finite
-extensional check. Its orthogonality premise concerns fully expanded
-outputs, so it need not infer linear independence from surface
-syntax.
 \begin{mathpar}
 \isorule{\Delta_i\vdash v_i:a\quad \Sigma;\Delta_i\vdash
 e_i:b\quad(i\in I)\\
@@ -3246,11 +3260,6 @@ vectors and sums extend the calculation by linearity. Each combinator
 then acts on the same matrices before and after elaboration, including
 trace by Theorem~\ref{thm:total}. Equality on basis inputs extends
 linearly to inputs entangled with a retained factor.
-
-In source syntax, \code{;} denotes sequence, \code{+} direct sum and \code{dagger} the adjoint.
-We write \code{*} for the tensor of two isos and \code{x} for the product of their types.
-For a dense $d$-by-$d$ table the initial column check takes $O(d^3)$
-arithmetic operations. A register of $q$ qubits has $d=2^q$ basis values.
 
 \subsection{Denotation}
 A checked table denotes the linear extension of its columns. Names,
@@ -3594,9 +3603,10 @@ A state can stay inside forever without being fixed. For example, if
 $Dv=-v$ then every call preserves its norm, so $Bv=0$. Only a nonzero state
 with $Dv=v$ makes $I-D$ singular at phase one.
 \subsection{Eliminating a pattern}\label{app:elim}
-For a regular pivot the update below is also the scattering-matrix update
-of Gough and James~\cite[\S~4, Thm.~12]{GoughJames09Feedback} and
-Tezak et al.~\cite[App.~A, Eq.~(A1)]{Tezak12QHDL}. The proof includes a return with self-entry one.
+Closing one port requires summing its repeated returns. When its self-entry
+differs from one, this gives the usual scattering-matrix update~\cite[\S~4, Thm.~12]{GoughJames09Feedback}~\cite[App.~A, Eq.~(A1)]{Tezak12QHDL}.
+When the self-entry equals one, unitarity tells us what to do instead.
+
 \begin{proof}[Proof of Proposition~\ref{prop:elim}]
 \setlength{\parindent}{\appendixindent}
 Choose the returning basis value $q$ we want to remove, and leave the
@@ -3835,7 +3845,8 @@ adds all $n$ terms at zero, giving $\sqrt n\ket0$.
 Summing at phase one also gives $\sqrt n$, so neither operation is bounded on
 square-summable sequences.
 
-In Ying's free coin histories, $k$ returns followed by an exit give the word
+The exact count can also be written as a sequence of guard outcomes. In
+Ying's free coin histories, $k$ returns followed by an exit give the word
 $J\ket k=\ket{1^k0}$ in the $(k+1)$-coin sector~\cite[Eq.~(34)]{Ying14QuantumRecursion}.
 These words are orthonormal, so $J$ identifies the exact register isometrically
 with their closed span. For matched exit maps, $(J\otimes I)Ru$ and $Ru$ give
@@ -3884,9 +3895,8 @@ $\sum_{r<K}G_r\rho G_r^\dagger$, the channel of the hidden $K$-counter.
 If $D^n=0$, only counts $0,\ldots,n$ can occur, so $n+1$ equally spaced
 phases give the measured loop exactly.
 
-The table at the end of Section~\ref{sec:effects} gives these maps
-for \code{bypassRound}. For the
-classical trace, let
+We can recover the measured channel by closing the return block of a single
+measured call, as in Figure~\ref{fig:trace-comparison}. Let
 $\theta(\rho,\sigma)=\operatorname{diag}(\rho,\sigma)$ insert the
 two operator blocks and let $\varphi$ extract the diagonal output
 blocks. Then $\Phi_U=\varphi\circ\chan U\circ\theta$ is the branching
@@ -3896,10 +3906,9 @@ completely positive trace-nonincreasing maps, the classical-sum trace
 $\Tr^{\operatorname{End}(Y)}_{\rm cl}(\Phi_U)$ sends $\rho$ to
 $\sum_k x_k\rho x_k^\dagger$~\cite[\S~5.1, Eq.~(1)]{Selinger04QPL}~\cite[Thm.~3.2.11, Prop.~3.2.17]{AndresMartinez22Thesis}.
 
-The trace on finite isometries agrees with the coherent trace on
-embedded unitaries~\cite[Cor.~3.3.16]{AndresMartinez22Thesis}.
-Extracting the two diagonal blocks of the output removes the cross
-terms between an exit and a return.
+It is the extraction of the diagonal blocks after each call that removes
+coherence between exit and return. Embedding the unitary in finite
+isometries and tracing there still gives the coherent loop~\cite[Cor.~3.3.16]{AndresMartinez22Thesis}.
 
 \paragraph{Relation to monitored first returns.}
 The published test-first loop measures before applying
@@ -4207,8 +4216,6 @@ Taking the trace gives $\tr N=\dim Y_1$. When $Y_1=0$, $F_z=0$,
 and all three identities give zero return weight.
 \end{proof}
 
-
-
 For monitored first returns, identify the external output unitarily with
 the input $X$. An exit after $k$ returns takes $k+1$ calls, so counting
 calls multiplies $\Theta(z)$ by one more $z$. The relative phase derivative
@@ -4224,13 +4231,6 @@ the smallest reducing subspace as $X\oplus Y_1$. The mean on $u$ is the quadrati
 orthonormal basis is $\dim X$ times its uniform unit-sphere average.
 The monitored return times therefore sum to $\dim X+\dim Y_1$~\cite[Thm.~3.2, Eq.~(9)]{Bourgain14Subspace}.
 Removing one initial call per basis vector gives $\tr N=\dim Y_1$.
-
-In scattering theory Fyodorov and Sommers relate a wave packet's dwell time
-to the energy average of the Wigner--Smith matrix~\cite[Eqs.~(34)--(35)]{FyodorovSommers97Delay}.
-Here we differentiate with respect to the phase acquired in one round.
-A phase on the return tag is an ordinary iso, so forming this family requires no counter or guard
-measurement.
-
 
 \paragraph{Phase invariance and agreement.}
 On a nonempty external type, the phase family also characterizes
@@ -4588,13 +4588,13 @@ These are the two probabilities for \code{bypassRound} in Table~\ref{tab:three-l
 The ring alone returns scalar data in either experiment. Including the bypass in
 the body lets the immediate exit carry both paths, revealing their relative sign.
 
-For a single photon, prepare the path state $\ket+$ independently of
-frequency and write $p(\omega)$ for its spectral density. Suppose the
-detector sums over all arrival times without resolving frequency. Each frequency contributes its own
-difference-port probability, so the caller reads $1$ with probability
-$\int p(\omega)|1-\Theta_{\rm ring}(e^{i\omega\tau_0})|^2\,d\omega/4$,
-with $\int p(\omega)\,d\omega=1$. Write $\delta$ for the round-trip phase
-detuning. At fixed $|t|<1$ the loss from the difference port is
+A pulse of finite bandwidth samples several return phases. Suppose the
+incident photon has path state $\ket+$ independent of frequency and
+normalized spectral density $p(\omega)$. A detector that sums over all
+arrival times without resolving frequency reads the difference port with
+probability $\int p(\omega)|1-\Theta_{\rm ring}(e^{i\omega\tau_0})|^2\,d\omega/4$.
+At fixed $|t|<1$ the loss from that port at phase detuning $\delta$ is
+
 \[
  \frac{|1+\Theta_{\rm ring}(e^{i\delta})|^2}{4}
  =\frac{(1+t)^2\sin^2(\delta/2)}{(1-t)^2+4t\sin^2(\delta/2)}
@@ -4612,12 +4612,14 @@ intensity magnification $Q(1)$~\cite[Eq.~(7)]{HeebnerBoyd99Ring} gives
 the delay relative to the direct path. Indeed $d\varphi/d\omega=\tau_0$
 for a frequency-independent coupler, so
 $-i\Theta^\dagger d\Theta/d\omega=\tau_0 Q(1)$~\cite{Wigner55Phase,Smith60LifetimeMatrix}.
+For a wave packet, the analogous dwell time involves averaging the
+Wigner--Smith matrix over its energy spectrum~\cite[Eqs.~(34)--(35)]{FyodorovSommers97Delay}.
 
 \section{Observing the response}\label{app:observing}
 
-For a fixed $|z|=1$, the phase iso $P_z^c=\{s\leftrightarrow z\cdot
-s\}_{s\in\mathcal B(c)}:c\leftrightarrow c$ gives the marked source
-body $\beta;(I_b\oplus P_z^c)$. The bypass caller is
+We put a phase on each return by composing $\beta$ with $I_b\oplus P_z^c$,
+where $P_z^c=\{s\leftrightarrow z\cdot s\}_{s\in\mathcal B(c)}:c\leftrightarrow c$
+and $|z|=1$. With the bypass this gives the program
 \[
 H;\mathsf{trace}_1\bigl(\code{bypassRound}; (I_{\kw{Qubit}}\oplus
 P_z^1)\bigr);H.
@@ -4642,21 +4644,17 @@ Averaging this test over the phase circle gives the measured
 probability $1/5$ by~\eqref{eq:haar}.
 
 \paragraph{Comparing two nearby phases.}
-We derive the readout of Section~\ref{sec:phase} for any finite body.
-For \code{guardRound} the amplitudes before the phase gate at $z=1,-1$ are
-$2$ and $1/2$, giving weights $4$ and $1/4$.
-
-For $|z|=1$ and $\delta\in\mathbb R$, let the reference space be
-$H_r=\C^2$, and put
-$P_\delta=\operatorname{diag}(1,e^{i\delta})$.
-Use distributivity to identify $H_r\otimes(X\oplus Y)$ with
-$(H_r\otimes X)\oplus(H_r\otimes Y)$. The open body controlled by the reference is the finite unitary
+The bypass compares the loop with a straight path. To distinguish the
+circulating weights $4$ and $1/4$ of \code{guardRound} (return amplitudes
+$2$ at $z=1$ and $1/2$ at $z=-1$), we compare the loop at two nearby phases.
+A qubit $H_r=\C^2$ accompanies the data on both wires. By distributivity,
+$H_r\otimes(X\oplus Y)\cong(H_r\otimes X)\oplus(H_r\otimes Y)$. With $P_\delta=\operatorname{diag}(1,e^{i\delta})$ for
+$\delta\in\mathbb R$, the controlled body is
 \[
 W_{z,\delta} =\bigl(I_{H_r\otimes X'}\oplus(P_\delta\otimes
 zI_Y)\bigr) (I_{H_r}\otimes U).
 \]
-The external space carries the reference alongside the data and the return space is
-$H_r\otimes Y$. Because the reference bit is preserved, the $k$th exit is
+Because the body preserves the reference bit, the $k$th exit is
 $z^kx_k$ on branch zero and $(ze^{i\delta})^kx_k$ on branch one. Summing the exits
 gives $\ket0\bra0_r\otimes\Theta(z)+\ket1\bra1_r\otimes\Theta(ze^{i\delta})$.
 
