@@ -2249,19 +2249,19 @@ imaginary part of their overlap~\cite[p.~1, following Eq.~(3)]{Childs13Hadamard}
  =\operatorname{Im}\langle\Theta(z)u,\Theta(ze^{i\delta})u\rangle
  =\delta\,\|F_z u\|^2+O(\delta^2).
 \]
-At $z=1$, the probability of $0$ is $1/2$ for an immediate exit and
-$1/2+2\delta+O(\delta^2)$ for \code{guardRound}. In $n$ runs the difference
-of the two bit frequencies divided by $\delta$ estimates the weight $4$,
-with bias $O(\delta)$ and variance at most $1/(n\delta^2)$ (Appendix~\ref{app:observing}).
+An immediate exit gives both bits equal probability. For \code{guardRound}
+at $z=1$, the weight is four, so the difference in probabilities is
+$4\delta+O(\delta^2)$. Subtracting the two bit frequencies and dividing
+by $\delta$ estimates four, with bias $O(\delta)$ and variance at most
+$1/(n\delta^2)$ in $n$ independent runs (Appendix~\ref{app:observing}).
 
 \paragraph{Averaging over the phase.}
-To recover the measured mean, we choose one angle uniformly for each run
-and use it on every return. A cross term between $j$ and $k$ returns then
-carries $z^{k-j}$, whose average vanishes unless $j=k$. In $|s+stz+st^2z^2+\cdots|^2$ this leaves the
-measured mean $s^2+s^2t^2+\cdots=1$. At the output only equal counts
-survive. The probe keeps the relative phase $e^{ik\delta}$, as if we had
-measured $k$ and rotated the probe by $k\delta$. Tracing out the probe gives
-
+Now keep $\delta$ fixed but choose $z$ uniformly on the circle for each run.
+We use that same $z$ on every return, so a cross term with $j\ne k$ carries
+$z^{k-j}$ and averages to zero. The weight averages to $s^2+s^2t^2+\cdots=1$.
+The difference in bit probabilities is now $\delta+O(\delta^2)$, so the
+same readout estimates the measured mean of one. Each surviving count $k$
+turns the probe by $k\delta$, just as if we had measured $k$. Hiding the probe gives
 \begin{equation}\label{eq:haar}
  \meas(\rho)=\frac1{2\pi}\int_0^{2\pi}\Theta(e^{i\varphi})\rho
        \Theta(e^{i\varphi})^\dagger\,d\varphi .
@@ -2273,34 +2273,34 @@ is the coherent channel and its average is $\meas$, so the two agree (Appendix~\
 
 \section{What the caller can tell}\label{sec:family}
 
-\begin{wrapfigure}[9]{r}{.26\linewidth}\centering
-\vspace{-\intextsep}
-\includegraphics[width=\linewidth]{figures/80-sequenced-sheets.pdf}
-\end{wrapfigure}
-With no added phase, two closed \code{guardRound} loops in sequence
-each change the sign, so the caller sees a straight wire. To see how the
-returns add, we vary the phase on both return wires together.
+\noindent\begin{minipage}[c]{.71\linewidth}
+\setlength{\parindent}{1em}\noindent With no added phase, two closed \code{guardRound} loops each change
+the sign, so together they look like a straight wire. We put the same
+probe on both return wires, so a return in either loop turns it by $\delta$.
 
-Follow the green sheet from the first loop's output to the second loop's
-input. Each return on a purple sheet picks up $z$. One trip below and two
-above therefore carry the same $z^3$ as three below, so their amplitudes
-add. With $i$ returns in $U$ and $j$ in $V$, the exit map is
-$x_j^V x_i^U$. Collecting equal powers gives $x_k=\sum_{i+j=k}x_j^V x_i^U$.
-Two copies of \code{guardRound} thus give $\Theta_{\rm rot}(z)^2$.
+Follow the green sheet from the first loop to the second. Each return on
+a purple sheet picks up $z$, so one trip below and two above carry the
+same $z^3$ as three below. Their amplitudes add. With $i$ returns in
+$U$ and $j$ in $V$, the exit map is $x_j^V x_i^U$. Collecting equal
+powers gives $x_k=\sum_{i+j=k}x_j^V x_i^U$, so for the pair the
+response is $\Theta_{\rm rot}(z)^2$.
+\end{minipage}\hfill
+\begin{minipage}[c]{.26\linewidth}\centering
+\includegraphics[width=\linewidth]{figures/80-sequenced-sheets.pdf}
+\end{minipage}\par
 
 In two identical rings, a pulse shorter than their round-trip time
 separates the exits by total count. The first pulse passes straight through both. One round-trip
 time later, a trip in the first ring and a trip in the second reach the
 output together, so their amplitudes add.
 
-At resonance the two sign changes cancel. To distinguish the pair from
-a straight wire, we vary the common return phase. Each ring contributes
-a slope of four, giving a weight of eight on unit input. For a small change
-$\delta$ the probe reads $0$ with probability $1/2+4\delta+O(\delta^2)$
-for the pair and $1/2$ for the wire. Averaging the weight over a full turn
-gives two: each measured loop makes one return on average. We can learn
-that mean while the exits still interfere, without assigning a trip count
-to any one detection.
+At resonance the two sign changes cancel, but the common probe still
+distinguishes the pair from a straight wire. The two responses multiply,
+so their phases add. Each shifts by $4\delta$ to first order, giving a
+difference of $8\delta+O(\delta^2)$ between the probe's bit probabilities
+for the pair and zero for the wire. Averaging over the common phase now
+gives two, the sum of the measured means. Even after this average, paths
+with the same total can interfere because either ring gives the probe the same turn.
 
 \section{Related work and future directions}
 
@@ -2319,8 +2319,9 @@ distinguishes every round, Section~\ref{sec:agreement} decides whether
 discarding it gives the same data as letting all exits interfere.
 
 \paragraph{Future work.}
-When two loops run in sequence, a shared counter records their total.
-Separate counters can also tell us which loop made each return. We would
+A counter shared between the loops, like the common phase on the two rings,
+responds only to the total number of returns. Separate counters also record
+which loop made each return. We would
 like a test on the two clause tables that decides when sharing the counter
 preserves the caller's data channel.
 
@@ -2329,8 +2330,8 @@ Even when the total count is certain, it matters what else the counter records.
 Suppose the first loop lets $\ket0$ straight through and delays $\ket1$
 by one return, while the second does the reverse. Either basis input reaches the caller unchanged after exactly one return. If we send in $\ket+$,
 a counter shared between the loops reads one with certainty and the
-qubit comes back in $\ket+$. With separate counters, learning which
-loop made the return tells us which basis state went through. Even if
+qubit comes back in $\ket+$. With separate counters, $\ket0$ leaves the record $(0,1)$ and $\ket1$
+leaves $(1,0)$, so the record also distinguishes the two basis states. Even if
 we discard both counters, a final Hadamard now gives either bit with
 equal probability. With the shared counter it gives zero every time
 (Appendix~\ref{app:programs}).
