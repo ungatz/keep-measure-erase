@@ -1032,6 +1032,14 @@ $X$ and $X'$ have equal dimension, $L$ is unitary, as in the finite trace
 theorems~\cite[Thms.~4, 7, 8]{Bartha14QuantumTuringAutomata}~\cite[Thm.~3.3.15,
 Cor.~3.3.16]{AndresMartinez22Thesis}. Appendix~\ref{app:total} proves the decay bound.
 
+For each basis input $\ket s$, put the sum of the returns in column $s$ of $F$.
+The wire equations then read $(I_Y-D)F=C$, and column $s$ of $A+BF$ gives the output on $\ket s$.
+\[
+ \frac{\kappa\Downarrow U\quad U=\left(\begin{smallmatrix}A&B\\C&D\end{smallmatrix}\right)
+ \quad F:X\to Y\quad (I_Y-D)F=C}
+ {\mathsf{trace}_c\,\kappa\Downarrow A+BF}.
+\]
+
 \begin{figure}[!htbp]\centering
 \begin{minipage}[c]{.65\linewidth}\centering
 \includegraphics[width=\linewidth]{figures/28-sheets.pdf}
@@ -1058,17 +1066,6 @@ With external input amplitude one, the return amplitude solves y = 4/5 + (3/5)y,
 so both ends of the purple sheet carry two. The external output is 3/5 minus
 (4/5) times two, or minus one.}
 \end{figure}
-
-\par\smallskip\noindent\begin{minipage}[c]{.41\linewidth}
-\setlength{\parindent}{1em}\indent For each basis input $\ket s$, solve $y=C\ket s+Dy$ and put $y$ in
-column $s$ of $F$. Together these equations give $(I_Y-D)F=C$.
-The output $A\ket s+By$ is then column $s$ of $A+BF$.
-\end{minipage}\hfill\begin{minipage}[c]{.57\linewidth}\centering
-$\displaystyle \frac{\kappa\Downarrow U\quad
- U=\left(\begin{smallmatrix}A&B\\C&D\end{smallmatrix}\right)
- \quad F:X\to Y\quad (I_Y-D)F=C}
- {\mathsf{trace}_c\,\kappa\Downarrow A+BF}.$
-\end{minipage}\par
 
 \paragraph{An undetermined return.}
 For \code{guardRound} we divided by $1-3/5$. To see why $I_Y-D$
@@ -1104,13 +1101,12 @@ round extraPort : Unit + Qubit = {
 \end{tikzpicture}
 \end{minipage}\par
 
-In the order \code{exit unit}, \code{back 1}, \code{back 0}, the matrix is
-$R_\theta\oplus I_1$. The original port satisfies $y_1=\tfrac45u+\tfrac35y_1$, so $y_1=2u$.
-The new port gives $y_0=y_0$, which leaves $y_0$ free: $I_Y-D=\operatorname{diag}(2/5,0)$
-has no inverse. Starting from $u$ gives $y_0=0$ since no call reaches this port,
-but every choice gives the same output $(3/5)u-(4/5)y_1=-u$.
+In the order \code{exit unit}, \code{back 1}, \code{back 0}, the matrix is $R_\theta\oplus I_1$.
+The equation $y_1=\tfrac45u+\tfrac35y_1$ fixes $y_1=2u$, while $y_0=y_0$ leaves $y_0$ free.
+Here $I_Y-D=\operatorname{diag}(2/5,0)$ has no inverse. No call from $u$ reaches \code{back 0}, so $y_0=0$ in the sum,
+but any $y_0$ gives the same exit $(3/5)u-(4/5)y_1=-u$.
 
-\begin{wrapfigure}{r}{.34\linewidth}\centering
+\begin{wrapfigure}{r}{.28\linewidth}\centering
 \begin{tikzpicture}[kme circuit,>={Stealth[length=1.25mm,width=.85mm]}]
  \node[kme gate,minimum height=9mm] (u) at (0,0) {$U$};
  \draw[flipout,->] (-1.02,.25) node[left] {$0$} -- (u.west |- 0,.25);
@@ -1121,31 +1117,38 @@ but every choice gives the same output $(3/5)u-(4/5)y_1=-u$.
    {$\|w\|^2=\textcolor{flipout}{\|Bw\|^2}+\textcolor{flipback}{\|w\|^2}$};
 \end{tikzpicture}
 \end{wrapfigure}
-Summing the returns gives one solution. If two solutions for the same input
-differ by $w$, subtracting their equations cancels $Cu$ and leaves $Dw=w$.
-All of $w$ comes back on the lower wire, so norm preservation forces $Bw=0$. Both solutions
-give the caller the same output (Appendix~\ref{app:total},
-Figure~\ref{fig:feedback-proof}).
+To see why the output is unique for any finite unitary body, fix the input $u$.
+Summing its returns gives a solution $y$ of $y=Cu+Dy$. If $y+w$ is another, both
+wire equations have the same $Cu$, so their difference satisfies $w=Dw$.
+The inset follows $w$ alone through the body. It returns unchanged,
+which accounts for its full norm. Since $U$ preserves norm, nothing
+is left at the exit ($Bw=0$), and adding $w$ to $y$ leaves the caller's
+output $Au+By$ unchanged (Appendix~\ref{app:total}, Figure~\ref{fig:feedback-proof}).
 
-The distinction between an undetermined return and a definite output also matters
-in Czachor's model of a wormhole. He uses the ring's feedback equation to send
-part of a particle's later output to its earlier input. The grandfather paradox follows a single history in which a
-traveler goes back and prevents their own departure. In Czachor's model the
-different round trips contribute amplitudes to the same outgoing state. Their
-interference at the mouth of the lossless loop gives reflection with probability
-one~\cite[Thm.~1 and \S~IV]{Czachor19Ring}.
+In \code{guardRound} the wire carries amplitude from one call to the next.
+Czachor uses it to model a wormhole by feeding one port's later output
+back to its earlier input~\cite[Eqs.~(6)--(7)]{Czachor19Ring}.
+The grandfather paradox imagines a traveler who goes back and prevents
+their own departure. In Czachor's model the returning wave meets the incoming
+wave at the entrance, where all round trips contribute to the outgoing state.
+When $I_Y-D$ is invertible, the particle leaves on the outside path with
+probability one. Czachor calls this reflection at the entrance. The traveler
+leaves without meeting their earlier self~\cite[Thm.~1 and \S~IV]{Czachor19Ring}.
 
-Czachor observes that a singular scalar return decouples from the external port and asks
-what happens in higher dimensions~\cite[arXiv v8, after Eq.~(45)]{Czachor19Ring}. Here
-$Bw=0$ gives the same uniqueness for every finite unitary body. Bartha identifies the
-resulting map with the path sum~\cite[Thm.~8]{Bartha14QuantumTuringAutomata}.
+When a single complex amplitude returns unchanged, Czachor finds that its
+port is isolated, just like \code{back 0}. He asks what happens with more return modes~\cite[arXiv v8, after Eq.~(45)]{Czachor19Ring}.
+In~finite~dimensions the outside state is still unique because $Bw=0$.
+Even if two solutions differ inside the loop, none of that difference can reach the caller.
+Bartha proved for finite isometries that the external map equals the sum over
+paths to the exit~\cite[Thm.~8]{Bartha14QuantumTuringAutomata}.
 
 \subsection{Compiling away the loop}\label{sec:eliminate}
-The wire equation gave us the gate $L=A+BF$. We can also write its
-clauses directly. In \code{guardRound}, the first clause sends $3/5$
-to \code{exit unit} and $4/5$ to \code{back unit}. Follow the latter
-in the picture. One call sends $B=-4/5$ to the exit and $D=3/5$ back
-to \code{back unit}.
+Building on Bartha's proof, Andr\'es-Mart\'inez eliminates return values one at
+a time for finite contractions~\cite[Thm.~3.3.15, pp.~165--166]{AndresMartinez22Thesis}.
+We use this elimination to write the clauses of $L=A+BF$.
+In \code{guardRound}, the first clause sends $3/5$ to \code{exit unit}
+and $4/5$ to \code{back unit}. From there one call sends $B=-4/5$ to
+the exit and $D=3/5$ back to the same port.
 
 \par\smallskip\noindent
 \begin{minipage}[c]{.49\linewidth}\centering
@@ -1260,8 +1263,7 @@ Dropping the outer \kw{exit} tags gives a loop-free table. In \code{kickbackExac
 for example, eliminating the returns gives $I\otimes X$: the data bit flips
 even on inputs entangled with the ancilla (Appendix~\ref{app:kickback}).
 
-This applies elimination for finite contractions~\cite[Thm.~3.3.15]{AndresMartinez22Thesis}
-to clause tables. Summing the trips from a port back to itself when $d\ne1$ gives Mason's signal-flow reduction~\cite[\S\S~3.1--3.2]{Mason53Flow},
+Summing the trips from a port back to itself when $d\ne1$ gives Mason's signal-flow reduction~\cite[\S\S~3.1--3.2]{Mason53Flow},
 also used for zero-delay feedback when $I-D$ is invertible~\cite[Thm.~12, Eq.~(12)]{GoughJames09Feedback}
 and for optical networks~\cite[App.~A, Eq.~(A1)]{Tezak12QHDL}.
 With $n$ external and $m$ returning values, $m$ steps each update at most $(n+m)^2$
