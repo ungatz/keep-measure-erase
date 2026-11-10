@@ -1534,8 +1534,8 @@ difference is one. In the plot the curves for two and thirty-two trips both
 start at plus one. The steady field equals minus one at positive angles in the plotted interval.}
 \end{figure}
 
-The splitters in Figure~\ref{fig:ring-model} act like the Hadamards in Figure~\ref{fig:bypass-intro}. When the ring reverses the sign,
-light leaves by the difference port. At $z=-1$ the ring preserves the sign and light leaves by the sum port.
+The splitters in Figure~\ref{fig:ring-model} act like the Hadamards in Figure~\ref{fig:bypass-intro}. When the ring reverses the sign, the two paths cancel at the sum port and all the light leaves by the difference port.
+At a frequency where a trip takes a whole number of cycles plus half a cycle ($z=-1$), the ring preserves the sign and the light leaves by the sum port.
 Wang et al. used a ring on the shorter path to send alternate frequencies in a regularly spaced sequence
 mostly to opposite outputs~\cite[Figs.~1 and~6]{Wang25Interleaver}.
 
@@ -1865,9 +1865,9 @@ Its chance of returning again is $9/25$ at each call, so it eventually
 exits as $\ket1$. The second Hadamard sends half that probability to
 output $1$, giving $1/25+(8/25)(1/2)=1/5$ in all.
 
-Send in a pulse shorter than one trip. Only the direct pulse meets the
-bypass in Figure~\ref{fig:22-pulses}. The later pulses arrive one trip
-apart and split equally, giving $1/5$ overall~\cite[Eqs.~(30)--(33)]{RaymerMcKinstrie13Cavity}.
+For a pulse shorter than one trip, we time the bypass to meet the direct pulse
+(Figure~\ref{fig:22-pulses}). Each later pulse reaches the splitter alone and splits equally,
+giving $1/5$ overall~\cite[Eqs.~(30)--(33)]{RaymerMcKinstrie13Cavity}.
 This reminds us of Bergson's first book, where he observes that we can
 hear a bell's rhythm, yet to count its strokes we must keep them
 distinct~\cite[pp.~86--87]{Bergson10TimeAndFreeWill}. Here each trip
@@ -2216,15 +2216,15 @@ $\|Cu\|^2+\|D_1Cu\|^2+\|D_1^2Cu\|^2+\cdots$. These are the probabilities
 of at least one return, at least two, and so on. Their sum counts a run with
 $k$ returns $k$ times, just as for \code{guardRound}.
 
-Summing over an orthonormal input basis gives $\tr N$. Unitarity gives
+On an orthonormal input basis these means sum to $\tr N$. Unitarity gives
 $CC^\dagger=I_{Y_1}-D_1D_1^\dagger$, so
 \[
  \tr N=\sum_{j\ge0}\tr(D_1^j CC^\dagger D_1^{\dagger j})
  =\sum_{j\ge0}\tr(D_1^j D_1^{\dagger j}-D_1^{j+1}D_1^{\dagger(j+1)})
  =\dim Y_1 .
 \]
-because consecutive terms cancel and $D_1^j$ tends to zero (Appendix~\ref{app:deriv}).
-For $X'=X$, counting the initial call in a monitored first return gives $\tr(I_X+N)=\dim X+\dim Y_1$~\cite[Thm.~3.2, Eq.~(9)]{Bourgain14Subspace}.
+Successive terms cancel, leaving $\tr I_{Y_1}$ in the limit since $D_1^j\to0$ (Appendix~\ref{app:deriv}).
+For $X'=X$, including the initial call gives the monitored sum $\tr(I_X+N)=\dim X+\dim Y_1$~\cite[Thm.~3.2, Eq.~(9)]{Bourgain14Subspace}.
 
 \paragraph{Reading the weight with one qubit.}
 We let a qubit turn a little each time amplitude crosses the return wire.
@@ -3147,9 +3147,8 @@ Row $s$ of $M^\dagger$ is the conjugate of that column, so
  \sum_{t\in\mathcal B(b)}\overline{M_{ts}}M_{ts'}.
 \]
 The diagonal entries give the squared column norms and the off-diagonal
-entries give the inner products between distinct columns. We can therefore
-check orthogonality on the expanded outputs. Forming this matrix for a
-dense $d$-by-$d$ table takes $O(d^3)$ arithmetic operations, where
+entries give the inner products between distinct columns. Once the columns are known,
+forming $M^\dagger M$ for a dense $d$-by-$d$ table takes $O(d^3)$ arithmetic operations, where
 $d=2^q$ for a register of $q$ qubits.
 
 \begin{mathpar}
@@ -3726,11 +3725,10 @@ places.}\label{tab:rounds}
 For a scalar rotation with cosine $-1<t<1$, the trace is
 $t-(1-t^2)/(1-t)=-1$. At the identity rotation it is $+1$.
 With a bypass and a final Hadamard, the probability of reading $1$
-therefore jumps from one to zero at the identity. In any fixed finite
-circuit built by composing the supplied gate, this probability varies
-continuously. If it gives probability $p$ at the identity, its error
+therefore jumps from one to zero at the identity. In a fixed circuit using finitely many calls to the supplied gate, each amplitude is a finite sum of products
+of gate entries, so the probability varies continuously with the rotation angle. If it gives probability $p$ at the identity, its error
 there is $p$ and its error on nearby rotations tends to $1-p$.
-At least one of these is $1/2$ or more.
+The worst-case error is therefore at least $\max(p,1-p)\ge1/2$.
 Given the clause table, elimination can test $t=1$ exactly~\cite[Remark~B.1]{FairbanksSelinger25Traces}.
 Section~\ref{sec:light} follows the light from its first trip around an empty ring.
 
@@ -3879,14 +3877,14 @@ x_k^\dagger$. Such operators span the input matrix algebra,
 giving~\eqref{eq:meas}. For \code{bypassRound}, all delayed exits are
 multiples of $P=\ket1\bra1$. Their squared coefficients sum to
 $s^4/(1-t^2)=s^2$. Thus $u\mapsto\ket0\otimes Au+\ket1\otimes sPu$
-also gives the measured channel when we hide the bit. This bit represents
-two Kraus operators. It carries neither the count nor its parity.
+gives the same measured channel when we hide the bit. The bit labels two Kraus operators, $A$ on an immediate exit and $sP$ on all delayed exits together.
 
 For a finite counter put $G_j=\sum_{k\equiv
 j\bmod K}x_k$. Discarding that counter instead gives
 $\sum_{j<K}G_j\rho G_j^\dagger$. As a result, unequal counts
-congruent modulo $K$ retain cross terms. For the Fourier forms, the
-coefficient sum is absolutely convergent, and
+congruent modulo $K$ still interfere. At the $K$th roots of unity, $z^k$ depends only on $k\bmod K$,
+so averaging against $\bar z^{\,j}$ selects the entire residue class $j$. Averaging over
+the whole circle selects a single count. The exit series converges absolutely, so we may average it term by term to obtain
 \[
 G_j=\frac1K\sum_{z^K=1}\bar z^{\,j}\Theta(z),\qquad
 x_k=\frac1{2\pi}\int_0^{2\pi}
@@ -4214,8 +4212,8 @@ $j=p-1$ gives $\sum_{k\le p} k x_k^\dagger x_k=\sum_{j<p}T_j-pT_p$.
 Geometric decay sends $pT_p$ to zero, so the phase average $\sum_j T_j$
 equals $N$. On a unit input, its expectation gives the mean number of returns.
 
-Taking traces gives $\tr N=\sum_j\tr T_j$. Cyclicity puts each trace on
-$Y_1$, where the return row gives $CC^\dagger=I-D_1D_1^\dagger$.
+Taking traces gives $\tr N=\sum_j\tr T_j$. Writing $T_j=(D_1^j C)^\dagger(D_1^j C)$, we can move the first factor
+to the end under the trace. The product now acts on $Y_1$, where the return row gives $CC^\dagger=I-D_1D_1^\dagger$.
 Substituting this difference cancels consecutive terms:
 \[
  \sum_{j=0}^{p-1} D_1^j CC^\dagger D_1^{\dagger j}
@@ -4591,9 +4589,8 @@ program~\cite[Eqs.~(6)--(7)]{Alsing17RingLoss}.
 
 To realize \code{bypassRound}, match the bypass to the straight-through
 path in phase and travel time. Prepare the external qubit in $\ket+$, run the
-two paths, and apply $H$ to compare them. At this frequency the delay around the ring has phase factor $z=1$, so the ring contributes
-$-1$ against the bypass amplitude $1$ and the difference port has
-probability $|1-(-1)|^2/4=1$.
+two paths, and apply $H$ to compare them. At $z=1$ the ring changes the sign on its path while the bypass preserves it,
+so the difference port has probability $|1-(-1)|^2/4=1$.
 
 For a short pulse, only the direct field arrives with the bypass.
 Their amplitudes at the difference port are $-t/2$ and $1/2$, so the
@@ -4605,15 +4602,15 @@ and we add the resulting probabilities.
                 \sum_{k\ge1}s^4t^{2(k-1)}\right)
 =\frac14\bigl((1-t)^2+1-t^2\bigr)=\frac15.
 \]
-These are the two probabilities for \code{bypassRound} in Table~\ref{tab:three-loops}.
-The ring alone returns scalar data in either experiment. Including the bypass in
-the body lets the immediate exit carry both paths, revealing their relative sign.
+The ring alone has just one data output. The bypass gives it a second path,
+so steady light reveals the relative sign and gives the coherent row of Table~\ref{tab:three-loops}.
+With a short pulse only the direct exit meets the bypass, giving the measured row.
 
 A pulse contains a range of frequencies, each with its own round-trip phase
 $\omega\tau_0$. Suppose the incident photon has the same path state $\ket+$
-at every frequency, with frequency distribution $p(\omega)$. A detector
-that counts every arrival at the difference port without distinguishing
-frequencies therefore averages the single-frequency probabilities, giving $\int p(\omega)|1-\Theta_{\rm ring}(e^{i\omega\tau_0})|^2\,d\omega/4$.
+at every frequency, with frequency distribution $p(\omega)$. We count arrivals
+at the difference port over the entire pulse. Since distinct frequency modes are orthogonal,
+ignoring frequency adds their probabilities, weighted by $p(\omega)$, giving $\int p(\omega)|1-\Theta_{\rm ring}(e^{i\omega\tau_0})|^2\,d\omega/4$.
 The component at resonance goes entirely to the difference port. For a component
 whose round-trip phase is $\delta$ away from a whole turn, the probability of reaching
 the other port, for fixed $|t|<1$, is
@@ -4628,12 +4625,14 @@ then $\mathbb E[\delta^4]\le h^2\sigma^2$. As $h\to0$ the mean probability of re
 is therefore $Q(1)^2\sigma^2/4+o(\sigma^2)$. If the round-trip phase is uniform, averaging the full response over the spectrum
 gives the measured loop by~\eqref{eq:haar}.
 
-Section~\ref{sec:light} gives the switch-on field $-1+(1+t)t^n$
-after $n$ trips. Near $t=1$ it takes $-1/\log t\sim1/(1-t)$ trips to
-reduce the difference from the limiting amplitude $-1$ by a factor of $e$.
-For the steady output, we can also ask how its phase changes with frequency. The circulating intensity for unit input is $Q(1)$~\cite[Eq.~(7)]{HeebnerBoyd99Ring}. Since $\varphi=\omega\tau_0$,
-we have $d\varphi/d\omega=\tau_0$. With a frequency-independent coupler this gives
-$-i\Theta^\dagger d\Theta/d\omega=\tau_0 Q(1)$~\cite{Wigner55Phase,Smith60LifetimeMatrix}.
+When we first turn on the light, the output after $n$ trips still differs from $-1$
+by $(1+t)t^n$ (Section~\ref{sec:light}). Each trip multiplies this difference by $t$.
+Near $t=1$ it takes about $-1/\log t\sim1/(1-t)$ trips to reduce it by a factor of $e$.
+
+Once the output is steady, we can vary the frequency and read the change in its phase.
+With a frequency-independent coupler, only the round-trip phase $\varphi=\omega\tau_0$ changes.
+The chain rule therefore gives $-i\Theta^\dagger d\Theta/d\omega=\tau_0 Q(e^{i\varphi})$~\cite{Wigner55Phase,Smith60LifetimeMatrix}.
+At resonance this is $\tau_0 Q(1)$, where $Q(1)$ is the circulating intensity for unit input~\cite[Eq.~(7)]{HeebnerBoyd99Ring}.
 For a wave packet, the corresponding dwell time involves averaging the Wigner--Smith matrix over the packet's energy spectrum~\cite[Eqs.~(34)--(35)]{FyodorovSommers97Delay}.
 
 \section{Observing the response}\label{app:observing}
@@ -4701,6 +4700,7 @@ The constants depend on the local variation of the response.
 For phases $1$ and $i$, \code{guardRound} returns $-1$ and $(15-8i)/17$.
 Their overlap $(-15+8i)/17$ gives a probability difference of $8/17$,
 so the caller reads zero with probability $25/34$ and one with $9/34$.
-Dividing by the quarter turn $\pi/2$ gives $16/(17\pi)$. As we bring
-the second phase back toward $1$, this quotient tends to the local weight $4$.
+A quarter turn is a large phase change. Dividing the measured difference by $\pi/2$
+gives $16/(17\pi)$ for this setting. To read the local weight, we repeat the comparison
+with smaller angles $\delta$. The probability difference shrinks, but its ratio to $\delta$ approaches four.
 \end{document}
