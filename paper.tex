@@ -535,7 +535,7 @@ and a way back. Light that leaves after one trip, after two or after
 a hundred all reaches the same output. Under a steady beam of a single
 color, these contributions add as
 amplitudes~\cite[Eq.~(6)]{Alsing17RingLoss}~\cite[\S~5.3]{AndresMartinez22Thesis},
-just like the exits of a loop that leaves its count implicit. The returns cross twice, giving the minus sign in $3/5-8/5=-1$ (Section~\ref{sec:light}).
+just like the exits of a loop that leaves its count implicit. In this coupler each crossing shifts the phase by a quarter turn, so crossing into the ring and back gives the minus sign in $3/5-8/5=-1$ (Section~\ref{sec:light}).
 \end{minipage}\hfill
 \begin{minipage}[c]{.26\linewidth}\centering
 \begin{tikzpicture}[x=8.1mm,y=8.1mm,>={Stealth[length=1.2mm,width=.85mm]},
@@ -1435,7 +1435,7 @@ equations of Section~\ref{sec:trace}. By Theorem~\ref{thm:total},
 every solution gives $v=Lu$.
 \end{proof}
 
-The matrix sets the optical elements, one mode per basis value ($2^n$ for $n$ qubits).
+The matrix sets the optical elements, one mode per basis value ($2^n$ modes for $n$ qubits).
 Given an optical device with accessible return ports, only the delay lines need to be built.
 A fixed number of black-box gate calls gives a continuous response
 (Appendix~\ref{app:total}). The time needed for the optical response to settle can vary with the coupling.
@@ -1529,9 +1529,8 @@ If we hold a small positive angle fixed and wait, $t^n$ decays and the sign reve
 
 At this frequency and nonzero coupling, unit input gives a circulating field of magnitude $|s|/(1-t)$.
 Its weight $s^2/(1-t)^2=\cot^2(\theta/2)$ grows without bound as $\theta\to0$.
-For a frequency-independent coupler, multiplying by the round-trip time
-gives the Wigner--Smith delay~\cite{Wigner55Phase,Smith60LifetimeMatrix,HeebnerBoyd99Ring}.
-The trace is thus the long-time response of a device whose delay diverges where the trace jumps.
+With a frequency-independent coupler, the output phase changes with angular frequency at a rate equal to the weight times the round-trip time. This is the Wigner--Smith delay~\cite{Wigner55Phase,Smith60LifetimeMatrix,HeebnerBoyd99Ring}.
+This long-time response has a diverging delay where the trace jumps.
 
 A flash shorter than one trip behaves differently: the arrival time of each pulse records the count~\cite[Eqs.~(30)--(33)]{RaymerMcKinstrie13Cavity}.
 In the program we can choose how much of that record to keep.
@@ -1804,6 +1803,7 @@ outcomes~\cite[\S~4]{AssoliniDiPierro25Loops}.
 In the bounded loop of Yuan et al., the count is already an input giving the number
 of repetitions. Shorter branches execute no-ops until all reach the same
 control state at the same step~\cite[\S~6.1, Fig.~7]{YuanVillanyiCarbin24QCM}.
+This padding assumes a classical upper bound on the number of repetitions.
 As in constant-time code, padding makes the timing the same for every count.
 The input retains the original count. Register-machine compilation also
 computes waits within a time bound~\cite[\S~5]{ZhangYing25QRM}.
@@ -1851,8 +1851,7 @@ count has its own arrival time.
 
 \begin{figure}[!htbp]\centering
 \includegraphics[width=.95\linewidth]{figures/22-pulses.pdf}
-\caption{A short pulse separates exits by a round-trip time $\tau_0$. At $z=1$ the dots sample the waves
-at the same instant. Their sum reverses the sign, sending the light to the difference port in Figure~\ref{fig:ring-model}.}\label{fig:22-pulses}
+\caption{Successive exits of a short pulse arrive $\tau_0$ apart. For steady light at $z=1$, the dots show the fields at the same instant. They add to give the sign change in Figure~\ref{fig:ring-model}.}\label{fig:22-pulses}
 
 \Description{A pulse splits at the gap. The direct pulse reaches the marked port
 first, followed at equal intervals by the returns. With steady light the
@@ -2116,7 +2115,7 @@ A clause that exits at once with amplitude $-1$ gives exactly the same gate
 as the rotation with feedback. To learn which body we have, we put a phase
 on the return wire before we close it. Only the rotation sends amplitude
 through that wire.
-\par\smallskip\noindent\begin{minipage}[c]{.64\linewidth}
+\par\smallskip\noindent\begin{minipage}[c]{.68\linewidth}
 \setlength{\parindent}{1em}\indent In \code{trace (guardRound; phaseBack)}
 we run \code{phaseBack} after every call. Its exit clause passes
 \code{exit unit} straight through. Its return clause multiplies
@@ -2130,49 +2129,43 @@ $s=4/5$, each further trip contributes another factor $tz$, giving
  \Theta_{\rm rot}(z)=t-s^2z(1+tz+t^2z^2+\cdots)=\frac{t-z}{1-tz}.
 \]
 \end{minipage}\hfill
-\begin{minipage}[c]{.32\linewidth}\centering
+\begin{minipage}[c]{.30\linewidth}\centering
 \includegraphics[width=\linewidth]{figures/75-phased-sheet.pdf}
 \end{minipage}\par
 
-On \code{exit unit} the first clause sends amplitude $s=4/5$ back.
-If we measure the tag, the probability of \kw{back} is its squared
-magnitude, $|s|^2=16/25$. After that outcome the next call starts on \code{back unit}
-and sends amplitude $t=3/5$ back to that port, so the conditional
-probability of another return is $|t|^2=9/25$. The probabilities of
-at least one, two and three returns are $s^2,s^2t^2,s^2t^4$.
-Adding these tail probabilities counts a run with $k$ returns $k$ times.
-The mean is $s^2/(1-t^2)=1$ for every rotation with $s\ne0$, since $s^2=1-t^2$.
+On \code{exit unit} the first call sends amplitude $s=4/5$ back, so a
+guard measurement gives \kw{back} with probability $|s|^2=16/25$.
+The next call then starts on \code{back unit}, where its return
+amplitude is $t=3/5$ and the probability of another return is $|t|^2=9/25$.
+The probabilities of making at least one, two and three returns are
+$s^2,s^2t^2,s^2t^4$. Summing these tails counts a run with $k$ returns
+$k$ times, so the mean is $s^2/(1-t^2)=1$ whenever $s\ne0$, since $s^2=1-t^2$.
 
+When we close the wire coherently, the same returns contribute amplitudes
+$s,stz,s(tz)^2,\ldots$ just before the phase gate. At $z=1$ they add to
+$s/(1-t)=2$ on unit input. The squared magnitude is the
+\emph{circulating weight}, here $|2|^2=4$, four times the measured mean. At $z=-1$ the signs alternate,
+giving amplitude $s/(1+t)=1/2$ and weight $1/4$.
 
-Now close the wire coherently and look just before the phase gate.
-For input amplitude $1$, successive returns contribute
-$s,stz,s(tz)^2,\ldots$ to the same wire. At $z=1$ they add to
-$s/(1-t)=2$, as in the wire equation of Section~\ref{sec:trace}.
-Its squared magnitude for unit input is the \emph{circulating weight},
-here $|2|^2=4$, four times the measured mean. At $z=-1$ the returns alternate in sign, so the same input gives
-amplitude $s/(1+t)=1/2$ and weight $1/4$.
-
-The bypass caller reads $1$ at $z=1$ and $0$ at $z=-1$. To read the
-weight we compare nearby settings. Since
-$\Theta_{\rm rot}(e^{i\delta})=-1-4i\delta+O(\delta^2)$, the output phase
-changes by $4\delta$ to first order, while an immediate exit with sign
-$-1$ keeps its phase fixed. Heebner and Boyd identify this slope with the
-circulating intensity in a lossless ring on resonance~\cite[p.~848, Eq.~(7)]{HeebnerBoyd99Ring}.
-Each trip of duration $\tau_0$ adds phase $\omega\tau_0$.
-If the coupler is frequency-independent, the delay is therefore $4\tau_0$ relative to the
-direct path~\cite{Wigner55Phase,Smith60LifetimeMatrix}.
+The output reveals this weight when we compare nearby phases.
+Since $\Theta_{\rm rot}(e^{i\delta})=-1-4i\delta+O(\delta^2)$, its phase
+changes by $4\delta$ to first order. Heebner and Boyd identify this
+slope with the circulating intensity in a lossless ring on
+resonance~\cite[p.~848, Eq.~(7)]{HeebnerBoyd99Ring}. Each trip adds phase
+$\omega\tau_0$, so for a frequency-independent coupler the delay relative to
+the direct path is $4\tau_0$~\cite{Wigner55Phase,Smith60LifetimeMatrix}.
 \paragraph{From one return wire to a finite body.}
-For input $u$, the successive returns add to $F_z u=Cu+zDCu+(zD)^2Cu+\cdots$.
-The first return $Cu$ lies in the emitting subspace $Y_1$, and $D$ keeps
-each later return there. Since the powers of $D$ decay geometrically on $Y_1$
-(Theorem~\ref{thm:total}), we can sum the series by inverting $I-zD$ on that subspace. The returns cross the phase gate once more on their way out
-through $B$, giving $\Theta(z)u=Au+zBF_z u$ with the immediate exit included.
+Each trip through the phase gate and $D$ adds one term to the return vector
+$F_z u=Cu+zDCu+z^2D^2Cu+\cdots$. These returns lie in $Y_1$, the orthogonal
+complement of the states that never emit. There $D_1=D|_{Y_1}$ has geometrically
+decaying powers (Theorem~\ref{thm:total}), so $F_z=(I_{Y_1}-zD_1)^{-1}C$.
+Each return crosses the phase gate once more on its way out through $B$.
 \begin{theorem}[The measured mean and the phase derivative]\label{thm:deriv}
-For a finite unitary body with exit maps $x_k$, let $Y_1$ be the
-orthogonal complement of the return states that never emit.
-Put $D_1=D|_{Y_1}$. At $z=e^{i\varphi}$ write $F_z=(I_{Y_1}-zD_1)^{-1}C$ for the
-return map, $\Theta(z)=\sum_{k\ge0}z^kx_k$ for the output and
-$N=\sum_{k\ge0}k\,x_k^\dagger x_k$ for the measured mean number of returns. Then
+For a finite unitary body, let $x_k$ be the exit map after $k$ returns.
+At $z=e^{i\varphi}$ the coherent output map is
+$\Theta(z)=A+zBF_z=\sum_{k\ge0}z^k x_k$. Measuring the guard gives exit $k$
+with probability $\|x_k u\|^2$ on unit input $u$, so the mean number
+of returns is $\langle u,Nu\rangle$ for $N=\sum_{k\ge0}k\,x_k^\dagger x_k$. Then
 \[
  Q(z)=-i\Theta(z)^\dagger\frac{d}{d\varphi}\Theta(e^{i\varphi})
      =F_z^\dagger F_z,\qquad
@@ -2180,31 +2173,33 @@ $N=\sum_{k\ge0}k\,x_k^\dagger x_k$ for the measured mean number of returns. Then
  \tr N=\dim Y_1 .
 \]
 \end{theorem}
-At phase $z$ the body sends $(u,zF_z u)$ to $(\Theta(z)u,F_z u)$.
-Since the body preserves inner products, comparing this call with one at $w$
-gives $I-\Theta(w)^\dagger\Theta(z)=(1-\bar w z)F_w^\dagger F_z$~\cite[Eq.~(4.10)]{BehrndtHassiSnoo09Colligations}.
-Differentiate in the angle of $z$ at $z=w$. The factor $1-\bar w z$
-vanishes there, leaving $Q(w)=F_w^\dagger F_w$.
-In the phase average of $-i\Theta^\dagger\,d\Theta/d\varphi$,
-only equal powers of $z$ survive, giving $\sum_k k x_k^\dagger x_k=N$.
-For the last identity we average $\tr(F_z^\dagger F_z)$ instead. Only
-equal powers survive here too. Moving the factors around each trace and using
-$CC^\dagger=I-D_1D_1^\dagger$ gives
+To see why the output reveals the weight, compare two nearby phases $z$ and
+$w=ze^{i\delta}$ on the same unit input $u$. At $z$ the body sends
+$(u,zF_z u)$ to $(\Theta(z)u,F_z u)$, while the second setting feeds $wF_w u$ back.
+Equating the input and output inner products gives~\cite[Eq.~(4.10)]{BehrndtHassiSnoo09Colligations}
 \[
- \sum_{j\ge0}\tr(D_1^j CC^\dagger D_1^{\dagger j})
- =\sum_{j\ge0}\tr(D_1^j D_1^{\dagger j}-D_1^{j+1}D_1^{\dagger(j+1)})
- =\tr I_{Y_1},
+ \langle\Theta(z)u,\Theta(w)u\rangle
+ =1+(e^{i\delta}-1)\langle F_z u,F_w u\rangle .
 \]
-where consecutive terms cancel and $D_1^j$ tends to zero.
+As $w$ approaches $z$, the return vectors agree in the limit, so the imaginary
+part of the overlap is $\delta\|F_z u\|^2$ to first order. Its slope
+$\langle u,Q(z)u\rangle$ measures the circulating weight. For a fixed return
+count $k$, the output simply acquires $z^k$, so $\Theta(z)=z^kL$ and $Q(z)=kI$.
 
-In a monitored first return the initial call counts too, so an exit after
-$k$ returns takes $k+1$ calls. For $X'=X$, summing the mean number of
-calls over an orthonormal input basis gives
-$\tr(I_X+N)=\dim X+\dim Y_1$, as in Bourgain et al.~\cite[Eq.~(8), Thm.~3.2]{Bourgain14Subspace}.
+Averaging $\|F_z u\|^2$ over a full turn cancels the cross terms, leaving
+$\|Cu\|^2+\|D_1Cu\|^2+\|D_1^2Cu\|^2+\cdots$. These are the probabilities
+of at least one return, at least two, and so on. Their sum counts a run with
+$k$ returns $k$ times, just as for \code{guardRound}.
 
-If every exit makes $k$ returns, then $\Theta(e^{i\varphi})=e^{ik\varphi}L$
-and $Q(z)=kI$. When exits from different rounds interfere, the derivative
-instead gives $\langle u,Q(z)u\rangle=\|F_z u\|^2$ for unit input $u$ (Appendix~\ref{app:deriv}).
+Summing over an orthonormal input basis gives $\tr N$. Unitarity gives
+$CC^\dagger=I_{Y_1}-D_1D_1^\dagger$, so
+\[
+ \tr N=\sum_{j\ge0}\tr(D_1^j CC^\dagger D_1^{\dagger j})
+ =\sum_{j\ge0}\tr(D_1^j D_1^{\dagger j}-D_1^{j+1}D_1^{\dagger(j+1)})
+ =\dim Y_1 .
+\]
+because consecutive terms cancel and $D_1^j$ tends to zero (Appendix~\ref{app:deriv}).
+For $X'=X$, counting the initial call in a monitored first return gives $\tr(I_X+N)=\dim X+\dim Y_1$~\cite[Thm.~3.2, Eq.~(9)]{Bourgain14Subspace}.
 
 \paragraph{Reading the weight with one qubit.}
 We let a qubit turn a little each time amplitude crosses the return wire.
@@ -2215,6 +2210,18 @@ there~\cite{Buttiker83Larmor,Steinberg95Dwell}.
 We prepare the qubit in $(\ket0+\ket1)/\sqrt2$ (Figure~\ref{fig:phase-probe}). On each return
 the $\ket0$ branch picks up $z$ and the $\ket1$ branch picks up
 $ze^{i\delta}$, so after $k$ returns the extra phase on $\ket1$ is $e^{ik\delta}$.
+After the exits have added, $S^\dagger$ multiplies the second branch by $-i$,
+so the final Hadamard reads the imaginary part of the overlap~\cite[p.~1, following Eq.~(3)]{Childs13Hadamard}:
+\[
+ \Pr(b=0)-\Pr(b=1)
+ =\operatorname{Im}\langle\Theta(z)u,\Theta(ze^{i\delta})u\rangle
+ =\delta\,\|F_z u\|^2+O(\delta^2).
+\]
+An immediate exit gives both bits equal probability. For \code{guardRound}
+at $z=1$, the overlap gives a difference of $4\delta+O(\delta^2)$.
+In $n$ independent runs, the difference in bit frequencies divided by $\delta$
+estimates four with bias $O(\delta)$ and variance at most $1/(n\delta^2)$
+(Appendix~\ref{app:observing}).
 
 \begin{figure}[!htbp]\centering
 \begin{minipage}[c]{.54\linewidth}\centering
@@ -2246,41 +2253,35 @@ The curve gives the weight for \code{guardRound} and the dashed line its phase a
 \Description{A probe qubit controls the extra return phase. At zero phase the weight is four; its average over the full circle is one.}
 \end{figure}
 
-Once the exits have added on each branch, we compare the two outputs.
-Multiplying the second branch by $-i$ with $S^\dagger$ before the final
-Hadamard makes the difference in output probabilities equal to the
-imaginary part of their overlap~\cite[p.~1, following Eq.~(3)]{Childs13Hadamard}.
-\[
- \Pr(b=0)-\Pr(b=1)
- =\operatorname{Im}\langle\Theta(z)u,\Theta(ze^{i\delta})u\rangle
- =\delta\,\|F_z u\|^2+O(\delta^2).
-\]
-An immediate exit gives both bits equal probability. For \code{guardRound}
-at $z=1$, the weight is four, so the difference in probabilities is
-$4\delta+O(\delta^2)$. Subtracting the two bit frequencies and dividing
-by $\delta$ estimates four, with bias $O(\delta)$ and variance at most
-$1/(n\delta^2)$ in $n$ independent runs (Appendix~\ref{app:observing}).
-
 \paragraph{Averaging over the phase.}
-Now keep $\delta$ fixed but choose $z$ uniformly on the circle for each run.
-We use that same $z$ on every return, so a cross term with $j\ne k$ carries
-$z^{k-j}$ and averages to zero. The weight averages to $s^2+s^2t^2+\cdots=1$.
-The difference in bit probabilities is now $\delta+O(\delta^2)$, so the
-same readout estimates the measured mean of one. Each surviving count $k$
-turns the probe by $k\delta$, just as if we had measured $k$. For the
-data alone, averaging over $z$ removes those same cross terms and leaves
+Keep $\delta$ fixed and choose $z$ uniformly for each run. Averaging $z^{k-j}$ leaves only pairs with equal counts.
+Each surviving count $k$ turns the probe by $k\delta$, so for \code{guardRound}
+the bit probabilities now differ by $\delta+O(\delta^2)$: the probe reads the
+measured mean of one. Averaging the data gives
 \begin{equation}\label{eq:haar}
  \meas(\rho)=\frac1{2\pi}\int_0^{2\pi}\Theta(e^{i\varphi})\rho
        \Theta(e^{i\varphi})^\dagger\,d\varphi .
 \end{equation}
-Without the probe, the bypass caller reads $1$ one time in five over the circle and half the time over $\{1,-1\}$
-(hidden parity, Appendix~\ref{app:readings}). When all exits are multiples of one gate, as in \code{guardRound},
-varying $z$ changes only its overall phase. Conversely, if the channel stays fixed as we vary $z$, its value at $z=1$
-is the coherent channel and its average is $\meas$, so the two agree (Appendix~\ref{app:deriv}).
+Without the probe, the bypass caller reads $1$ at $z=1$ and $0$ at $z=-1$.
+Choosing between them by a fair coin gives $1$ half the time. Only odd counts change sign,
+so exits of the same parity still interfere, as with a hidden parity bit (Appendix~\ref{app:readings}).
 
+To average over a full turn, follow the same two paths. The first Hadamard
+gives each amplitude $1/\sqrt2$. At output $1$ we subtract the loop path
+from the bypass and divide by $\sqrt2$ again, giving $(1-\Theta_{\rm rot}(z))/2$.
+The loop changes only the phase, so $|\Theta_{\rm rot}(z)|=1$ and squaring
+the magnitude gives probability $(1-\operatorname{Re}\Theta_{\rm rot}(z))/2$.
+With $z$ chosen uniformly, each delayed exit carries a power $z^k$ that
+averages to zero. Only the immediate $3/5$ remains, giving $(1-3/5)/2=1/5$.
+
+The bypass reveals a phase that is invisible on \code{guardRound} alone.
+If all exits are multiples of one gate, changing $z$ gives that gate an
+overall phase, leaving its data channel unchanged. Conversely, a channel
+that stays the same over the circle agrees at $z=1$ with its average:
+the coherent and measured loops then give the same data (Appendix~\ref{app:deriv}).
+
+\par\noindent\begin{minipage}[c]{.75\linewidth}
 \section{What the caller can tell}\label{sec:family}
-
-\noindent\begin{minipage}[c]{.71\linewidth}
 \setlength{\parindent}{1em}\noindent With no added phase, two closed \code{guardRound} loops each change
 the sign, so together they look like a straight wire. We put the same
 probe on both return wires, so a return in either loop turns it by $\delta$.
@@ -2292,7 +2293,7 @@ $U$ and $j$ in $V$, the exit map is $x_j^V x_i^U$. Collecting equal
 powers gives $x_k=\sum_{i+j=k}x_j^V x_i^U$, so for the pair the
 response is $\Theta_{\rm rot}(z)^2$.
 \end{minipage}\hfill
-\begin{minipage}[c]{.26\linewidth}\centering
+\begin{minipage}[c]{.23\linewidth}\centering
 \includegraphics[width=\linewidth]{figures/80-sequenced-sheets.pdf}
 \end{minipage}\par
 
@@ -4599,19 +4600,21 @@ These are the two probabilities for \code{bypassRound} in Table~\ref{tab:three-l
 The ring alone returns scalar data in either experiment. Including the bypass in
 the body lets the immediate exit carry both paths, revealing their relative sign.
 
-A pulse of finite bandwidth samples several return phases. Suppose the
-incident photon has path state $\ket+$ independent of frequency and
-normalized spectral density $p(\omega)$. A detector that sums over all
-arrival times without resolving frequency reads the difference port with
-probability $\int p(\omega)|1-\Theta_{\rm ring}(e^{i\omega\tau_0})|^2\,d\omega/4$.
-At fixed $|t|<1$ the loss from that port at phase detuning $\delta$ is
+A pulse contains a range of frequencies, each with its own round-trip phase
+$\omega\tau_0$. Suppose the incident photon has the same path state $\ket+$
+at every frequency, with frequency distribution $p(\omega)$. A detector
+that counts every arrival at the difference port without distinguishing
+frequencies therefore averages the single-frequency probabilities, giving $\int p(\omega)|1-\Theta_{\rm ring}(e^{i\omega\tau_0})|^2\,d\omega/4$.
+At resonance all the light leaves by this port. When the round-trip phase
+differs from resonance by $\delta$, the probability of reaching the other
+port, for fixed $|t|<1$, is
 
 \[
  \frac{|1+\Theta_{\rm ring}(e^{i\delta})|^2}{4}
  =\frac{(1+t)^2\sin^2(\delta/2)}{(1-t)^2+4t\sin^2(\delta/2)}
  =\frac{Q(1)^2}{4}\delta^2+O_t(\delta^4).
 \]
-If the spectrum lies in $|\delta|\le h$ and has rms detuning $\sigma$,
+If the spectrum lies in $|\delta|\le h$ and $\sigma^2=\mathbb E[\delta^2]$,
 then $\mathbb E[\delta^4]\le h^2\sigma^2$. As $h\to0$ the mean loss
 is therefore $Q(1)^2\sigma^2/4+o(\sigma^2)$. If the round-trip phase is uniform, averaging the full response over the spectrum
 gives the measured loop by~\eqref{eq:haar}.
