@@ -157,7 +157,7 @@
   \begin{scope}[declare function={
       mixangle(\x)=acos(.6)*(.5+.5*sin(90*max(-1,min(1,\x/.62))));
       busfield(\x)=.115*(cos(mixangle(\x))-2*sin(mixangle(\x)))*sin(360*\x/1.30);}]
-    \draw[opticalfield,wave head=.34,line width=.7pt,samples=95,domain=-1.95:0]
+    \draw[flipout,wave head=.34,line width=.7pt,samples=95,domain=-1.95:0]
       plot (\x,{busfield(\x)});
     \draw[ink,wave head=.66,line width=.7pt,samples=95,domain=0:1.95]
       plot (\x,{busfield(\x)});
@@ -457,27 +457,20 @@
 \begin{abstract}
 Quantum loops have a reputation for paradox. We trace the paradoxes to
 a single fact: the history of a quantum loop, the record of how many
-times its body ran, is itself quantum information. We make the choice
-of what to do with that history explicit in a small quantum language
-in the $\Pi$ family. The coherent loop lets exits interfere without
-recording the round. For every finite unitary body its direct-sum trace
-is total and unitary. Eliminating the return ports compiles it exactly
-into loop-free code over a field with decidable equality. At a chosen
-frequency, a lossless optical network with its return ports connected
-realizes this trace in steady state.
-The other two loops come from two universal constructions on quantum
-processes. Allocation ($\mathcal R$) lets us keep a count modulo the size
-of a register, and hiding ($\mathcal L$) lets us discard a fresh copy of
-the guard after each call. Measuring the guard on every round gives the
+times its body ran, is itself quantum information. In a small quantum language in the $\Pi$ family we can leave this history implicit, keep it, or measure it. The coherent loop is the direct-sum trace of its body:
+for every finite unitary body it is total and unitary and compiles exactly
+into loop-free code over a field with decidable equality. A lossless optical network realizes this trace in steady state
+when the returns come back in phase.
+The other two loops come from the coherent one through two universal constructions on quantum processes:
+$\mathcal R$ adds allocation for a finite counter, and $\mathcal L$ adds hiding
+so we can discard a fresh copy of the guard and feed back the returning outcome. Measuring the guard on every round gives the
 same data as keeping the exact number of returns and then forgetting it.
 Forgetting gives the coherent data exactly when the same count state
-factors out on every input. We can test this on finitely many exits over
-the same field to decide whether the measured loop can replace the coherent one even for
-callers holding a reference entangled with the input. A phase on each return lets us probe how much amplitude circulates.
-Averaged uniformly over that phase, the output state agrees with the
-measured loop and the circulating weight gives its mean number of returns. We run all three
-loops in a floating-point interpreter and check the compiler results exactly on real
-rational tables.
+factors out on every input. A finite test on the loop body decides when this holds, so a compiler
+can safely replace a coherent loop by a measured one even on entangled inputs. Conversely, averaging the coherent loop's output state over a uniformly random return phase
+yields the measured data, and averaging the circulating weight gives the measured loop's mean number of returns.
+We implement the language with all three loops and run the paper's examples in it,
+using a floating-point interpreter and exact checks on real rational tables.
 \end{abstract}
 \maketitle
 \hypersetup{citecolor=ink,linkcolor=ink,urlcolor=muted}
@@ -489,16 +482,15 @@ the answers on record seem to contradict one another. Let the loop's guard
 be in superposition, so that one branch exits after three rounds while
 another keeps going. If a clock records when each branch halts, branches
 that leave different records do not interfere~\cite{Myers97Halting,LindenPopescu98Halting}.
-A second approach measures the guard on every round, leaving a classical
-loop over quantum data~\cite{YingFeng10QuantumLoop}. The measurement supplies
-the classical condition when we write such a \code{while} loop in
-Q\# or OpenQASM~3~\cite{QSharpDocsLoops,OpenQASMClassicalInstructions}.
-A third bounds the rounds and pads shorter branches so that they reach
-the same control state at the same step~\cite{YuanVillanyiCarbin24QCM,ZhangYing25QRM}. Another approach
-leaves the exits free to interfere and defines the loop as an infinite sum over the paths of its control
+A second approach says the loop must measure its guard on every round, which leaves a classical loop
+running over quantum data~\cite{YingFeng10QuantumLoop}. Such a measurement supplies the classical condition for \code{while} in Q\# and OpenQASM~3~\cite{QSharpDocsLoops,OpenQASMClassicalInstructions}.
+A third keeps
+the guard coherent but bounds the rounds and pads shorter branches until
+all reach the same control state at the same step~\cite{YuanVillanyiCarbin24QCM,ZhangYing25QRM}. A fourth
+defines the loop as an infinite sum over the paths of its control
 flow~\cite{Bartha14QuantumTuringAutomata,AndresMartinez22Thesis}.
-
-To see why the answers differ, we follow what each loop does with its history.
+In our approach, the differences arise from a single design choice,
+namely what to do with the iteration count:
 \begin{itemize}
 \item \textbf{Keep it.} Return the count with the data, modulo $K$ for a register of size $K$.
 \item \textbf{Measure it.} Measure the guard after each call to decide whether to continue.
@@ -517,31 +509,35 @@ combine as complex amplitudes, which behave like signed weights: they
 can reinforce or cancel, so the final answer depends on both. A
 counter tags each contribution with its iteration number, and
 contributions with different tags stay apart whether or not anyone
-reads the tags. Untagged, the contributions of all iteration counts
-add into a single map, the direct-sum trace of the loop
+reads the tags. As in Bohr's two-slit example, leaving out the device that records the path
+can change the answer~\cite[Fig.~3]{Bohr49Einstein}.
+Untagged, the contributions of all iteration counts
+add into a single map, the infinite sum of the fourth answer.
+Category theory calls this map the direct-sum trace of the loop
 body~\cite{JSV96,Bartha14QuantumTuringAutomata}, and the geometry of
 interaction computes it with its execution
 formula~\cite{AbramskyHaghverdiScott02GoI}. For a reversible programmer the count is garbage that still carries information:
 if each round leaves a different tag, discarding the tags gives the same
 data as measuring the guard on every round.
 
-\par\medskip\noindent\begin{minipage}[c]{.70\linewidth}
+Leaving the count implicit may look exotic, yet optical devices do it routinely.
+
+\par\medskip\noindent\begin{minipage}[c]{.72\linewidth}
 \setlength{\parindent}{1em}\indent
-Leaving the count implicit may look exotic, yet optical devices do it
-routinely. A ring resonator is a closed loop of optical waveguide,
+A ring resonator is a closed loop of optical waveguide,
 much like a ring of optical fiber, placed beside a straight waveguide
 (right). Where the two pass close together, light arriving on the
 straight guide either continues along it or crosses into the ring,
 and light already in the ring either goes around again or crosses
-back out. This junction plays the role of a loop body with an exit
+back out. The light fields overlap across the gap.
+This junction plays the role of a loop body with an exit
 and a way back. Light that leaves after one trip, after two or after
 a hundred all reaches the same output. Under a steady beam of a single
 color, these contributions add as
 amplitudes~\cite[Eq.~(6)]{Alsing17RingLoss}~\cite[\S~5.3]{AndresMartinez22Thesis},
-just like uncounted exits. In the picture the direct field is $3/5$ and the returns sum to
-$-8/5$, so the output has amplitude $-1$.
+just like the exits of a loop that leaves its count implicit. The returns cross twice, giving the minus sign in $3/5-8/5=-1$ (Section~\ref{sec:light}).
 \end{minipage}\hfill
-\begin{minipage}[c]{.28\linewidth}\centering
+\begin{minipage}[c]{.26\linewidth}\centering
 \begin{tikzpicture}[x=8.1mm,y=8.1mm,>={Stealth[length=1.2mm,width=.85mm]},
  every node/.style={font=\footnotesize,inner sep=1pt}]
  \sideCoupledRing
@@ -563,40 +559,32 @@ $-8/5$, so the output has amplitude $-1$.
 \end{tikzpicture}
 \end{minipage}\par\medskip
 
-We make this choice explicit in \textsc{iso}, a reversible language
-based on symmetric pattern matching~\cite{CaretteEtAl24,SabryValironVizzotto18}.
-We write one body with an exit and a back edge. To close it, \code{trace}
-feeds the return straight back, $\mathsf{count}_K$ counts returns modulo $K$,
-and \code{while} measures the guard after each call.
 
-In \code{bypassRound} one clause passes straight through and the other two rotate the guard
-as in \code{guardRound}. The caller splits a qubit between the two paths and recombines
-them. It reads $1$ with certainty for coherent feedback, half the time when we keep parity
+
+
+We make the choice explicit in \textsc{iso}, a small quantum language based on reversible
+pattern matching~\cite{CaretteEtAl24,SabryValironVizzotto18}. A loop body has the shape of the ring's
+junction. To close it, \code{trace} feeds the state straight back, $\mathsf{count}_K$ also counts
+the returns modulo~$K$, and \code{while} measures the guard after each call.
+In \code{bypassRound} the caller splits a qubit between \code{guardRound} and a straight path.
+When the paths recombine, the caller reads $1$ with certainty for coherent feedback, half the time when we keep parity
 and discard the bit, and one time in five for measurement on every call
-(Table~\ref{tab:three-loops}).
+(Table~\ref{tab:three-loops}). This design yields four results:
 
 \begin{itemize}
-\item \textbf{Coherent loops compile away.}
-  With exact arithmetic and decidable coefficient equality, we eliminate
-  one returning basis value at a time, even when infinitely many rounds
-  contribute~\cite[proof of Thm.~3.3.15]{AndresMartinez22Thesis}
-  (Section~\ref{sec:trace}). Section~\ref{sec:light} realizes the same
-  map by feeding the return ports of a finite optical network back in phase.
+\item \textbf{Coherent loops compile away.} Solving for the returning state one basis value at a time
+  gives a loop-free program with exact coefficients even when infinitely many iterations
+  contribute~\cite[proof of Thm.~3.3.15]{AndresMartinez22Thesis} (Section~\ref{sec:trace}).
 \item \textbf{Keeping and measuring come from two universal constructions.}
-  Allocation supplies the counter and hiding lets us discard a copy of
-  the guard~\cite{HeunenKaarsgaard22Effects,HuotStaton18}
-  (Section~\ref{sec:effects}).
-\item \textbf{Forgetting can be certified.}
-For a nonempty input and $m$ return values, measuring the guard gives the coherent data in
-every context exactly when the first $m+1$ exit maps span a line
-(Section~\ref{sec:agreement}).
-
-\item \textbf{A phase probe reads the circulating weight.}
-A qubit picks up a small relative phase each time amplitude returns.
-  Reading that qubit lets us estimate the weight on the return wire.
-  Averaged over the return phase, this weight gives the measured mean
-  number of returns (Section~\ref{sec:phase}).
-
+  Allocation supplies the counter and hiding lets the caller discard it~\cite{HeunenKaarsgaard22Effects,HuotStaton18}.
+  Discarding an exact count gives the same data as \code{while} (Section~\ref{sec:effects}).
+\item \textbf{Forgetting can be certified.} With $m$ returning basis values and a nonempty input,
+  it suffices to check that the first $m+1$ exit maps are multiples of one map.
+  The measured loop may then replace the coherent one in every channel context (Section~\ref{sec:agreement}).
+\item \textbf{The coherent loop can be probed without a count register.}
+  Comparing two nearby phases with one control qubit estimates how much weight circulates
+  in the loop, and averaging that weight over all phases gives the measured loop's mean number of returns
+  (Section~\ref{sec:phase}).
 \end{itemize}
 
 \section{Finite programs in \textsc{iso}}\label{sec:iso}
@@ -609,8 +597,7 @@ $s\in\mathcal B(a)$ gives a vector $\ket s$. In $1+1$ only the tags distinguish 
 
 A clause $v\leftrightarrow e$ matches its input against $v$ and evaluates $e$ with
 the variables it binds. For instance, $\mathrm{left}\,x$ matches $\mathrm{left}\,s$
-and binds $x$ to $s$. Patterns use distinct variables, and expressions allow
-local calls and finite sums $\sum_i\alpha_i e_i$ with $\alpha_i\in\C$, written in brackets in the code.
+and binds $x$ to $s$.
 
 \par\smallskip\noindent\begin{minipage}[c]{.53\linewidth}\centering
 $\displaystyle \begin{aligned}
@@ -632,6 +619,8 @@ testing its tag.
 \end{minipage}\par\smallskip
 
 
+Patterns use distinct variables, and expressions allow
+local calls and finite sums $\sum_i\alpha_i e_i$ with $\alpha_i\in\C$, written in brackets in the code.
 We build isos from clause tables and names $f$ of earlier checked definitions.
 Sequence $f;g$ passes the output of $f$ to $g$, while $\oplus$ acts on the alternative
 selected by a tag and $\otimes$ acts on both factors of a pair. Dagger reverses an
@@ -869,17 +858,18 @@ feed back only the \kw{back} amplitude.
 
 \section{What the coherent loop computes}\label{sec:trace}
 
-Closing \code{guardRound} leaves the caller with a single output
-of type \kw{Unit}. Every amplitude that leaves through \kw{exit}
-contributes to that output, however many trips it makes around the loop.
+Closing \code{guardRound} feeds the lower output back into the next call.
+The upper output still goes to the caller, so the $3/5$ that leaves
+on the first call and whatever leaves on later calls reach the same port.
 
 \subsection{From a round to its exits}
 
-Follow the lower wire in Figure~\ref{fig:scalar-loop}. On the
-second call, only the \kw{back} clause contributes: it takes the
-returning amplitude $4/5$ and sends $(4/5)(-4/5)=-16/25$ to the
-external output. It sends $(4/5)(3/5)=12/25$ back for the third call.
-
+Follow the $4/5$ on the lower wire in Figure~\ref{fig:scalar-loop}.
+The second call sends $(4/5)(-4/5)=-16/25$ to the upper port and
+$(4/5)(3/5)=12/25$ back for a third call. A classical reversible body follows one path on each basis input.
+Here several exits contribute. We number the trips to work
+out what each contributes. Those numbers let us calculate the sum
+without putting a counter in the program. Only the sum reaches the caller.
 \begin{figure}[!htbp]\centering
 \begin{tikzpicture}[kme circuit,x=.96cm,>={Stealth[length=1.2mm,width=.8mm]},
  ext/.style={draw=flipout,line width=.8pt},
@@ -1136,18 +1126,16 @@ wave that has gone around the loop. For a lossless loop with $I_Y-D$
 invertible, their interference gives a unitary external map. To a
 traveler who tries to enter, it is as if the universe had placed a
 mirror across the doorway: the traveler is reflected with probability
-one. Suppose, however, that a perfect absorber inside the wormhole
-intercepts the returning wave. Nothing comes back to interfere at the
-entrance, so the traveler now has a chance to step through. If they
-do, it is a one-way ticket: the very absorber that let them in stops
-them before they can complete the trip around this loop~\cite[Thm.~1 and
+one. A perfect absorber inside the wormhole cuts off the wave that made
+the entrance act like a mirror. If the entrance couples to the incoming
+state, the traveler now has a chance to step through. If they do, it is
+a one-way ticket: the absorber stops them before they can complete the trip~\cite[Thm.~1 and
 \S~IV]{Czachor19Ring}.
 
 Hawking and Visser ask what could prevent a time machine from
 forming~\cite{Hawking92Chronology,Visser93Chronology}. In Czachor's model
 the wormhole already exists. He calls reflection a form of \emph{chronology
-protection} because unitarity rules out the contradictory history for
-any lossless dynamics along the loop~\cite[\S~I]{Czachor19Ring}.
+protection}: for such a loop, unitarity alone forces reflection~\cite[\S~I]{Czachor19Ring}.
 
 When a single complex amplitude returns unchanged, Czachor observes
 that its port is isolated, just like \code{back 0}. He asks what happens
@@ -1306,17 +1294,18 @@ and $(0,Y)$ only to the left.
  \foreach \x in {.97,2.08,3.83} \draw[cut] (\x,.62) -- (\x,-1.11);
  \draw[flipout,->] (.04,.25) node[above right] {$N(X)$} -- (u.west |- 0,.25);
  \draw[flipout,->] (u.east |- 0,.25) -- (4.93,.25) node[above left] {$N(X')$};
- \draw[return] (2.46,-1.00) -- (2.08,-1.00)
-   .. controls (1.57,-1.00) and (1.48,-.46) .. (.97,-.46) -- (.58,-.46)
-   arc[start angle=90,end angle=270,radius=2mm] -- (.97,-.86);
- \draw[return,preaction={draw=white,line width=2.3pt}] (.97,-.86)
-   .. controls (1.48,-.86) and (1.57,-.25) .. (2.08,-.25) -- (u.west |- 0,-.25);
- \draw[return] (u.east |- 0,-.25) -- (4.11,-.25)
-   arc[start angle=90,end angle=-90,radius=3.75mm] -- (2.46,-1.00);
- \draw[return,-{Stealth[length=1.05mm,width=.75mm]}]
-   (.58,-.46) arc[start angle=90,end angle=184,radius=2mm];
- \draw[return,->] (3.06,-1.00) -- (2.62,-1.00);
- \draw[return,->] (2.08,-.25) -- (2.42,-.25);
+ \tikzset{along/.style={postaction={decorate},decoration={markings,
+   mark=at position #1 with {\arrow{Stealth[length=1.35mm,width=1mm]}}}}}
+ \draw[return,along=.58] (u.east |- 0,-.25) -- (4.11,-.25)
+   arc[start angle=90,end angle=-90,radius=3.75mm];
+ \draw[return,along=.60] (4.11,-1.00) -- (2.08,-1.00);
+ \draw[return] (2.08,-1.00) .. controls (1.63,-1.00) and (1.42,-.46) .. (.97,-.46);
+ \draw[return,along=.51] (.97,-.46) -- (.53,-.46);
+ \draw[return] (.53,-.46) arc[start angle=90,end angle=270,radius=2mm];
+ \draw[return,along=.64] (.53,-.86) -- (.97,-.86);
+ \draw[return,preaction={draw=white,line width=2.7pt}] (.97,-.86)
+   .. controls (1.42,-.86) and (1.63,-.25) .. (2.08,-.25);
+ \draw[return,along=.77] (2.08,-.25) -- (u.west |- 0,-.25);
  \node[text=flipback] at (1.95,.018) {$(Y,0)$};
  \node[text=flipback,above] at (.57,-.46) {$\eta$};
  \node[text=flipback,right] at (4.49,-.63) {$\varepsilon$};
@@ -1425,10 +1414,9 @@ zero.}
 
 \section{The coherent loop in light}\label{sec:light}
 
-Fairbanks and Selinger ask whether the trace has a physical interpretation,
-and consider a device given the unitary as a black box~\cite[App.~B]{FairbanksSelinger25Traces}.
-For a given matrix, we can build the loop in light. Its response is a steady state, and the
-time to reach it matters near a discontinuity.
+Fairbanks and Selinger ask whether a device can take the trace of a unitary
+supplied as a black box~\cite[App.~B]{FairbanksSelinger25Traces}. For a given matrix,
+we can build its optical network.
 
 \begin{proposition}[Optical feedback]\label{prop:optical}
 Let $U:X\oplus Y\to X'\oplus Y$ be a finite unitary body. Build $U$
@@ -1447,11 +1435,10 @@ equations of Section~\ref{sec:trace}. By Theorem~\ref{thm:total},
 every solution gives $v=Lu$.
 \end{proof}
 
-The matrix sets the couplers in a network of $2^n$ modes for an $n$-qubit
-body. Given an optical device with accessible return ports, we need only
-connect the delay lines. A fixed number of black-box gate calls gives a
-continuous response (Appendix~\ref{app:total}), whereas the time the
-light takes to settle can grow as we vary the coupling.
+The matrix sets the optical elements, one mode per basis value ($2^n$ for $n$ qubits).
+Given an optical device with accessible return ports, only the delay lines need to be built.
+A fixed number of black-box gate calls gives a continuous response
+(Appendix~\ref{app:total}). The time needed for the optical response to settle can vary with the coupling.
 
 \begin{figure}[!htbp]\centering
 \begin{tikzpicture}[x=1cm,y=1cm,
@@ -1515,10 +1502,10 @@ light takes to settle can grow as we vary the coupling.
 $\binom{v}{d}=\left(\begin{smallmatrix}t&is\\is&t\end{smallmatrix}\right)\binom{u}{y},\quad y=zd
  \qquad \kw{exit}\mapsto t\,\kw{exit}+is\,\kw{back}\qquad
  \kw{back}\mapsto is\,\kw{exit}+t\,\kw{back}$
-\caption{The first splitter feeds both paths. The second gives their sum at the upper port and their difference at the lower. At the ring, light stays in its guide with amplitude $t=3/5$ or crosses with $is=4i/5$.
+\caption{The ring is the scalar case. The second splitter gives the sum of the two paths at the upper port and their difference at the lower. At the gap (Appendix~\ref{sec:ring}), light stays in its guide with amplitude $t=3/5$ or crosses with $is=4i/5$.
 The straight guide carries $u$ to $v$. The ring feeds $d$ back as $y=zd$~\cite{Alsing17RingLoss,RaymerMcKinstrie13Cavity}.
 At $z=1$, the two crossings contribute $(is)^2=-s^2$ and each extra trip contributes $t$.
-After $k+1$ returns this gives $BD^kCu$, as in \code{guardRound}.}\label{fig:ring-model}
+Each trip brings light back for another call, so exit $k+1$ has amplitude $BD^kCu$, as in \code{guardRound}.}\label{fig:ring-model}
 \Description{Two four-port balanced couplers enclose a bypass and a ring. Only the
 upper input of the first is illuminated. The ring in the lower path
 reverses the sign of its field. Each path contributes to both outputs of
@@ -1526,31 +1513,27 @@ the second splitter. Their normalized sum is zero and their normalized
 difference is one.}
 \end{figure}
 
-The splitters in Figure~\ref{fig:ring-model} act like the Hadamards in
-Figure~\ref{fig:bypass-intro}: when the ring reverses the sign, the paths cancel
-at the sum port and add at the difference port. At the wavelength where $z=-1$, the ring
-preserves the sign and the light leaves by the sum port. Wang et al. used a ring on the
-shorter path to send odd- and
-even-numbered frequencies in a regularly spaced sequence mostly to opposite
-outputs~\cite[Figs.~1 and~6]{Wang25Interleaver}.
+The splitters in Figure~\ref{fig:ring-model} act like the Hadamards in Figure~\ref{fig:bypass-intro}. When the ring reverses the sign,
+light leaves by the difference port. At $z=-1$ the ring preserves the sign and light leaves by the sum port.
+Wang et al. used a ring on the shorter path to send alternate frequencies in a regularly spaced sequence
+mostly to opposite outputs~\cite[Figs.~1 and~6]{Wang25Interleaver}.
 
 Fairbanks and Selinger observed that the trace of the rotation jumps from $+1$ at
 $\theta=0$ to $-1$ for $0<\theta<2\pi$~\cite[Remark~B.1]{FairbanksSelinger25Traces}.
-At zero all the light goes straight through. To see what happens near zero,
-switch on a steady unit input with the ring empty and the return in phase.
-The direct field $t=\cos\theta$ arrives first, and after $n\ge1$ trips the output is
+At zero all the light goes straight through. Near zero, switch on a steady unit input with the ring empty
+at a frequency where one trip brings the light back in phase.
+The direct field $t=\cos\theta$ arrives first. After $n\ge1$ trips the output is
 $t-(1-t^2)(1+t+\cdots+t^{n-1})=-1+(1+t)t^n$.
 If we watch for a fixed number of trips, this approaches $+1$ as $\theta\to0$.
 If we hold a small positive angle fixed and wait, $t^n$ decays and the sign reverses.
 
-At resonance and nonzero coupling, unit input gives a circulating field of magnitude $|s|/(1-t)$.
+At this frequency and nonzero coupling, unit input gives a circulating field of magnitude $|s|/(1-t)$.
 Its weight $s^2/(1-t)^2=\cot^2(\theta/2)$ grows without bound as $\theta\to0$.
 For a frequency-independent coupler, multiplying by the round-trip time
 gives the Wigner--Smith delay~\cite{Wigner55Phase,Smith60LifetimeMatrix,HeebnerBoyd99Ring}.
-The weaker the coupling, the longer we must wait to see the sign change.
+The trace is thus the long-time response of a device whose delay diverges where the trace jumps.
 
-A pulse shorter than one trip around the ring records the exact count
-in its arrival time~\cite[Eqs.~(30)--(33)]{RaymerMcKinstrie13Cavity}.
+A flash shorter than one trip behaves differently: the arrival time of each pulse records the count~\cite[Eqs.~(30)--(33)]{RaymerMcKinstrie13Cavity}.
 In the program we can choose how much of that record to keep.
 
 \section{What allocation and hiding do to the
@@ -1802,7 +1785,8 @@ Knowing the body, the caller can reverse the enlarged loop to recover
 $\ket0\otimes u$, then apply $L$ to the data. Even without the body,
 a Fourier measurement can erase the count: the uniform outcome has overlap
 $1/\sqrt K$ with every label and yields the unnormalized output $Lu/\sqrt K$, with probability $1/K$.
-Simply hiding the counter preserves interference within each label.
+When we hide the parity bit, the first and third exits can still
+interfere because both leave it at zero.
 For \code{bypassRound} the probability of $1$ approaches $1/5$ as $K$
 grows but differs from \code{while} at every finite $K$ (Appendix~\ref{app:readings}).
 Allocating the counter and applying the enlarged unitary makes $R_K$ an
@@ -1820,6 +1804,7 @@ outcomes~\cite[\S~4]{AssoliniDiPierro25Loops}.
 In the bounded loop of Yuan et al., the count is already an input giving the number
 of repetitions. Shorter branches execute no-ops until all reach the same
 control state at the same step~\cite[\S~6.1, Fig.~7]{YuanVillanyiCarbin24QCM}.
+As in constant-time code, padding makes the timing the same for every count.
 The input retains the original count. Register-machine compilation also
 computes waits within a time bound~\cite[\S~5]{ZhangYing25QRM}.
 Our counter records when amplitude leaves, even when one input gives
@@ -1830,10 +1815,11 @@ the first and third exits the same bit. Measuring the tag after every call
 distinguishes the first exit from every later one.
 
 \par\smallskip\noindent\begin{minipage}[c]{.56\linewidth}
-\setlength{\parindent}{1em}\indent Of the amplitude $1/\sqrt2$ sent down each path, all of the bypass and
-$3/5$ of the lower path leave on the first \kw{exit}. At output $1$ the
-second Hadamard takes their difference, giving amplitude $(1-3/5)/2=1/5$
-and probability $1/25$.
+\setlength{\parindent}{1em}\indent Each path starts with amplitude $1/\sqrt2$.
+On the first exit all of the bypass meets $3/5$ of the lower path.
+The second Hadamard takes their difference at output $1$, giving
+amplitude $(1-3/5)/2=1/5$ and probability $1/25$.
+
 \end{minipage}\hfill
 \begin{minipage}[c]{.415\linewidth}\centering
 \begin{tikzpicture}[kme circuit,>={Stealth[length=1.35mm,width=.95mm]}]
@@ -1851,32 +1837,33 @@ and probability $1/25$.
 \end{minipage}\par\smallskip
 
 Only the lower path returns, with probability $|(4/5)/\sqrt2|^2=8/25$.
-Each further call returns with probability $9/25$, so this part eventually
-exits. It carries $\ket1$, which the second Hadamard sends to $1$ half
-the time. Adding the first and later exits gives $1/25+(8/25)(1/2)=1/5$.
+Its chance of returning again is $9/25$ at each call, so it eventually
+exits as $\ket1$. The second Hadamard sends half that probability to
+output $1$, giving $1/25+(8/25)(1/2)=1/5$ in all.
 
-Arrival time can distinguish the same exits in the ring. Matching the bypass
-to the direct pulse in Figure~\ref{fig:22-pulses} lets those two amplitudes
-interfere. Each later pulse arrives alone and splits equally between the ports,
-so the difference port again receives $1/5$ in total. Under steady illumination
-at the frequency of Figure~\ref{fig:ring-model}, all the light reaches
-that port~\cite[Eqs.~(30)--(33)]{RaymerMcKinstrie13Cavity}.
+Send in a pulse shorter than one trip. Only the direct pulse meets the
+bypass in Figure~\ref{fig:22-pulses}. The later pulses arrive one trip
+apart and split equally, giving $1/5$ overall~\cite[Eqs.~(30)--(33)]{RaymerMcKinstrie13Cavity}.
+This reminds us of Bergson's first book, where he observes that we can
+hear a bell's rhythm, yet to count its strokes we must keep them
+distinct~\cite[pp.~86--87]{Bergson10TimeAndFreeWill}. Here each trip
+count has its own arrival time.
 
 \begin{figure}[!htbp]\centering
 \includegraphics[width=.95\linewidth]{figures/22-pulses.pdf}
-\caption{A pulse shorter than one round-trip time $\tau_0$ gives a separate pulse for each exit.
-With steady light at round-trip phase $z=1$, the dots mark the field at the same instant.
-The output sums all the exits.}\label{fig:22-pulses}
+\caption{A short pulse separates exits by a round-trip time $\tau_0$. At $z=1$ the dots sample the waves
+at the same instant. Their sum reverses the sign, sending the light to the difference port in Figure~\ref{fig:ring-model}.}\label{fig:22-pulses}
+
 \Description{A pulse splits at the gap. The direct pulse reaches the marked port
 first, followed at equal intervals by the returns. With steady light the
 direct crest and the returning troughs add to a trough of unit depth.}
 \end{figure}
 
 \paragraph{What one call measures.}
-The body of \code{while} must be reversible, so it can contain a compiled
-\code{trace}, whereas another \code{while} has channel type. After each call we
-copy the outer tag and hide the copy. Both paths of \code{bypassRound} have the
-same tag on the first exit, so this measurement lets them interfere.
+After each call we copy the tag and hide the copy.
+Both paths carry \kw{exit} on the first exit, so they can still interfere.
+The body must be reversible. It can contain a compiled \code{trace},
+whereas another \code{while} has channel type.
 
 \begin{figure}[!htbp]\centering
 \begin{minipage}[c]{.40\linewidth}\centering
@@ -1961,12 +1948,11 @@ b$}
 
 \section{When can a caller forget the
 difference?}\label{sec:agreement}
-A compiler may replace a measured loop with its compiled coherent gate when the
-two give the caller the same data on every input. For \code{guardRound} all exits
-carry \code{unit}. Their amplitudes sum to $3/5-(16/25)/(1-3/5)=-1$,
-yet measuring the guard also returns \code{unit} with certainty. Adding a bypass
-changes the answer because it contributes only to the first exit. A record of
-any later exit tells the caller that the amplitude took the rotation path.
+With the bypass, learning that the qubit returned even once tells us
+which path it took. In \code{guardRound} every exit carries \code{unit},
+whatever the count. A compiler can replace the measured loop by the
+coherent gate if both give the caller the same data on every input.
+We can see when this works by keeping the exact count for a moment.
 
 \par\smallskip\noindent\begin{minipage}[c]{.44\linewidth}
 \setlength{\parindent}{1em}\indent Suppose each exit $x_k$ applies the same gate $L$ up to a scalar $b_k$.
@@ -1977,9 +1963,9 @@ $\displaystyle Ru=\sum_k\ket k\otimes x_k u
 \end{minipage}\par\smallskip
 For \code{guardRound}, $L=-1$, so factoring out $Lu$ leaves
 $-\tfrac35\ket0+\tfrac{16}{25}\ket1+\tfrac{48}{125}\ket2+\cdots$
-in the counter. The count can vary. What stays the same for every input is the whole
-count state, including the relative phases of its amplitudes.
-
+in the counter. Knowing how many returns occurred need reveal nothing
+about the data. Here the whole count state, including its relative phases,
+is the same for every input, so discarding it leaves the caller with $Lu$.
 \begin{theorem}[Agreement on the returned data]\label{thm:axis}
 Let $\beta:a+c\leftrightarrow b+c$ be a finite iso with nonempty
 external input type $a$. Let $m=|\mathcal B(c)|$ be the number of
@@ -2020,7 +2006,7 @@ can change the bypass caller's probability from $(1-t)/2$ to one if the replacem
 is accepted. A direct channel test solves for up to $m^2$ return entries
 (Appendix~\ref{app:axis}).
 
-The bound is sharp. Suppose $\ket0$ exits at once and $\ket1$ after $m>0$ returns,
+The last exit can matter to the span test. Suppose $\ket0$ exits at once and $\ket1$ after $m>0$ returns,
 both unchanged (Appendix~\ref{app:axis}). A count modulo $m$ labels both exits zero
 and preserves $\ket+$, while measurement leaves $I/2$. All exits between
 $x_0=\ket0\bra0$ and $x_m=\ket1\bra1$ are zero, so only $x_m$ reveals the second
@@ -2124,19 +2110,22 @@ ret/.style={draw=flipback,line width=.8pt}]
  (7.75,0) node[right] {$b$};
 \end{tikzpicture}}
 \section{Reading the returns with a phase}\label{sec:phase}
-On \code{guardRound} the caller receives \code{unit} whether we close
-the wire or measure the tag. Even the coherent gate $-1$ could have
-come from a clause that exits at once. To tell the two bodies apart,
-we put a phase on the return wire before we close it. Only the rotation
-sends amplitude through that wire.
-
+Once \code{guardRound} is closed, the caller can see the sign change by
+using a bypass. What the sign alone cannot tell us is how it arose.
+A clause that exits at once with amplitude $-1$ gives exactly the same gate
+as the rotation with feedback. To learn which body we have, we put a phase
+on the return wire before we close it. Only the rotation sends amplitude
+through that wire.
 \par\smallskip\noindent\begin{minipage}[c]{.64\linewidth}
-\setlength{\parindent}{1em}\indent Follow the arrow around the purple sheet. Each time the body sends amplitude
-back, the gate on that sheet multiplies it by $z=e^{i\varphi}$.
-The direct exit still gives $3/5$, while one crossing gives
-$-(16/25)z$ and two give $-(48/125)z^2$.
-With $t=3/5$ and $s=4/5$, each further trip contributes a factor $tz$,
-so the output amplitude is
+\setlength{\parindent}{1em}\indent In \code{trace (guardRound; phaseBack)}
+we run \code{phaseBack} after every call. Its exit clause passes
+\code{exit unit} straight through. Its return clause multiplies
+\code{back unit} by $z=e^{i\varphi}$, as in
+\code{back unit <-> -1 . back unit} for $z=-1$.
+A phase placed on the returning state marks each iteration in the amplitude itself. On the purple sheet the direct
+$3/5$ misses the gate, the first return picks up $z$ and gives
+$-(16/25)z$, and the next gives $-(48/125)z^2$. With $t=3/5$ and
+$s=4/5$, each further trip contributes another factor $tz$, giving
 \[
  \Theta_{\rm rot}(z)=t-s^2z(1+tz+t^2z^2+\cdots)=\frac{t-z}{1-tz}.
 \]
@@ -2169,8 +2158,8 @@ $\Theta_{\rm rot}(e^{i\delta})=-1-4i\delta+O(\delta^2)$, the output phase
 changes by $4\delta$ to first order, while an immediate exit with sign
 $-1$ keeps its phase fixed. Heebner and Boyd identify this slope with the
 circulating intensity in a lossless ring on resonance~\cite[p.~848, Eq.~(7)]{HeebnerBoyd99Ring}.
-For a frequency-independent coupler, a frequency change $\Delta\omega$ adds
-$\tau_0\Delta\omega$ per trip, so the delay is $4\tau_0$ relative to the
+Each trip of duration $\tau_0$ adds phase $\omega\tau_0$.
+If the coupler is frequency-independent, the delay is therefore $4\tau_0$ relative to the
 direct path~\cite{Wigner55Phase,Smith60LifetimeMatrix}.
 \paragraph{From one return wire to a finite body.}
 For input $u$, the successive returns add to $F_z u=Cu+zDCu+(zD)^2Cu+\cdots$.
@@ -2278,7 +2267,8 @@ We use that same $z$ on every return, so a cross term with $j\ne k$ carries
 $z^{k-j}$ and averages to zero. The weight averages to $s^2+s^2t^2+\cdots=1$.
 The difference in bit probabilities is now $\delta+O(\delta^2)$, so the
 same readout estimates the measured mean of one. Each surviving count $k$
-turns the probe by $k\delta$, just as if we had measured $k$. Hiding the probe gives
+turns the probe by $k\delta$, just as if we had measured $k$. For the
+data alone, averaging over $z$ removes those same cross terms and leaves
 \begin{equation}\label{eq:haar}
  \meas(\rho)=\frac1{2\pi}\int_0^{2\pi}\Theta(e^{i\varphi})\rho
        \Theta(e^{i\varphi})^\dagger\,d\varphi .
@@ -2306,56 +2296,65 @@ response is $\Theta_{\rm rot}(z)^2$.
 \includegraphics[width=\linewidth]{figures/80-sequenced-sheets.pdf}
 \end{minipage}\par
 
-In two identical rings, a pulse shorter than their round-trip time
-separates the exits by total count. The first pulse passes straight through both. One round-trip
-time later, a trip in the first ring and a trip in the second reach the
-output together, so their amplitudes add.
+In two identical rings a short pulse resolves the total count. The direct
+pulse passes through both rings. One round-trip time later the two ways
+of making one trip arrive together, so their amplitudes add.
 
-At resonance the two sign changes cancel, but the common probe still
-distinguishes the pair from a straight wire. The two responses multiply,
-so their phases add. Each shifts by $4\delta$ to first order, giving a
-difference of $8\delta+O(\delta^2)$ between the probe's bit probabilities
-for the pair and zero for the wire. Averaging over the common phase now
-gives two, the sum of the measured means. Even after this average, paths
-with the same total can interfere because either ring gives the probe the same turn.
+When one trip brings the light back in phase, each ring changes the sign
+and the two signs cancel. Varying the common phase now distinguishes the
+pair from a straight wire. The two responses multiply, so their phase
+shifts add. Each contributes $4\delta$ to first order, giving a difference
+of $8\delta+O(\delta^2)$ in the probe's bit probabilities instead of zero.
+Averaging over the common phase gives two returns on average, even though
+the probe still leaves the two ways of making one trip free to interfere.
 
 \section{Related work and future directions}
+At the frequency where the two sign changes cancel, a straight wire
+gives the same gate as the two rings.
+Cl\'ement and Perdrix redraw polarizing beam-splitter diagrams on at
+least two wires with invertible gates, removing feedback while preserving
+the external map~\cite[\S~5, Prop.~26]{ClementPerdrix20PBS}. Each path
+there uses a feedback wire at most twice. In \code{guardRound} arbitrarily
+many trips contribute to one clause, and Andr\'es-Mart\'inez's construction
+lets us sum them one port at a time~\cite[Thm.~3.3.15]{AndresMartinez22Thesis}.
 
-Cl\'ement and Perdrix eliminate feedback from polarizing beam-splitter
-diagrams on at least two wires with invertible gates. A path in those
-diagrams traverses a feedback wire at most twice~\cite[\S~5, Prop.~26]{ClementPerdrix20PBS}.
-In \code{guardRound}, amplitude can return arbitrarily many times. Because
-each return feeds the same clause, its wire equation adds all those trips
-at once. Our compiler eliminates one return value at a time, following
-Andr\'es-Mart\'inez's proof for finite-dimensional contractions~\cite[Thm.~3.3.15]{AndresMartinez22Thesis}.
-
-Assolini and Di Pierro keep a fresh qubit at every guard test~\cite[Fig.~2 and \S~4]{AssoliniDiPierro25Loops},
-while Andr\'es-Mart\'inez varies the strength of the measurement~\cite[\S~4.2]{AndresMartinez22Thesis}.
-Our counter lets exits with the same label interfere. When the record
-distinguishes every round, Section~\ref{sec:agreement} decides whether
-discarding it gives the same data as letting all exits interfere.
+Which trips can contribute together depends on what survives each call.
+In Assolini and Di Pierro's loop a fresh qubit records each test, so
+exits on calls three and five remain distinct~\cite[Fig.~2 and \S~4]{AssoliniDiPierro25Loops}.
+Andr\'es-Mart\'inez varies how well a measurement distinguishes the guard
+values~\cite[\S~4.2]{AndresMartinez22Thesis}. Our parity bit flips on every return, yet both exits leave it at zero.
 
 \paragraph{Future work.}
-A counter shared between the loops, like the common phase on the two rings,
-responds only to the total number of returns. Separate counters also record
-which loop made each return. We would
-like a test on the two clause tables that decides when sharing the counter
-preserves the caller's data channel.
+Separate counters record where each return took place. A shared counter
+keeps only the total. We can decide whether sharing is safe by comparing
+the two data channels (Appendix~\ref{app:axis}). We would like to detect
+safe sharing from the clauses without building both channels. A similar question arises in recursion, where calls
+at the same depth can arrive by different routes.
 
 \section{Conclusion}
-Even when the total count is certain, it matters what else the counter records.
-Suppose the first loop lets $\ket0$ straight through and delays $\ket1$
-by one return, while the second does the reverse. Either basis input reaches the caller unchanged after exactly one return. If we send in $\ket+$,
-a counter shared between the loops reads one with certainty and the
-qubit comes back in $\ket+$. With separate counters, $\ket0$ leaves the record $(0,1)$ and $\ket1$
-leaves $(1,0)$, so the record also distinguishes the two basis states. Even if
-we discard both counters, a final Hadamard now gives either bit with
-equal probability. With the shared counter it gives zero every time
-(Appendix~\ref{app:programs}).
+We started with three choices for one loop body. Closing the wire lets
+us add all the exits into one gate. Keeping a count or measuring the
+guard changes which exits can still interfere, and our test tells us
+when the caller gets the coherent output even after we discard the exact count.
+Toss a fair coin before each run and change the sign on every return
+if it lands heads. Exits two returns apart still add in either case,
+and averaging the two settings gives the same data as hiding the parity bit.
+Averaging uniformly over all return phases gives the measured data, and reading
+the probe then recovers the mean number of returns.
 
-Both experiments count exactly one return. What changes is whether we can tell
-where it took place. In the two rings, the second pulse tells us that the light
-went around once, and the two ways of making that trip still interfere.
+Suppose we already know the total. Let one loop pass $\ket0$ straight
+through and delay $\ket1$ by one return, and let the next do the reverse.
+On input $\ket+$ each path makes one return, so a shared counter ends
+in $\ket1$ and leaves the qubit in $\ket+$. Separate counters leave
+$(0,1)$ beside $\ket0$ and $(1,0)$ beside $\ket1$. Discarding them leaves
+an equal mixture, which the final Hadamard preserves, whereas it sends
+$\ket+$ to $\ket0$ (Appendix~\ref{app:programs}). With one counter that
+bit is always zero. With two counters it is random.
+
+We knew all along that there was one return. What changed the qubit was
+writing down where it happened. With a shared counter the two paths
+could still interfere, precisely because knowing the total left that
+part of the history open.
 
 \par\smallskip\noindent\textbf{AI Use.}
 The authors used ChatGPT Codex (GPT-6.1 Sol) for
@@ -2489,6 +2488,15 @@ Theory}}
 \newblock
 \href{https://doi.org/10.1007/s11785-008-0064-z}{doi:\nolinkurl
 {10.1007/s11785-008-0064-z}}
+
+\bibitem[Bergson(1910)]{Bergson10TimeAndFreeWill}
+Henri Bergson. 1910. \emph{Time and Free Will: An Essay on the Immediate Data of Consciousness}.
+Translated by F.~L. Pogson. Swan Sonnenschein, London.
+
+\bibitem[Bohr(1949)]{Bohr49Einstein}
+Niels Bohr. 1949. Discussion with Einstein on epistemological problems in atomic physics.
+In \emph{Albert Einstein: Philosopher-Scientist}, Paul Arthur Schilpp (Ed.).
+The Library of Living Philosophers, Evanston, IL, 199--241.
 
 \bibitem[Bourgain et~al\mbox{.}(2014)]{Bourgain14Subspace}
 \bibfield{author}{\bibinfo{person}{J. Bourgain},
@@ -3368,7 +3376,8 @@ Here $\operatorname{Vec}(b)$ consists of the vectors in $\sem b$ and
 $\operatorname{Op}(b)$ of the operators on that space. For $t\Downarrow\psi$, the two applications are
 $v$ \code{on} $t\Downarrow\sem v\,\psi$ and
 $h$ \code{on} $t\Downarrow\sem h(\ket\psi\bra\psi)$.
-When $\|\psi\|=1$ the latter is a density matrix.
+For a unit vector the latter is a density matrix. The executable checks
+the input norm to numerical tolerance.
 An $\mathcal R[\mathsf{Unitary}]$ representative $U:X\oplus H\to X'$ exposes
 $u\mapsto U(u,0)$, identifying changes confined to the unused
 summand. An $\mathcal L[\mathsf{Isometry}]$ representative $V:X\to X'\otimes G$
@@ -3791,7 +3800,7 @@ factor is always $\ket*$, and the count state is
 $\xi_{\rm rot}=t\ket0-s^2\sum_{k\ge1}t^{k-1}\ket k$, with
 $t=3/5$ and $s=4/5$. Section~\ref{sec:agreement} factors out
 $L\ket*=-\ket*$, so its count vector is $-\xi_{\rm rot}$.
-Keeping the sign in the count vector lets us compare the rotation with the bypass.
+In the bypass experiment we factor out $\ket1$ on the rotating path, so its count state is $\xi_{\rm rot}$.
 
 In \code{bypassRound}, the bypass exits at once, so $R\ket0=\ket0\otimes\ket0$, while $R\ket1=\xi_{\rm rot}\otimes\ket1$.
 Only the rotating arm has a nonzero $\ket1$ count amplitude, so $R\ket+$ is entangled.
@@ -3867,12 +3876,13 @@ G_j=\frac1K\sum_{z^K=1}\bar z^{\,j}\Theta(z),\qquad
 x_k=\frac1{2\pi}\int_0^{2\pi}
 e^{-ik\varphi}\Theta(e^{i\varphi})\,d\varphi .
 \]
-Expanding $\Theta(z)\rho\Theta(z)^\dagger$ and integrating term by
-term removes all unequal indices, proving~\eqref{eq:haar}. For a uniform
-choice among the $K$th roots, a pair of exits $k,j$ acquires the factor
-$K^{-1}\sum_{z^K=1}z^{k-j}$. This geometric sum is one when
-$k\equiv j\pmod K$ and zero otherwise. The surviving terms are exactly
-$\sum_{r<K}G_r\rho G_r^\dagger$, the channel of the hidden $K$-counter.
+At phase one the exits add to $L$. Averaging
+$\Theta(z)\rho\Theta(z)^\dagger$ over the circle cancels every term with
+unequal counts, giving~\eqref{eq:haar} by absolute convergence. Over the
+$K$th roots, a pair of exits $k,j$ instead acquires the factor
+$K^{-1}\sum_{z^K=1}z^{k-j}$. It is one if $k\equiv j\pmod K$ and zero
+otherwise, so the average is $\sum_{r<K}G_r\rho G_r^\dagger$, the
+data channel of the hidden $K$-counter.
 If $D^n=0$, only counts $0,\ldots,n$ can occur, so $n+1$ equally spaced
 phases give the measured loop exactly.
 
@@ -3976,6 +3986,11 @@ acts by $\chan{D_1}$. Its powers decay, so summing the delayed exits gives
  \meas=\chan A+\chan{B_1}(I-\chan{D_1})^{-1}\chan C .
 \]
 Comparing this with $\chan L$ on matrix units is a second finite test.
+For two loops with separate exact counts, forgetting both records
+composes their measured channels. With one shared exact count, exits
+with the same total add before we forget it, so we apply the formula to
+the combined body of Section~\ref{sec:family}. Comparing these channels
+on matrix units decides whether sharing changes the data.
 
 The bypass shows why we test proportionality exactly.
 As $t$ approaches one from below, $x_1=-(1-t^2)\ket1\bra1$ tends to zero.
@@ -4259,12 +4274,15 @@ returns label $0$ with certainty. At phase $1$ the even and odd exits
 add, and at phase $-1$ the odd exits change sign. Both sums are one,
 so the odd exits sum to zero and the even exits sum to one.
 
-\textit{Shared and separate counts.} Measuring each loop can reveal where a return took place.
+\textit{Shared and separate counts.} Measuring each loop can reveal a distinction that the total alone misses.
 For example, let the first body send $\ket0$ straight through and delay $\ket1$ by
-one return. Let the second do the reverse, with unit amplitude on each path. The two
-records distinguish $(0,1)$ from $(1,0)$, so hiding them
-dephases $\ket+$. In the combined body both paths make one return. Its only
-nonzero exit map is $x_1=I$, so measuring its tag preserves $\ket+$.
+one return. Let the second do the reverse, with unit amplitude on each path. On input
+$\ket+$, separate counters leave the joint state
+$(\ket{0,1}\otimes\ket0+\ket{1,0}\otimes\ket1)/\sqrt2$.
+The two records are orthogonal, so tracing them out leaves $I/2$.
+A shared counter carries $\ket1$ on both paths, giving
+$\ket1\otimes\ket+$. In the combined body the only nonzero exit map is
+therefore $x_1=I$, and measuring its outer tag also preserves $\ket+$.
 
 \subsection{A flip on every call}\label{app:flip}
 In \code{flipRound}, each call rotates the guard by $R_\theta$ and
@@ -4513,7 +4531,18 @@ the ports. Both bends belong to the compact completion.
 \section{A ring realization of the same exits}\label{sec:ring}
 In Figure~\ref{fig:ring-model}, light stays in its waveguide with
 amplitude $t=3/5$ and crosses to the other waveguide with amplitude
-$is=4i/5$. This coupler is the rotation from \code{guardRound} in
+$is=4i/5$~\cite[Eq.~(1)]{HeebnerBoyd99Ring}. The light field extends
+a little beyond each guide, so the fields overlap across the narrow
+gap~\cite{Alsing17RingLoss}. Light crossing into the ring from $u$ keeps
+its direction of travel. It leaves the gap as $d$, comes around again as
+$y$, and the part that crosses back joins the direct light on its way
+to $v$.
+
+We can see where the $i$ comes from by checking the columns, just as we
+did for \code{guardRound}. With through amplitude $t=3/5$ and the same
+crossing amplitude $x$ in both directions, the columns are $(t,x)$ and
+$(x,t)$. Their inner product $t(x+\bar x)$ must vanish, so $x$ is
+purely imaginary. Here we choose $x=is$. This coupler is the rotation from \code{guardRound} in
 a different basis on the return wire,
 $(1\oplus i)R_\theta(1\oplus(-i))$. To leave after one trip, light crosses into the ring with amplitude
 $is$ and crosses back with amplitude $is$. Each further trip adds a
@@ -4534,7 +4563,8 @@ trace ringCoupler on unit
 \end{minipage}\par
 With no added phase the ring returns $-\ket*$.
 
-The same exit amplitudes give both outputs in Figure~\ref{fig:22-pulses}.
+To read both panels of Figure~\ref{fig:22-pulses} from this program, we
+also need to say when each exit reaches the straight guide.
 Write $u(T)$ for the incident field, with time measured relative to the direct path. The copy that makes $k$ trips arrives $k\tau_0$ later with the
 amplitude of exit $k$. The field at the marked port is therefore
 \[
@@ -4590,8 +4620,8 @@ Section~\ref{sec:light} gives the switch-on field $-1+(1+t)t^n$
 after $n$ trips. Near $t=1$ it takes $-1/\log t\sim1/(1-t)$ trips to
 reduce the field error by a factor of $e$. In the steady state, the
 intensity magnification $Q(1)$~\cite[Eq.~(7)]{HeebnerBoyd99Ring} gives
-the delay relative to the direct path. Indeed $d\varphi/d\omega=\tau_0$
-for a frequency-independent coupler, so
+the delay relative to the direct path. Since $\varphi=\omega\tau_0$,
+we have $d\varphi/d\omega=\tau_0$. With a frequency-independent coupler this gives
 $-i\Theta^\dagger d\Theta/d\omega=\tau_0 Q(1)$~\cite{Wigner55Phase,Smith60LifetimeMatrix}.
 For a wave packet, the analogous dwell time involves averaging the
 Wigner--Smith matrix over its energy spectrum~\cite[Eqs.~(34)--(35)]{FyodorovSommers97Delay}.
