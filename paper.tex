@@ -495,7 +495,7 @@ namely what to do with the iteration count:
 \begin{itemize}
 \item \textbf{Keep it.} Return the count with the data, modulo $K$ for a register of size $K$.
 \item \textbf{Measure it.} Measure the guard after each call to decide whether to continue.
-\item \textbf{Erase it.} Leave the count implicit so that the exit amplitudes add at the output.
+\item \textbf{Erase it.} Never write the count, so that the exit amplitudes add at the output.
 \end{itemize}
 For classical programs the three coincide on the returned data
 when the count is ignored, which is why classical languages never
@@ -513,7 +513,7 @@ contributions with different tags stay apart whether or not anyone
 reads the tags. As in Bohr's two-slit example, leaving out the device that records the path
 can change the answer~\cite[Fig.~3]{Bohr49Einstein}.
 For a reversible programmer the count is garbage that still carries information:
-if each round leaves a different tag, discarding the tags gives the same
+if each round leaves a different tag, discarding the tags does not erase them: it gives the same
 data as measuring the guard on every round.
 Untagged, the contributions of all iteration counts
 add into a single map, the infinite sum of the fourth answer.
@@ -1703,7 +1703,7 @@ Without the counter, all exit amplitudes add at one output.}
 The successor acts only on the return. The three exits carry zero, one and two.}
 \end{figure}
 
-The adjoint of the enlarged unitary in~\eqref{eq:count} restores $\ket0\otimes u$, after which a caller who knows the body can apply $L$. A Fourier measurement uses only the counter: the uniform outcome overlaps every label by $1/\sqrt K$, leaving $Lu/\sqrt K$ with probability $1/K$. Hiding the counter instead preserves interference within each residue. For \code{bypassRound} its probability tends to $1/5$ but differs from \code{while} at every finite $K$ (Appendix~\ref{app:readings}).
+Discarding a written count does not erase it. The adjoint of the enlarged unitary in~\eqref{eq:count} restores $\ket0\otimes u$, after which a caller who knows the body can apply $L$. A Fourier measurement uses only the counter: the uniform outcome overlaps every label by $1/\sqrt K$, leaving $Lu/\sqrt K$ with probability $1/K$. Hiding the counter instead preserves interference within each residue. For \code{bypassRound} its probability tends to $1/5$ but differs from \code{while} at every finite $K$ (Appendix~\ref{app:readings}).
 
 Allocating zero followed by a unitary makes $R_K$ an isometry. The exact record $Ru=\sum_k\ket k\otimes x_ku$ in $\ell^2(\N)\otimes X'$ also preserves the norm, since $\sum_k\|x_ku\|^2=\|u\|^2$. It lies outside the finite language, but the labels agree until the counter wraps. The remaining exits decay geometrically, so embedding the first $K$ labels gives operator-norm convergence $R_K\to R$ (Appendix~\ref{app:readings}). Fresh coins encode the same history~\cite[\S~6]{YingYuFeng12Control}: in Ying's loop $k$ returns and an exit spell $1^k0$~\cite[Eq.~(34)]{Ying14QuantumRecursion}. Assolini and Di Pierro likewise copy each test into a fresh qubit~\cite[\S~4]{AssoliniDiPierro25Loops}.
 
@@ -2141,11 +2141,11 @@ A fresh test qubit distinguishes calls three and five~\cite[Fig.~2 and \S~4]{Ass
 Separate counters remember which loop returned. Whether a shared total suffices can be decided by comparing the data channels (Appendix~\ref{app:axis}). We would like to infer this from the clauses, also for recursive calls that reach the same depth by different routes.
 
 \section{Conclusion}
-Can a quantum computer run a loop? For a finite reversible body we have three ways to do it. We can keep the count in a register that advances on each return, measure the guard after each call to decide whether to repeat, or leave the count implicit and compile coherent feedback into a gate. Our test tells us when all three give the same data after the count is hidden.
+Can a quantum computer run a loop? For a finite reversible body we have three ways to do it. We can keep the count in a register that advances on each return, measure the guard after each call to decide whether to repeat, or leave the count implicit and compile coherent feedback into a gate. They agree on the data exactly when the first $m+1$ exits are multiples of one exit (Theorem~\ref{thm:axis}).
 
-All three read the same series. Bartha defines the trace by the Kleene formula, the limit of $A+B(I+D+\cdots+D^n)C$, in which the star of the return block collects every way around~\cite[Eq.~(1)]{Bartha14QuantumTuringAutomata}. In a regular expression or a reachability matrix the terms of a star only accumulate, so a classical loop loses nothing by forgetting how many trips a path took. Amplitudes can cancel. The coherent loop adds the terms, the counter keeps them apart, and measuring the guard adds their probabilities.
+All three read the series $A+B(I+D+D^2+\cdots)C$. Bartha's Kleene formula takes its limit, and the term $BD^kC$ is our exit $x_{k+1}$~\cite[Eq.~(1)]{Bartha14QuantumTuringAutomata}. Over the Booleans the same sum is reachability, $I\lor D\lor D^2\lor\cdots$. Its terms can only add: a path after five returns cannot undo one after three, so forgetting the count loses nothing. Amplitudes, however, can cancel, as in $3/5-16/25-\cdots=-1$. The coherent loop adds them, a counter keeps them apart, and measurement adds their probabilities.
 
-The same choice arises wherever a program's history stays quantum. An algorithm that keeps a set in superposition needs a history-independent representation: if two orders of insertion leave different lists for the same set, their amplitudes no longer cancel~\cite[\S~1.2, Def.~3.1]{YuanCarbin22Tower}. Our test decides this for the simplest history, one loop's count. Two loops show it in miniature. The first sends $\ket0$ straight through and $\ket1$ once around, the second the reverse. On input $\ket+$ both branches make one return, like two insertion orders for one set. A shared counter reads one on both, so it factors out and leaves $\ket+$. Separate counters read $(0,1)$ beside $\ket0$ and $(1,0)$ beside $\ket1$. They record which loop returned, and discarding them leaves an equal mixture (Appendix~\ref{app:programs}). We knew all along that there was one return. What changed the qubit was writing down where it happened.
+The same choice arises wherever a program's history stays quantum. An algorithm that keeps a set in superposition needs a history-independent representation: if one insertion order leaves $[1,2]$ and the other $[2,1]$, both hold the same set but their amplitudes no longer cancel~\cite[\S~1.2, Def.~3.1]{YuanCarbin22Tower}. Two loops in sequence show this. The first sends $\ket0$ straight through and $\ket1$ once around, the second the reverse, so on $\ket+$ both branches make one return. A shared counter reads $1$ on both, like the set, and leaves $\ket+$. A counter on each loop reads $(0,1)$ beside $\ket0$ and $(1,0)$ beside $\ket1$, like the two lists, and discarding them leaves an equal mixture (Appendix~\ref{app:programs}). We knew all along that there was one return. What changed the qubit was writing down where it happened. Even a counter, the simplest data structure, has a history that a program must keep, measure or erase.
 
 \par\smallskip\noindent\textbf{AI Use.}
 The authors used ChatGPT Codex (GPT-6.1 Sol) to revise and format prose, generate TeX for
