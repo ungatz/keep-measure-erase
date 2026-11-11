@@ -526,7 +526,7 @@ formula~\cite{AbramskyHaghverdiScott02GoI}.
 \setlength{\parindent}{1em}\indent
 Leaving the count implicit may look exotic, yet optical devices do it routinely. A ring resonator is a closed loop of optical waveguide,
 much like a ring of optical fiber, placed beside a straight waveguide
-(right). Where the two pass close together, light arriving on the
+(Inset~\ref{inset:coupler}). Where the two pass close together, light arriving on the
 straight guide either continues along it or crosses into the ring,
 and light already in the ring either goes around again or crosses
 back out. The waves overlap across the gap, so light can pass between the guides.
@@ -557,7 +557,9 @@ just like the exits of a loop that leaves its count implicit. In our example the
  }
  \node at (-.735,-.91) {$+$};
  \node at (.735,-.91) {$=$};
-\end{tikzpicture}
+\end{tikzpicture}\par\smallskip
+\newcounter{ringinset}\refstepcounter{ringinset}\label{inset:coupler}
+{\small Inset~\theringinset. The ring coupler.}
 \end{minipage}\par\medskip
 
 
@@ -572,12 +574,12 @@ interfere. Measuring the guard on the third call tells them apart,
 since one exits and the other returns.
 
 \begin{itemize}
-\item \textbf{Coherent or unitary loops compile away.} We compile Bartha's finite unitary trace~\cite[Thm.~8]{Bartha14QuantumTuringAutomata} to a loop-free clause table by eliminating one return value at a time, following Andr\'es-Mart\'inez~\cite[proof of Thm.~3.3.15]{AndresMartinez22Thesis} (Section~\ref{sec:trace}).
+\item \textbf{Coherent feedback compiles to a unitary gate.} We compile Bartha's finite unitary trace~\cite[Thm.~8]{Bartha14QuantumTuringAutomata} to a loop-free clause table by eliminating one return value at a time, following Andr\'es-Mart\'inez~\cite[proof of Thm.~3.3.15]{AndresMartinez22Thesis} (Section~\ref{sec:trace}).
 \item \textbf{Keeping and measuring come from two universal constructions.}
   Allocation supplies the counter and hiding lets the caller discard it~\cite{HeunenKaarsgaard22Effects,HuotStaton18}.
   Classical feedback on the returning measurement outcome gives \code{while}, with the same data as discarding an exact count (Section~\ref{sec:effects}).
 \item \textbf{Forgetting can be certified.} With $m$ returning basis values and a nonempty input,
-  it suffices to check that the first $m+1$ exit maps are multiples of one map.
+  we check whether the first $m+1$ exit maps are scalar multiples of one nonzero exit.
   The measured and coherent loops are then interchangeable in every channel context (Section~\ref{sec:agreement}).
 \item \textbf{The coherent loop can be probed without a count register.}
   Comparing two nearby return phases with one probe qubit estimates how much weight circulates
@@ -596,7 +598,7 @@ $s\in\mathcal B(a)$ gives a vector $\ket s$. In $1+1$ only the tags distinguish 
 A clause $v\leftrightarrow e$ binds the variables of $v$ in $e$. For instance, $\mathrm{left}\,x$ matches $\mathrm{left}\,s$
 and binds $x$ to $s$.
 
-Pattern variables are distinct, and brackets group a finite superposition. From tables and earlier definitions we build isos by sequence, sum, tensor and dagger. Sum acts on the tagged alternative, tensor on both factors, and dagger reverses the iso. On a closed term $t$, \code{f; g on t} applies \code{f} then \code{g}. Isometries and channels use the same spelling.
+Each variable occurs only once in a pattern. On the right of a clause, brackets group a finite superposition. We build isos from clause tables and earlier definitions: $\oplus$ chooses a program by its input tag, $\otimes$ acts on both parts of a pair, and dagger reverses the iso. To run two isos in sequence on a closed term $t$, we write \code{f; g on t}, which passes the output of \code{f} to \code{g}.
 
 \par\smallskip\noindent\begin{minipage}[c]{.53\linewidth}\centering
 $\displaystyle \begin{aligned}
@@ -815,20 +817,17 @@ $\displaystyle \begin{aligned} R_\theta\binom uv
   &=u\binom{3/5}{4/5}+v\binom{-4/5}{3/5}\\
   &=\binom{(3u-4v)/5}{(4u+3v)/5}.\end{aligned}$
 \end{minipage}\par\smallskip
-The column check makes this map unitary (Appendix~\ref{app:rules}). In sequence both output coordinates enter the next call.
+The column check makes this map unitary (Appendix~\ref{app:rules}).
 
 \section{What the coherent loop computes}\label{sec:trace}
-Closing the return wire changes what reaches the next call of \code{guardRound}. Its upper
-output sends $3/5$ to the caller, where later exits will add to it.
+In sequence, both outputs of \code{guardRound} enter the next call. When we close the return wire, only the lower output goes around again. The upper output sends $3/5$ to the caller, where later exits will add to it.
 
 \subsection{From a round to its exits}
 
 Follow the $4/5$ on the lower wire in Figure~\ref{fig:scalar-loop}.
 The second call sends $(4/5)(-4/5)=-16/25$ to the upper port and
 $(4/5)(3/5)=12/25$ back for a third call. A classical reversible body follows one path on each basis input.
-Here several exits reach the same port, so we number the trips to work
-out what each contributes. Those numbers let us calculate the sum
-without putting a counter in the program. Only the sum reaches the caller.
+Here several exits reach the same port. We number the trips to work out what each contributes, but the program puts no trip number on the output. With nothing there to distinguish the exits, only their sum reaches the caller.
 \begin{figure}[!htbp]\centering
 \begin{tikzpicture}[kme circuit,x=.96cm,>={Stealth[length=1.2mm,width=.8mm]},
  ext/.style={draw=flipout,line width=.8pt},
@@ -873,7 +872,7 @@ close the same wire, one on source clauses and one on their matrix:
       {\mathsf{trace}_c\,\kappa:a\leftrightarrow b}}_
       {\text{matrix combinator}} .
 \]
-Elaboration preserves this connection: $\mathcal E_\Sigma(\mathsf{trace}_c\,\omega)=\mathsf{trace}_c\,\mathcal E_\Sigma(\omega)$. In \code{trace f; g} we close \code{f} first. The external dimensions agree, and a \kw{round} uses the same type on both sides. This is the do-while interface of
+Elaboration preserves this connection: $\mathcal E_\Sigma(\mathsf{trace}_c\,\omega)=\mathsf{trace}_c\,\mathcal E_\Sigma(\omega)$. In \code{trace f; g} we close \code{f} first. The body is unitary and has the same return type $c$ on both sides, so its external dimensions agree. A \kw{round} also uses the same external type. This is the do-while interface of
 \textsf{qWhile}~\cite[\S~5.1]{AndresMartinez22Thesis}, using Bartha's trace on finite
 types as proposed by Lemonnier~\cite[\S~5.2.3]{Lemonnier24}.
 
@@ -881,11 +880,12 @@ In Figure~\ref{view:coherent-term} the gates are maps in $\mathsf{Unitary}$. The
 
 \begin{figure}[!htbp]\centering
 \noindent\begin{minipage}[c]{.48\linewidth}\centering
-$\Tr^P(F_g;\widehat U_g;F_g^{-1})$\par
+{\small (a) Circuit}\quad$\Tr^P(F_g;\widehat U_g;F_g^{-1})$\par
 \includegraphics[width=.98\linewidth]{figures/40-pi-trace.pdf}
 \end{minipage}\hfill
 \begin{minipage}[c]{.48\linewidth}\centering
-\includegraphics[height=32mm]{figures/coherent-term-sheet.pdf}
+{\small (b) Sheets}\par
+\includegraphics[height=29mm]{figures/coherent-term-sheet.pdf}
 \end{minipage}\par
 \caption{For a common payload $P$, read the circuit rightward and the sheets upward. Separate sheets carry alternatives
 ($\oplus$), and wires on one sheet carry pairs ($\otimes$)~\cite[Defs.~16, 18--20, 22]{ComfortDelpeuchHedges20Sheets}.
@@ -1063,9 +1063,7 @@ the traveler now has a chance to step through. If they do, it is
 a one-way ticket: the absorber stops them before they can complete the trip~\cite[Thm.~1 and
 \S~IV]{Czachor19Ring}.
 
-Czachor calls this reflection \emph{chronology protection}~\cite[\S~I]{Czachor19Ring}. He
-assumes the wormhole exists. Hawking and Visser ask what could prevent one from
-forming~\cite{Hawking92Chronology,Visser93Chronology}.
+Czachor calls this reflection \emph{chronology protection} in a model where the wormhole already exists~\cite[\S~I]{Czachor19Ring}. Hawking and Visser ask the earlier question of what could prevent one from forming~\cite{Hawking92Chronology,Visser93Chronology}.
 
 When a single complex amplitude returns unchanged, Czachor observes
 that its port is isolated, just like \code{back 0}. He asks what happens
@@ -1709,7 +1707,8 @@ The adjoint of the enlarged unitary in~\eqref{eq:count} restores $\ket0\otimes u
 
 Allocating zero followed by a unitary makes $R_K$ an isometry. The exact record $Ru=\sum_k\ket k\otimes x_ku$ in $\ell^2(\N)\otimes X'$ also preserves the norm, since $\sum_k\|x_ku\|^2=\|u\|^2$. It lies outside the finite language, but the labels agree until the counter wraps. The remaining exits decay geometrically, so embedding the first $K$ labels gives operator-norm convergence $R_K\to R$ (Appendix~\ref{app:readings}). Fresh coins encode the same history~\cite[\S~6]{YingYuFeng12Control}: in Ying's loop $k$ returns and an exit spell $1^k0$~\cite[Eq.~(34)]{Ying14QuantumRecursion}. Assolini and Di Pierro likewise copy each test into a fresh qubit~\cite[\S~4]{AssoliniDiPierro25Loops}.
 
-The opening's halt clock records an exit. In Yuan et al.'s bounded loop the count is already an input telling the body how often to run. Padding the shorter branches with no-ops assumes a classical upper bound and brings them to the same control state at the same step~\cite[\S~6.1, Fig.~7]{YuanVillanyiCarbin24QCM}. The timing is independent of the count, which the input retains. Register-machine compilation likewise computes waits within a time bound~\cite[\S~5]{ZhangYing25QRM}. Our counter records when amplitude leaves, even when one input gives exits at infinitely many counts.
+A count can also be an input. In Yuan et al.'s bounded loop it tells each branch how often to repeat an operation. Their padding assumes a common upper bound: shorter branches execute no-ops until all reach the same control state at the same step~\cite[\S~6.1, Fig.~7]{YuanVillanyiCarbin24QCM}. Reading the clock then reveals nothing about the count, which is still in the input. Register-machine compilation likewise computes waits within a time bound~\cite[\S~5]{ZhangYing25QRM}. Our counter records when amplitude leaves, even when a single input gives exits at infinitely many counts.
+
 \subsection{Measure the returning tag}
 The caller now runs \code{H; while bypassRound; H; measure on 0}. The parity bit gave the
 first and third exits the same label. Measuring the tag on every call distinguishes them
@@ -1935,7 +1934,7 @@ as it leaves. Its blocks are $(A,B,C,D)=(t\mathsf X,-s\mathsf X,sI,tI)$,
 so the immediate exit is $t\mathsf X$ and the exit after $k+1$ returns is
 $-s^2t^k\mathsf X$. One $\mathsf X$ can therefore replace the measurements. In the other direction, repeating an available body may cost less than synthesizing the gate. Paetznick and Svore's retry resets the failed guard to zero and reuses the external input port. Feeding it into the return port instead changes the next exit (Appendix~\ref{app:retry})~\cite[Fig.~9]{PaetznickSvore14RUS}. Our exact checker accepts six of the nine rational bodies in Appendix Table~\ref{tab:compiled-cases}.
 
-Leaving a hole in the caller where it uses the loop's data channel gives a \emph{channel context}. The hole can follow, precede or run beside another channel, or occupy one branch of a finite measurement. Equality survives each operation, including a retained reference. Unequal channels can be distinguished by an input and a measurement.
+Leaving a hole in the caller where it uses the loop's data channel gives a \emph{channel context}. The hole can follow, precede or run beside another channel, or occupy one branch of a finite measurement. Equality survives each operation, including a retained reference. For finitely many uses we replace one at a time, holding the others fixed (Appendix~\ref{app:axis}). Unequal channels can be distinguished by an input and a measurement.
 
 \begin{corollary}[Replacement in a caller]\label{cor:replace}
 Hiding the exact count gives the measured loop. For a finite iso with nonempty external input, the measured and coherent loops agree in every channel context exactly when $x_0,\ldots,x_m$ span a line. Then hiding the count modulo any $K\ge1$ gives this channel too. Conversely, agreement of the hidden and coherent channels for one $K>\dim Y_1$ suffices. On empty input all these channels agree.
@@ -2048,8 +2047,7 @@ count $k$, the output simply acquires $z^k$, so $\Theta(z)=z^kL$ and $Q(z)=kI$.
 
 Averaging $\|F_z u\|^2$ over a full turn cancels the cross terms, leaving
 $\|Cu\|^2+\|D_1Cu\|^2+\|D_1^2Cu\|^2+\cdots$. These are the probabilities
-of at least one return, at least two, and so on. Their sum counts a run with
-$k$ returns $k$ times, just as for \code{guardRound}.
+of at least one return, at least two, and so on. Their sum counts a run with $k$ returns $k$ times. When the agreement test permits a measured replacement, this gives its expected cost in calls to the body: $1+\langle u,Nu\rangle$, including the first call.
 
 Summing these means over an orthonormal input basis gives $\tr N$. To see why this is a dimension, substitute $CC^\dagger=I_{Y_1}-D_1D_1^\dagger$ into each tail. Writing $a_j=\tr(D_1^jD_1^{\dagger j})$, the $j$th tail contributes $a_j-a_{j+1}$. These differences sum to $a_0=\dim Y_1$ since $D_1^j\to0$ (Appendix~\ref{app:deriv}). For $X'=X$, counting the initial call gives the monitored sum $\dim X+\dim Y_1$~\cite[Thm.~3.2, Eq.~(9)]{Bourgain14Subspace}.
 
@@ -2131,37 +2129,22 @@ $\Theta_{\rm rot}(z)^2$ for two rotations.
 
 In two identical rings a short pulse records the total. The first pulse passes straight through both rings. One round-trip time later, the pulse from a trip in the first ring meets the pulse from a trip in the second.
 
-At the frequency where a trip takes a whole number of cycles, the two sign changes cancel. But when we vary the common phase the responses multiply, so their phase shifts add: $4\delta$ from each ring gives a bit imbalance of $8\delta+O(\delta^2)$ for the pair and zero for a straight wire. Averaging the weight gives two returns, the mean of a shared count, while the two ways of making one trip still interfere.
+At the frequency where a trip takes a whole number of cycles, the two sign changes cancel. But when we vary the common phase the responses multiply, so their phase shifts add: $4\delta$ from each ring gives a bit imbalance of $8\delta+O(\delta^2)$ for the pair and zero for a straight wire. Each of these scalar rotations has mean one, so averaging their combined weight gives two returns. The probe can recover that mean while the two ways of making one trip still interfere.
 
 \section{Related work and future directions}
-Sabry et al.\ iterate by recurring on smaller arguments~\cite{SabryValironVizzotto18}. Closing a wire lets arbitrarily many trips contribute to a single clause. Cl\'ement and Perdrix eliminate feedback in polarizing beam-splitter diagrams on at least two wires with invertible gates, where a path uses each feedback wire at most twice~\cite[Prop.~26]{ClementPerdrix20PBS}. For our unitary tables Andr\'es-Mart\'inez's construction sums all trips through each port~\cite[Thm.~3.3.15]{AndresMartinez22Thesis}.
+Sabry et al.\ iterate by recurring on smaller arguments~\cite{SabryValironVizzotto18}, whereas closing the return wire lets arbitrarily many trips contribute to a single clause. Cl\'ement and Perdrix eliminate feedback in polarizing beam-splitter diagrams on at least two wires with invertible gates, where a path uses each feedback wire at most twice~\cite[Prop.~26]{ClementPerdrix20PBS}. For our unitary tables Andr\'es-Mart\'inez's construction sums all trips through each port~\cite[Thm.~3.3.15]{AndresMartinez22Thesis}.
 
-A fresh test qubit distinguishes calls three and five~\cite[Fig.~2 and \S~4]{AssoliniDiPierro25Loops}, whereas our parity bit gives them the same label. Andr\'es-Mart\'inez varies how well each test distinguishes the guard values~\cite[\S~4.2]{AndresMartinez22Thesis}. Silq checks whether a temporary can be uncomputed~\cite{Silq20}. Our test asks when the count already factors from the data. For a measured loop a runtime transformer computes the expected cost~\cite{OlmedoDiazCaro19}. The phase probe recovers the mean number of returns while the exits still interfere.
+A fresh test qubit distinguishes calls three and five~\cite[Fig.~2 and \S~4]{AssoliniDiPierro25Loops}, whereas our parity bit gives them the same label. Andr\'es-Mart\'inez varies how well each test distinguishes the guard values~\cite[\S~4.2]{AndresMartinez22Thesis}. Silq checks when a temporary can be uncomputed~\cite{Silq20}. For a count, our test tells us when discarding it already suffices. A runtime transformer computes the expected cost of measured iteration~\cite{OlmedoDiazCaro19}, while the probe recovers its mean return count from interfering exits.
 
 \paragraph{Future work.}
-Separate counters remember which loop returned. A shared counter remembers only the total.
-Comparing the two data channels decides whether sharing is safe (Appendix~\ref{app:axis}).
-We would like to infer this directly from the clauses, also for recursive calls that reach
-the same depth by different routes.
+Separate counters remember which loop returned. Whether a shared total suffices can be decided by comparing the data channels (Appendix~\ref{app:axis}). We would like to infer this from the clauses, also for recursive calls that reach the same depth by different routes.
 
 \section{Conclusion}
-We started with three choices for one loop body. We can run the measured loop a call at a
-time. We compile coherent feedback into a gate, adding a register first if we want to keep the count. A counter lets exits interfere whenever
-they carry the same label. Our test tells us when all three choices give the caller the
-same data after the count is hidden. Toss a fair coin before each run and change the sign
-on every return if it lands heads. Exits two returns apart still add in either case, and
-averaging the two settings gives the same data as hiding the parity bit. Averaging
-uniformly over all return phases gives the measured data, and reading the probe then
-recovers the mean number of returns.
+Can a quantum computer run a loop? For a finite reversible body we have three ways to do it. We can keep the count in a register that advances on each return, measure the guard after each call to decide whether to repeat, or leave the count implicit and compile coherent feedback into a gate. Our test tells us when all three give the same data after the count is hidden.
 
-Suppose we already know the total. Let one loop pass $\ket0$ straight
-through and delay $\ket1$ by one return, and let the next do the reverse.
-On input $\ket+$ each path makes one return, so a shared counter ends
-in $\ket1$ and leaves the qubit in $\ket+$. Separate counters leave
-$(0,1)$ beside $\ket0$ and $(1,0)$ beside $\ket1$. Discarding them leaves
-an equal mixture, which the final Hadamard preserves, whereas it sends
-$\ket+$ to $\ket0$ (Appendix~\ref{app:programs}). With one counter that
-bit is always zero. With two counters it is random.
+Hiding a count has a counterpart on the return wire. To reproduce hidden parity, we toss a fair coin before each run and change the sign on every return if it lands heads. Exits two returns apart still interfere because they acquire the same sign. Choosing the phase uniformly over a full turn gives the measured data, and the probe recovers the mean number of returns.
+
+Even when we know how many returns two loops make together, we may still care which loop made them. Let one loop pass $\ket0$ straight through and delay $\ket1$ by one return, and let the next do the reverse. On input $\ket+$ each path makes one return, so a shared counter ends in $\ket1$ and leaves the qubit in $\ket+$. Separate counters leave $(0,1)$ beside $\ket0$ and $(1,0)$ beside $\ket1$. After discarding the counters, the caller applies a Hadamard. It sends $\ket+$ to $\ket0$ and preserves the equal mixture left by separate counters (Appendix~\ref{app:programs}). With one counter that bit is always zero. With two counters it is random.
 
 We knew all along that there was one return. What changed the qubit was
 writing down where it happened. With a shared counter the two paths
