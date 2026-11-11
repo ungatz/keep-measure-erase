@@ -21,7 +21,7 @@
     (0,1.65)
     .. controls (0.35,1.95) and (1.5,2.1) .. (1.5,2.55)
   }
-  \SheetSurface{readout}{0.72/readout, 0.28/ink}{0.28}{(0,-1.65) -- (0,1.65)}
+  \SheetSurface{readout}{0.28/readout, 0.72/ink}{0.28}{(0,-1.65) -- (0,1.65)}
   \PaintSheets
 
   \node[anchor=north] at (-1.5,-3.00) {$P$};
@@ -33,15 +33,17 @@
   \draw[ink] (0.528,-1.518) -- (-0.528,-1.782);
   \draw[ink] (0.528,1.782) -- (-0.528,1.518);
   \node[tag,minimum width=2.05cm,minimum height=.65cm] at (0,0) {$\widehat U_g$};
-  \fill[readout] (0.528,0.932) circle (1.45pt);
-  \draw[readout,line width=.7pt] (0.528,0.932) .. controls (0.84,0.98) and (0.936,1.18) .. (0.936,1.384);
-  \draw[readout,line width=.7pt] (0.816,1.384) -- (1.056,1.384);
-  \draw[readout,line width=.7pt] (0.851,1.439) -- (1.021,1.439);
-  \draw[readout,line width=.7pt] (0.891,1.494) -- (0.981,1.494);
-  \node[anchor=west,text=readout] at (1.52,1.35) {discard copy};
-  \draw[muted,densely dotted,line width=.4pt] (1.43,1.35) -- (1.066,1.444);
-  \node[anchor=west,text=readout] at (1.42,-0.7) {tag};
-  \node[anchor=east] at (-1.47,0.35) {payload};
+  \fill[readout] (-0.528,0.75) circle (1.45pt);
+  \draw[readout,line width=.7pt] (-0.528,0.75) .. controls (-0.81,0.80) and (-0.93,0.92) .. (-0.93,1.11);
+  \draw[readout,line width=.7pt] (-1.05,1.11) -- (-0.81,1.11);
+  \draw[readout,line width=.7pt] (-1.015,1.165) -- (-0.845,1.165);
+  \draw[readout,line width=.7pt] (-0.975,1.22) -- (-0.885,1.22);
+  \node[anchor=east,text=readout] at (-1.47,0.67) {discard copy};
+  \draw[muted,densely dotted,line width=.4pt] (-1.42,0.67) -- (-1.06,1.10);
+  \node[anchor=east,text=readout] at (-1.47,-0.63) {guard};
+  \draw[muted,densely dotted,line width=.4pt] (-1.43,-0.63) -- (-0.528,-0.63);
+  \node[anchor=west] at (1.42,-0.63) {payload};
+  \draw[muted,densely dotted,line width=.4pt] (1.39,-0.63) -- (0.528,-0.63);
   \node[anchor=east] at (-1.5,-1.35) {$F_g$};
   \draw[muted,densely dotted,line width=.4pt] (-1.4,-1.45) -- (-1.2,-1.95);
   \node[anchor=east] at (-1.5,1.15) {$F_g^{-1}$};
@@ -59,7 +61,7 @@
   \node[anchor=north] at (-0.75,-2.60) {$\rho$};
   \node[anchor=south] at (-0.75,2.90) {$\mathcal M(\rho)$};
   \node[anchor=west,text=again] at (2.73,0.22) {$\operatorname{End}(Y)$};
-  \node[head] at (0.55,3.94) {(b) Close the classical alternative};
+  \node[head] at (0.55,3.94) {(b) Feed back the return block};
 \end{scope}
 \end{scope}
 \end{tikzpicture}

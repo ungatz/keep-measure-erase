@@ -1,0 +1,83 @@
+\documentclass[border=2pt]{standalone}
+\input{diagram-style}
+\begin{document}
+\begin{tikzpicture}[house]
+\node[panel,anchor=west,text=backdeep] at (0,4.03) {(a) \texttt{trace}: add the exit vectors};
+\node[panel,anchor=west,text=measdeep] at (8.0,4.03) {(b) \texttt{while}: add exit probabilities};
+\begin{scope}[xshift=5.7cm,x=5.1cm,y=4.8cm]
+ \draw[flowdim] (-1.09,0)--(.025,0);
+ \draw[flowdim] (0,-.015)--(0,.68);
+ \draw[muted,line width=.45pt] (0,.60)--(.027,.60);
+ \node[lab,anchor=west] at (.028,.60) {$+\tfrac35$};
+ \node[note,anchor=west] at (-.21,.71) {$\ket1$ amplitude};
+ \foreach \xx/\txt in {-1/{-1},-.5/{-\frac12},0/0}{
+  \draw[hairline] (\xx,-.012)--(\xx,.012);
+  \node[lab,anchor=north] at (\xx,-.016) {$\txt$};}
+
+ \tikzset{walkstep/.style={draw=ink,line width=.8pt,-{Stealth[length=1.25mm,width=.85mm]}}}
+ \draw[walkstep] (0,0)--(0,.6);
+ \draw[walkstep] (0,.6)--(-.64,.6);
+ \draw[walkstep] (-.64,.6)--(-.64,.216);
+ \draw[walkstep] (-.64,.216)--(-.8704,.216);
+ \draw[ink,line width=.7pt] (-.8704,.216)--(-.8704,.07776)
+  --(-.953344,.07776)--(-.953344,.0279936);
+ \draw[back,densely dotted,line width=.8pt] (-.953344,.0279936)--(-1,0);
+ \foreach \p in {(0,0),(0,.6),(-.64,.6),(-.64,.216),(-.8704,.216),(-.8704,.07776),(-.953344,.07776)}
+  \fill[ink] \p circle (1.05pt);
+ \fill[back] (-1,0) circle (1.75pt);
+ \node[lab,anchor=east] at (-.018,.3) {1};
+ \node[lab,anchor=south] at (-.32,.615) {2};
+ \node[lab,anchor=east] at (-.655,.41) {3};
+ \node[lab,anchor=south] at (-.755,.225) {4};
+ \node[lab,anchor=west,align=left] at (.11,.33)
+  {call $n$\\[1pt] 1:\ $+\tfrac35\ket1$\\[1pt] 2:\ $-\tfrac{16}{25}\ket0$\\[1pt] 3:\ $-\tfrac{48}{125}\ket1$\\[1pt] 4:\ $-\tfrac{144}{625}\ket0$};
+ \node[labback,anchor=north,align=center] at (-1,-.10) {sum: $-\ket0$};
+ \node[note,anchor=north] at (-.43,-.12) {$\ket0$ amplitude};
+\end{scope}
+\node[note,anchor=north,align=center,text width=67mm] at (3.4,-1.04)
+ {each arrow adds one exit\\intermediate points are unnormalized sums};
+\begin{scope}[xshift=8.35cm,yshift=1.65cm,x=.46cm,y=2.3cm,
+ even bar/.style={fill=meas,draw=meas,line width=.55pt},
+ odd bar/.style={fill=meassoft,draw=meas,line width=.55pt}]
+ \draw[flowdim] (0,0)--(6.35,0);
+ \foreach \yy/\txt in {0/0,.25/{\frac14},.5/{\frac12}}{
+  \draw[hairline] (0,\yy)--(6,\yy);
+  \node[lab,anchor=east] at (-.14,\yy) {$\txt$};}
+ \node[note,anchor=west] at (-.2,.66) {exit probability};
+ \foreach \ii/\pp/\toOne in
+  {0/.36/1,1/.4096/0,2/.147456/1,3/.05308416/0,4/.0191102976/1,5/.006879707136/0}{
+  \ifnum\toOne=1
+   \path[even bar] (\ii+.10,0) rectangle (\ii+.78,\pp);
+  \else
+   \path[odd bar] (\ii+.10,0) rectangle (\ii+.78,\pp);
+  \fi
+  \node[lab,anchor=north] at (\ii+.44,-.012) {$\ii$};
+ }
+ \node[note,anchor=north] at (3,-.105) {returns};
+ \node[labmeas,anchor=north west] (even) at (.63,-.265) {even total: $9/17$ on $\ket1$};
+ \path[even bar] ([xshift=-3.5mm,yshift=-1.25mm]even.west)
+   rectangle ([xshift=-.7mm,yshift=1.25mm]even.west);
+ \node[labmeas,anchor=north west] (odd) at (.63,-.455) {odd total: $8/17$ on $\ket0$};
+ \path[odd bar] ([xshift=-3.5mm,yshift=-1.25mm]odd.west)
+   rectangle ([xshift=-.7mm,yshift=1.25mm]odd.west);
+\end{scope}
+
+\node[panel,anchor=west,text=backdeep] at (8.0,-.09) {(c) probability still inside};
+\begin{scope}[xshift=8.35cm,yshift=-1.81cm,x=.46cm,y=1.9cm]
+ \draw[flowdim] (0,0)--(6.35,0);
+ \foreach \yy/\txt in {0/0,.64/{\frac{16}{25}}}{
+  \draw[hairline] (0,\yy)--(6,\yy);
+  \node[lab,anchor=east] at (-.14,\yy) {$\txt$};}
+ \foreach \xx in {0,2,4,6}
+  \node[lab,anchor=north] at (\xx,-.025) {$\xx$};
+ \draw[back,line width=.85pt] plot coordinates
+ {(0,.64)(1,.2304)(2,.082944)(3,.02985984)
+  (4,.0107495424)(5,.003869835264)(6,.00139314069504)};
+ \foreach \xx/\yy in {0/.64,1/.2304,2/.082944,3/.02985984,
+  4/.0107495424,5/.003869835264,6/.00139314069504}
+  \fill[back] (\xx,\yy) circle (1.05pt);
+ \node[note,anchor=north,align=center] at (3,-.23)
+  {returns $k$ (after $k+1$ calls)\\each further round retains $9/25$};
+\end{scope}
+\end{tikzpicture}
+\end{document}

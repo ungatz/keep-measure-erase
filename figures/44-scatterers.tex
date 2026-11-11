@@ -1,0 +1,39 @@
+\documentclass[border=2pt]{standalone}
+\input{diagram-style}
+\begin{document}
+\begin{tikzpicture}[house, x=1mm, y=1mm,
+  sc/.style={body, minimum width=9mm, minimum height=14mm},
+  rev/.style={postaction={decorate}, decoration={markings, mark=at position .55 with {\arrowreversed{Stealth[length=1.15mm,width=.8mm]}}}}]
+\node[panel, anchor=west] at (-14,13) {(a) $g\circ f$: a loop over the middle wires};
+\node[sc] (f) at (0,0) {$f$};
+\node[sc] (g) at (30,0) {$g$};
+\draw[wpass,flowmark] (-13,3.5) node[labpass, left] {$a^+$} -- (f.west |- 0,3.5);
+\draw[wpass,rev] (-13,-3.5) node[labpass, left] {$a^-$} -- (f.west |- 0,-3.5);
+\draw[wback,flowmark] (f.east |- 0,3.5) -- (g.west |- 0,3.5);
+\node[labback,above] at (17,3.5) {$b^+$};
+\draw[ink,line width=.55pt,preaction={draw=white,line width=1.65pt}]
+  (10.4,1.95) -- (11.8,5.05);
+\node[note,above] at (10.8,5.3) {cut};
+\draw[wback,rev] (f.east |- 0,-3.5) -- node[labback, below] {$b^-$} (g.west |- 0,-3.5);
+\draw[wpass,flowmark] (g.east |- 0,3.5) -- (43,3.5) node[labpass, right] {$c^+$};
+\draw[wpass,rev] (g.east |- 0,-3.5) -- (43,-3.5) node[labpass, right] {$c^-$};
+\node[note, anchor=north, align=center] at (15,-10) {each round trip from $f$ to $g$ and back\\multiplies by $f_{12}\,g_{21}$; the composite adds them};
+\begin{scope}[xshift=70mm]
+\node[panel, anchor=west] at (-14,13) {(b) two perfect mirrors: $f_{12}\,g_{21}=I$};
+\node[sc,minimum width=14mm] (m) at (0,0) {$f$};
+\node[sc,minimum width=14mm] (n) at (30,0) {$g$};
+\draw[wpass,flowmark] (-13,3.5) node[labpass, left] {$a^+$} -- (m.west |- 0,3.5);
+\draw[wpass,rev] (-13,-3.5) node[labpass, left] {$a^-$} -- (m.west |- 0,-3.5);
+\draw[wpass,rev] (n.east |- 0,-3.5) -- (43,-3.5) node[labpass, right] {$c^-$};
+\draw[wpass,flowmark] (n.east |- 0,3.5) -- (43,3.5) node[labpass, right] {$c^+$};
+\draw[draw=bad, line width=0.9pt, flowmark] (m.east |- 0,3.5) -- (n.west |- 0,3.5);
+\draw[draw=bad, line width=0.9pt, rev] (m.east |- 0,-3.5) -- (n.west |- 0,-3.5);
+\draw[wpass,flowmark] (m.west |- 0,3.5) .. controls +(+5,0) and +(+5,0) .. (m.west |- 0,-3.5);
+\draw[wpass,flowmark] (n.east |- 0,-3.5) .. controls +(-5,0) and +(-5,0) .. (n.east |- 0,3.5);
+\draw[draw=bad,line width=.8pt,flowmark] (m.east |- 0,-3.5) .. controls +(-5,0) and +(-5,0) .. (m.east |- 0,3.5);
+\draw[draw=bad,line width=.8pt,flowmark] (n.west |- 0,3.5) .. controls +(+5,0) and +(+5,0) .. (n.west |- 0,-3.5);
+\node[labbad, anchor=south] at (15,4.2) {trapped};
+\node[note, anchor=north, align=center] at (15,-10) {the light between them is a dead part;\\$g\circ f$ is the outer reflection of each mirror};
+\end{scope}
+\end{tikzpicture}
+\end{document}

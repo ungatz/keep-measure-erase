@@ -1,0 +1,44 @@
+\documentclass[border=2pt]{standalone}
+\input{diagram-style}
+\begin{document}
+\begin{tikzpicture}[house, x=1mm, y=1mm,
+  op/.style={box, minimum width=8mm, minimum height=11mm, inner sep=1pt, font=\small},
+  sm/.style={box, minimum width=6.5mm, minimum height=5.5mm, inner sep=1pt, font=\footnotesize},
+  wl/.style={font=\scriptsize, inner sep=0.8pt},
+  eq/.style={font=\normalsize}]
+\node[panel, anchor=west] at (-3,12) {(a) $\mathcal R[\mathcal C]$: a heap enters beside the input, and only access to it counts};
+\node[sm, draw=keep] (h) at (10,-3) {$h$};
+\node[op] (f) at (24,0) {$f$};
+\draw[wire] (0,3) node[wl, left] {$A$} -- (f.west |- 0,3);
+\draw[wkeep,dashed,->] (0,-3) node[wl, left, text=keep] {$0_{H'}$} -- (h.west);
+\draw[wkeep] (h.east) -- node[wl, above, text=keep] {$H$} (f.west |- 0,-3);
+\draw[wire] (f.east) -- (34,0) node[wl, right] {$B$};
+\foreach \x in {3,50} \node[wl,text=muted] at (\x,0) {$\oplus$};
+\node[eq] at (41,0) {$\sim_{\mathcal R}$};
+\node[op] (f2) at (58,0) {$f$};
+\draw[wire] (48,3) node[wl, left] {$A$} -- (f2.west |- 0,3);
+\draw[wkeep,dashed,->] (48,-3) node[wl, left, text=keep] {$0_H$} -- (f2.west |- 0,-3);
+\draw[wire] (f2.east) -- (68,0) node[wl, right] {$B$};
+\node[note, anchor=west, align=left] at (75,0) {normal form: $A\to A\oplus H$, then $f$;\\ $\mathcal R[\mathrm{Unitary}]\simeq\mathrm{Isometry}$};
+\begin{scope}[yshift=-27mm]
+\node[panel, anchor=west] at (-3,12) {(b) $\mathcal L[\mathcal C]$: garbage leaves beside the output, and its contents do not count};
+\node[op] (g) at (10,0) {$f$};
+\node[sm, draw=meas] (k) at (24,-3) {$h$};
+\draw[wire] (0,0) node[wl, left] {$A$} -- (g.west);
+\draw[wire] (g.east |- 0,3) -- (34,3) node[wl, right] {$B$};
+\draw[wmeas] (g.east |- 0,-3) -- node[wl, above, text=measdeep] {$G$} (k.west);
+\draw[wmeas] (k.east) -- node[wl,below,text=measdeep] {$G'$} (34,-3);
+\foreach \x in {31,65} \node[wl,text=muted] at (\x,0) {$\otimes$};
+\node[eq] at (41,0) {$\sim_{\mathcal L}$};
+\node[op] (g2) at (58,0) {$f$};
+\draw[wire] (50,0) node[wl, left] {$A$} -- (g2.west);
+\draw[wire] (g2.east |- 0,3) -- (68,3) node[wl, right] {$B$};
+\draw[wmeas] (g2.east |- 0,-3) -- node[wl,below,text=measdeep] {$G$} (68,-3);
+\foreach \x in {34,68} {
+  \draw[wmeas] (\x,-4.5) -- (\x,-1.5)
+    (\x+.65,-4.0) -- (\x+.65,-2.0) (\x+1.3,-3.5) -- (\x+1.3,-2.5);
+}
+\node[note, anchor=west, align=left] at (75,0) {normal form: $f$, then $B\otimes G\to B$;\\ $\mathcal L[\mathcal R[\mathrm{Unitary}]]\simeq\mathrm{CPTP}$};
+\end{scope}
+\end{tikzpicture}
+\end{document}

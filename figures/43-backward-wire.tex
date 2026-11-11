@@ -1,0 +1,50 @@
+\documentclass[border=2pt]{standalone}
+\input{diagram-style}
+\begin{document}
+\begin{tikzpicture}[house, x=1mm, y=1mm,
+  slice/.style={draw=hairline, dashed, line width=0.45pt},
+  cupcap/.style={wback},
+  back/.style={wback, postaction={decorate}, decoration={markings, mark=at position .5 with {\arrowreversed{Stealth[length=1.3mm,width=.9mm]}}}}]
+\node[panel, anchor=west] at (-6,13) {(a) the loop, drawn as feedback};
+\node[body] (U) at (8,0) {$U$};
+\draw[wpass,flowmark] (-4,2.6) node[labpass, left] {$X$} -- (U.west |- 0,2.6);
+\draw[wpass,flowmark] (U.east |- 0,2.6) -- (20,2.6) node[labpass, right] {$X$};
+\feedbackcurve{U}{7.5}{9.5}
+\node[labback, anchor=north] at (8,-10.6) {$Y$};
+\node[font=\Large] at (30,-1) {$=$};
+\begin{scope}[xshift=40mm]
+\node[panel, anchor=west] at (-2,13) {(b) the same composite in $\mathrm{Int}(\mathcal C)$};
+\foreach \x in {10,20,39} \draw[slice] (\x,9) -- (\x,-17);
+\node[lab, text=muted] at (5,-20) {$I\oplus\eta$};
+\node[lab, text=muted] at (15,-20) {$I\oplus\sigma$};
+\node[lab, text=muted] at (29.5,-20) {$NU\oplus I$};
+\node[lab, text=muted] at (45,-20) {$I\oplus\varepsilon$};
+\node[lab, text=muted, anchor=east] at (-.5,-25.4) {in $\mathcal C$:};
+\node[lab, text=muted] at (4.7,-25.4) {$I_{X\oplus Y}$};
+\node[lab, text=muted] at (16.2,-25.4) {$I_{X\oplus Y\oplus Y}$};
+\node[lab, text=muted] at (29.7,-25.4) {$U\oplus I_Y$};
+\node[lab, text=muted] at (45,-25.4) {$I_{X\oplus Y}$};
+\node[note, anchor=north west] at (-2,-27.4) {between two slices the object is $(X\oplus Y,\,Y)$};
+\node[body] (V) at (29.5,0) {$NU$};
+\draw[wpass,flowmark] (0,2.6) node[labpass, left] {$X$} -- (V.west |- 0,2.6);
+\draw[wpass,flowmark] (V.east |- 0,2.6) -- (51,2.6) node[labpass, right] {$X$};
+\tikzset{along/.style={postaction={decorate},decoration={markings,
+  mark=at position #1 with {\arrow{Stealth[length=1.35mm,width=1mm]}}}}}
+\draw[wback,along=.6] (V.east |- 0,-2.6) -- (40.5,-2.6)
+  arc[start angle=90,end angle=-90,radius=5.7mm];
+\draw[wback,along=.6] (40.5,-14) -- (20,-14);
+\draw[wback] (20,-14) to[out=180,in=0] (10,-6);
+\draw[wback,along=.55] (10,-6) -- (6,-6);
+\draw[wback] (6,-6) arc[start angle=90,end angle=270,radius=2.5mm];
+\draw[wback,along=.65] (6,-11) -- (10,-11);
+\draw[wback,preaction={draw=white,line width=2.8pt}]
+  (10,-11) to[out=0,in=180] (20,-2.6);
+\draw[wback,along=.72] (20,-2.6) -- (V.west |- 0,-2.6);
+\node[lab, text=backdeep, anchor=south] at (5.4,-5.8) {$\eta_{NY}$};
+\node[lab, text=backdeep, anchor=west] at (46.4,-8.3) {$\varepsilon_{NY}$};
+\node[labback, anchor=south] at (19,-2.6) {$NY$};
+\node[labback, anchor=south] at (13.6,-7.05) {$\sigma$};
+\node[labback, anchor=north] at (29.5,-14.4) {$-Y=(0,Y)$};
+\end{scope}
+\end{tikzpicture}
+\end{document}
