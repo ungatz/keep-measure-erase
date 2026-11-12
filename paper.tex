@@ -2147,18 +2147,18 @@ Over a full turn, the first Hadamard sends $1/\sqrt2$ down each path. The second
 
 Varying $z$ gives \code{guardRound} an overall phase because every exit is a multiple of one gate. Conversely, a fixed data channel has the same value at $z=1$ as its average, so coherent feedback and guard measurement agree (Appendix~\ref{app:deriv}).
 
-\par\noindent\begin{minipage}[c]{.67\linewidth}
 \section{What the caller can tell}\label{sec:family}
+\noindent\begin{minipage}[b]{.67\linewidth}
 \setlength{\parindent}{1em}\noindent At $z=1$ two closed \code{guardRound} loops look like a straight wire because their signs cancel. We put the probe qubit of Section~\ref{sec:phase} on both return wires so that either loop can turn it by $\delta$.
 
 In \code{twoSections} we close both return ports together (Appendix~\ref{app:programs}). Follow the external sheet from $U$ to $V$. Each return picks up the same $z$ on
 either wire, so $i$ returns below and $j$ above carry $z^{i+j}$ with exit
-map $x_j^Vx_i^U$. One trip below and two above thus carry the same $z^3$ as three below.
-Their amplitudes add, giving $x_k=\sum_{i+j=k}x_j^Vx_i^U$ at total count $k$, and response
+map $\smash[t]{x_j^Vx_i^U}$. One trip below and two above thus carry the same $z^3$ as three below.
+Their amplitudes add, giving $x_k=\smash{\sum_{i+j=k}x_j^Vx_i^U}$ at total count $k$, and response
 $\Theta_{\rm rot}(z)^2$ for two rotations.
 \end{minipage}\hfill
-\begin{minipage}[c]{.31\linewidth}\centering
-\includegraphics[width=\linewidth]{figures/80-sequenced-sheets.pdf}
+\begin{minipage}[b]{.33\linewidth}\raggedleft
+\smash{\includegraphics[width=\linewidth]{figures/80-sequenced-sheets.pdf}}
 \end{minipage}\par
 
 In two identical rings a short pulse records the total. The first pulse passes straight through both rings. One trip later, the pulse from a trip in the first ring meets the pulse from a trip in the second.
