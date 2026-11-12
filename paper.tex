@@ -502,6 +502,7 @@ when the count is ignored, which is why classical languages never
 had to choose.
 For quantum programs they give three different loop constructs, and a
 language that provides only one has chosen for its programmers.
+We make the choice explicit in our language, so a programmer can write the loop they want.
 
 Why should the count matter when nobody reads it? A quantum loop can
 exit on its third call and on its fifth, in superposition,
@@ -565,7 +566,7 @@ just like the exits of a loop that leaves its count implicit. In our example the
 
 
 
-We make the choice explicit in \textsc{iso}, a small quantum language based on reversible
+We write the three loops in \textsc{iso}, a small quantum language based on reversible
 pattern matching~\cite{CaretteEtAl24,SabryValironVizzotto18}. We work with explicit tables, one column per basis input ($2^q$ for $q$ qubits), so the unit of compilation is a small body such as the ring's junction. To close it, \code{trace} feeds the state straight back, $\mathsf{count}_K$ also counts
 the returns modulo~$K$, and \code{while} measures the guard after each call.
 The exits on the third and fifth calls have made two and four returns.
@@ -690,7 +691,7 @@ To check a table $\omega:a\leftrightarrow b$, we first check that
 each basis input of $a$ matches exactly one clause and that each
 output expression has type $b$ under the variables its pattern binds.
 On basis input $s$, the clause gives column $s$ of the table's matrix $M$.
-Its entry in row $t$ is the amplitude for output $t$. The marked entry takes \kw{back} to \kw{exit}.
+Its row $t$ is the amplitude for output $t$. The marked entry takes \kw{back} to \kw{exit}.
 \end{minipage}\hspace{1.2em}\begin{minipage}[c]{\wd\entryview}\usebox{\entryview}\end{minipage}\par\smallskip
 
 For \code{guardRound} both squared column norms are one. In the inner product the exit row
@@ -764,7 +765,7 @@ $\displaystyle
  &=-\tfrac{12}{25}+\tfrac{12}{25}=0.
 \end{aligned}$
 \end{minipage}\par
-\caption{Each clause supplies one column of $R_\theta$. Here $*$ denotes \code{unit}. Both basis vectors rotate through $\theta$ and stay perpendicular. The products pair entries from the same row, conjugating the first entry for complex columns.}\label{fig:column-test}
+\caption{Each clause supplies one column of $R_\theta$. Here $*$ is \code{unit}. Both basis vectors rotate through $\theta$ and stay perpendicular. The products pair entries from the same row, conjugating the first for complex columns.}\label{fig:column-test}
 \Description{The exit and back clauses give the columns $(3/5,4/5)$
 and $(-4/5,3/5)$. Two arcs mark the counterclockwise rotation from
 each input basis axis to its column. A square marks the right angle
@@ -788,9 +789,9 @@ Checking and evaluation therefore terminate in lexicographic order (Appendix~\re
 To compute a column in Figure~\ref{fig:column-test}, we match a basis input
 against its clause. With the resulting bindings $\gamma$, a value $v$
 gives $\ket{v[\gamma]}$ and a sum gives the weighted sum of its vectors.
-A local \kw{let} uses each basis output of the called iso to bind the variables
-in the continuation, then adds the resulting vectors with their amplitudes.
-We write $\Sigma;\gamma\vdash e\Downarrow\psi$ for its output vector in the declaration environment $\Sigma$.
+A local \kw{let} uses each basis output of the called iso to bind the continuation's
+variables, then adds the resulting vectors with their amplitudes.
+We write $\Sigma;\gamma\vdash e\Downarrow\psi$ for its output vector under the declarations $\Sigma$.
 
 For \code{guardRound}, elaboration gives the atom $[R_\theta]$ and evaluation returns its
 matrix $R_\theta$. In general, if elaboration gives
@@ -820,7 +821,7 @@ $\displaystyle \begin{aligned} R_\theta\binom uv
 The column check makes this map unitary (Appendix~\ref{app:rules}).
 
 \section{What the coherent loop computes}\label{sec:trace}
-In sequence, both outputs of \code{guardRound} enter the next call. When we close the return wire, only the lower output goes around again. The upper output sends $3/5$ to the caller, where later exits will add to it.
+In sequence, both outputs of \code{guardRound} enter the next call. When we close the return wire, only the lower one goes around. The upper output sends $3/5$ to the caller, where later exits add to it.
 
 \subsection{From a round to its exits}
 
@@ -978,7 +979,7 @@ Bartha's finite trace theorem~\cite[Thms.~4, 7--8]{Bartha14QuantumTuringAutomata
 Appendix~\ref{app:total} proves the decay bound.
 
 \par\noindent\begin{minipage}[c]{.46\linewidth}
-For each input $\ket s$, put the sum of its returns in column $s$ of $F$. The wire equations then read $(I_Y-D)F=C$, and column $s$ of $A+BF$ gives the output.
+Let column $s$ of $F$ sum the returns of input $\ket s$. The wire equations read $(I_Y-D)F=C$, and column $s$ of $A+BF$ is the output.
 \end{minipage}\hfill\begin{minipage}[c]{.52\linewidth}\centering
 $\displaystyle\frac{\kappa\Downarrow U\quad U=\left(\begin{smallmatrix}A&B\\C&D\end{smallmatrix}\right)
  \quad F:X\to Y\quad (I_Y-D)F=C}
@@ -1063,7 +1064,7 @@ the traveler now has a chance to step through. If they do, it is
 a one-way ticket: the absorber stops them before they can complete the trip~\cite[Thm.~1 and
 \S~IV]{Czachor19Ring}.
 
-Czachor calls this reflection \emph{chronology protection} in a model where the wormhole already exists~\cite[\S~I]{Czachor19Ring}. Hawking and Visser ask the earlier question of what could prevent one from forming~\cite{Hawking92Chronology,Visser93Chronology}.
+Czachor calls this reflection \emph{chronology protection} for a wormhole that already exists~\cite[\S~I]{Czachor19Ring}. Hawking and Visser ask the earlier question of what prevents one from forming~\cite{Hawking92Chronology,Visser93Chronology}.
 
 When a single complex amplitude returns unchanged, Czachor observes
 that its port is isolated, just like \code{back 0}. He asks what happens
@@ -1121,8 +1122,20 @@ and drop the external tag.
  \qquad\leadsto\qquad \{*\leftrightarrow-1\cdot *\}.
 \]
 
-In \code{flipRound} (Appendix~\ref{app:flip}), each call rotates the guard and flips a data bit, so neither
-\code{back 0} nor \code{back 1} returns to itself in one call.
+In \code{flipRound}, each call rotates the guard and flips a data bit. Both clauses call
+\code{X}, which swaps \code{0} and \code{1}, before forming their outputs (Appendix~\ref{app:flip}).
+\par\smallskip\noindent\begin{minipage}[c]{.76\linewidth}
+\begin{lstlisting}[xleftmargin=0pt]
+round flipRound : Qubit + Qubit = {
+  exit x <-> let y = X x in [ 3/5 . exit y + 4/5 . back y];
+  back x <-> let y = X x in [-4/5 . exit y + 3/5 . back y]
+}
+\end{lstlisting}
+\end{minipage}\hfill
+\begin{minipage}[c]{.22\linewidth}\centering
+$U_{\rm flip}=R_\theta\otimes\mathsf X$
+\end{minipage}\par\smallskip
+Neither \code{back 0} nor \code{back 1} therefore returns to itself in one call.
 Follow \code{back 1} in Figure~\ref{fig:42-elim-flip}. It can return to
 \code{back 0} and then to \code{back 1}, with amplitude $3/5$ each way.
 Removing \code{back 0} turns those two steps into a single return with
@@ -1162,7 +1175,7 @@ $\begin{aligned}
 \end{tabular*}
 \endgroup
 \caption{Compiling \code{trace flipRound}. The top row gives the four clauses of
-$R_\theta\otimes\mathsf X$, read from input to output. Underlining marks each substitution. The self-entry of \code{back 0} is zero. Closing \code{back 1} multiplies its other outputs by $(1-9/25)^{-1}=25/16$. After the two substitutions, both inputs leave unchanged with amplitude $-1$.}
+$R_\theta\otimes\mathsf X$, read from input to output. Underlining marks each substitution. The self-entry of \code{back 0} is zero. Closing \code{back 1} multiplies its other outputs by $(1-9/25)^{-1}=25/16$. After these substitutions, both inputs leave unchanged with amplitude~$-1$.}
 \label{fig:42-elim-flip}
 \Description{Both substitutions show the original return pattern, its replacement
 expression, and the collected coefficients. Closing back one then replaces it by
@@ -1204,7 +1217,7 @@ An object $P=(P^+,P^-)$ of $\Int(\mathsf{Unitary})$ gives
 the spaces of rightward and leftward ports. A morphism $P\to Q$ takes input from
 both ends, so its matrix is a unitary $P^+\oplus Q^-\to Q^+\oplus P^-$~\cite[\S~4]{JSV96}.
 The embedding $N$ keeps each gate's matrix and sends $Y$ to $(Y,0)$. Since
-$0$ is the zero-dimensional space, $(Y,0)$ carries amplitude only to the right
+$0$ is the zero space, $(Y,0)$ carries amplitude only to the right
 and $(0,Y)$ only to the left.
 
 
@@ -1265,7 +1278,7 @@ U_{\rm bypass}=
 \end{minipage}\par
 With $t=3/5$ and $s=4/5$, both paths contribute to the immediate exit $x_0=\operatorname{diag}(1,t)$.
 Only the rotation returns, so $x_{k+1}=\operatorname{diag}(0,-s^2t^k)$ for $k\ge0$.
-Closing the wire leaves $\ket0$ alone and sends $\ket1$ to $-\ket1$.
+Closing the wire fixes $\ket0$ and sends $\ket1$ to $-\ket1$.
 
 The Hadamard test~\cite[p.~1, Eqs.~(1)--(3)]{Childs13Hadamard} compares the two paths. In
 \code{H; trace bypassRound; H on 0}, the first $H$ prepares $(\ket0+\ket1)/\sqrt2$ and the
@@ -1276,7 +1289,7 @@ $H$ recombines them:
  =\tfrac12(\ket0+\ket1)-\tfrac12(\ket0-\ket1)
  =(\tfrac12-\tfrac12)\ket0+(\tfrac12+\tfrac12)\ket1=\ket1.
 \]
-A basis measurement now reads $1$ with certainty. With no sign change the two Hadamards would give $0$.
+A measurement now reads $1$ with certainty. With no sign change the Hadamards would give $0$.
 \begin{figure}[!htbp]\centering
 \begin{tikzpicture}[kme circuit,y=.87cm,>={Stealth[length=1.3mm,width=.9mm]},
 pass/.style={draw=flipout,line width=.8pt},
@@ -1311,9 +1324,9 @@ controls (2.60,-.85) and (2.60,0) .. (3.25,0) -- (u.west |- 0,0);
  \draw[accentwarm,double,double distance=.65pt,->] (m.east) --
  (9.65,.90) node[right] {$b$};
 \end{tikzpicture}
-\caption{The two rails carry the basis alternatives of one qubit $G=\C^2$.
+\caption{The rails carry the basis alternatives of one qubit $G=\C^2$.
 The bypass beside the closed loop gives $\operatorname{diag}(1,-1):G\to G$. Each Hadamard
-acts on the same two rails. Measurement gives one classical bit, here $1$ with
+acts on both rails. Measurement gives one bit, here $1$ with
 certainty.}\label{fig:bypass-intro}
 \Description{Two-port Hadamard couplers place the scalar rotation
 feedback loop beside a bypass and recombine their amplitudes before a
@@ -1324,8 +1337,8 @@ zero.}
 \section{The coherent loop in light}\label{sec:light}
 
 Fairbanks and Selinger ask whether a device can take the trace of a unitary
-supplied as a black box~\cite[App.~B]{FairbanksSelinger25Traces}. When we know the matrix,
-we can build the network ourselves and choose which ports to connect.
+supplied as a black box~\cite[App.~B]{FairbanksSelinger25Traces}. Knowing the matrix,
+we can build the network and choose which ports to connect.
 
 \begin{proposition}[Optical feedback]\label{prop:optical}
 Realize a finite unitary body $U:X\oplus Y\to X'\oplus Y$ at the working frequency
@@ -1558,7 +1571,7 @@ $\mathsf{count}_K\,\beta:a\rightarrowtail[K]\otimes b$, with the counter first i
 and the data first in code.
 
 \paragraph{Adding hiding to $\text{\textsc{iso}}_a$.}
-For the second Hadamard the caller needs the ability to hide the counter. In \code{bypassRound}, let $u_0$ sum the even exits, including the bypass, and $u_1$ the odd ones. The joint output $w=\ket0\otimes u_0+\ket1\otimes u_1$ has density matrix $ww^\dagger$. Its partial trace groups rows and columns by the bit:
+For the second Hadamard the caller must be able to hide the counter. In \code{bypassRound}, let $u_0$ sum the even exits, with the bypass, and $u_1$ the odd ones. The joint output $w=\ket0\otimes u_0+\ket1\otimes u_1$ has density matrix $ww^\dagger$. Its partial trace groups rows and columns by the bit:
 \[
  \begin{pmatrix}
    \textcolor{equalcount}{u_0u_0^\dagger} & u_0u_1^\dagger\\
@@ -1713,14 +1726,9 @@ A count can also be an input. In Yuan et al.'s bounded loop it tells each branch
 The caller now runs \code{H; while bypassRound; H; measure on 0}. The parity bit gave the
 first and third exits the same label. Measuring the tag on every call distinguishes them
 because one has already left when the other returns.
-\par\smallskip\noindent\begin{minipage}[c]{.56\linewidth}
-\setlength{\parindent}{1em}\indent Each path starts with amplitude $1/\sqrt2$.
-On the first exit all of the bypass meets $3/5$ of the lower path.
-The second Hadamard takes their difference at output $1$, giving $(1-3/5)/2=1/5$ in amplitude, or $1/25$ in probability.
-
-\end{minipage}\hfill
-\begin{minipage}[c]{.415\linewidth}\centering
-\begin{tikzpicture}[kme circuit,>={Stealth[length=1.35mm,width=.95mm]}]
+Each path starts with amplitude $1/\sqrt2$, and we follow each tag of the first
+call to the caller's bit.
+\par\smallskip\noindent\makebox[\linewidth][c]{\begin{tikzpicture}[kme circuit,>={Stealth[length=1.35mm,width=.95mm]}]
   \node[kme gate] (call) at (0,0) {\code{bypassRound}};
   \draw[flipout,->] ([xshift=-2mm]call.west) node[left,align=center] {\kw{exit}\\$\ket+$} -- (call.west);
   \node[anchor=west] (exit) at (1.86,.49)
@@ -1731,15 +1739,31 @@ The second Hadamard takes their difference at output $1$, giving $(1-3/5)/2=1/5$
     -- node[above,text=flipout] {\kw{exit}} (exit.west);
   \draw[flipback,->] (call.east) to[out=0,in=180] (1.17,-.49)
     -- node[below,text=flipback] {\kw{back}} (back.west);
-\end{tikzpicture}
-\end{minipage}\par\smallskip
+  \node[anchor=west] (later) at (5.42,-.49) {$\ket1$ with probability $\tfrac8{25}$};
+  \draw[flipback,->] (back.east) -- node[below,text=flipback] {later calls} (later.west);
+  \foreach \row/\from in {.49/exit,-.49/later}{
+    \node[kme gate,minimum width=5mm,minimum height=5mm] (h\from) at (9.02,\row) {$H$};
+    \draw[kme wire,->] (h\from.east) -- (9.92,\row);
+  }
+  \draw[flipout,->] (exit.east) -- node[above,text=flipout] {bypass and lower path} (hexit.west);
+  \draw[kme wire,->] (later.east) -- (hlater.west);
+  \node[anchor=west] (pexit) at (9.92,.49)
+    {$\bigl|\tfrac12\bigl(1-\tfrac35\bigr)\bigr|^2=\tfrac1{25}$};
+  \node[anchor=west] (pback) at (9.92,-.49) {$\tfrac8{25}\cdot\tfrac12=\tfrac4{25}$};
+  \node[anchor=east] (total) at (pexit.east |- 0,-1.28)
+    {reads $1$ with probability $\tfrac1{25}+\tfrac4{25}=\tfrac15$};
+  \draw[muted,line width=.4pt] ([yshift=1.2pt]total.north west) -- ([yshift=1.2pt]total.north east);
+\end{tikzpicture}}\par\smallskip
 
-Only the lower path returns, with probability $|(4/5)/\sqrt2|^2=8/25$.
-Its chance of returning again is $9/25$ at each call, so it eventually
-exits as $\ket1$. The second Hadamard sends half that probability to
-output $1$, giving $1/25+(8/25)(1/2)=1/5$ in all.
+On \kw{exit}, all of the bypass meets $3/5$ of the lower path. The second Hadamard subtracts
+the two amplitudes and divides by $\sqrt2$, giving $(1-3/5)/2=1/5$ at output $1$. The bypass
+never returns, so \kw{back} tells us that the qubit took the lower path. It returns again with
+probability $9/25$ at each later call, so it eventually exits as $\ket1$, and the second
+Hadamard sends half of its $8/25$ to output $1$. In all, the caller reads $1$ with probability
+$1/25+4/25=1/5$.
 
-For a pulse shorter than one trip, we time the bypass to meet the direct pulse
+In the ring, a pulse shorter than one trip leaves as a train of pulses, one for each exit.
+We time the bypass to meet the direct pulse
 (Figure~\ref{fig:22-pulses}). Each later pulse reaches the splitter alone and splits equally,
 giving $1/5$ overall~\cite[Eqs.~(30)--(33)]{RaymerMcKinstrie13Cavity}.
 This reminds us of Bergson's first book, where he observes that we can
@@ -1775,7 +1799,7 @@ $\begin{aligned}
 \end{minipage}
 \caption{One call is $\mathsf{hide}(\mathsf{arr}\,\beta;T)$. With a common payload, $F_g$
 exposes the guard. Copying that qubit implements $T$ in these coordinates, and discarding the copy dephases the two tags before $F_g^{-1}$ restores the ports.
-The circuit and sheet (a) show one call with both ports open. In (b) the returning density block in $\operatorname{End}(Y)$ goes around again.}\label{fig:77-measured-sheet}
+Circuit and sheet (a) show one call with both ports open. In (b) the return block in $\operatorname{End}(Y)$ goes around again.}\label{fig:77-measured-sheet}
 \Description{The guard copy ends at a discard. A pair of sheets shows the
 measured call and feedback of its return block.}
 \end{figure}
@@ -1843,7 +1867,7 @@ difference?}\label{sec:agreement}
 With the bypass, learning that the qubit returned even once tells us
 which path it took. In \code{guardRound} every exit carries \code{unit},
 whatever the count. A compiler can choose either loop if both give the caller the same data on every input.
-We can see when this works by keeping the exact count for a moment.
+To see when this works, keep the exact count for a moment.
 
 \par\smallskip\noindent\begin{minipage}[c]{.44\linewidth}
 \setlength{\parindent}{1em}\indent Suppose each exit $x_k$ applies the same gate $L$ up to a scalar $b_k$.
@@ -1880,11 +1904,11 @@ $Le_j$ forces their multipliers to agree. The same $b_k$ therefore works for eve
 also follows from the freedom in a Kraus representation~\cite[Cor.~2.23]{Watrous18TQI}.
 Conversely, tracing out a fixed unit count vector leaves $L\rho L^\dagger$.
 
-For $m>0$, Cayley--Hamilton writes every $D^j$ with $j\ge m$ in terms of $I,D,\ldots,D^{m-1}$. Multiplying by $B$ and $C$ puts every delayed exit in the span of $x_1,\ldots,x_m$. Including the immediate exit $A$ gives a closed span containing the sum $L\ne0$, even without a last call. When $m=0$, only $A$ remains. Since $C$ lands in $Y_1$, we could use $d=\dim Y_1$ in place of $m$ throughout. Using $m$ spares us that subspace calculation.
+For $m>0$, Cayley--Hamilton writes every $D^j$ with $j\ge m$ in terms of $I,D,\ldots,D^{m-1}$. Multiplying by $B$ and $C$ puts every delayed exit in the span of $x_1,\ldots,x_m$. Including the immediate exit $A$ gives a closed span containing the sum $L\ne0$, even without a last call. When $m=0$, only $A$ remains. Since $C$ lands in $Y_1$, we could use $d=\dim Y_1$ in place of $m$ throughout. Using $m$ spares us computing $Y_1$.
 
-Starting with $W=C$, we form $BW$ and advance to $DW$ for each delayed exit, at a cost of $O(m^2n^2+m^3n)$ field operations for dense tables. We use a nonzero entry of the first nonzero exit $P$ to test all the scalar ratios in $O((m+1)n^2)$ comparisons. On success, any column of $P$ has squared norm $q>0$ and the channel is $\rho\mapsto P\rho P^\dagger/q$. Elimination recovers the gate with its phase. The ratios must be exact: near $t=1$, rounding a small bypass exit to zero can accept a replacement that changes the caller's probability from $(1-t)/2$ to one. A direct channel test instead solves for up to $m^2$ return entries (Appendix~\ref{app:axis}).
+For the delayed exits $x_{k+1}=BD^kC$ we keep $W=D^kC$, starting at $W=C$: $BW$ is the next exit and $DW$ the next $W$. On dense tables a step costs $O(mn^2+m^2n)$ field operations, so $m$ steps cost $O(m^2n^2+m^3n)$. We use a nonzero entry of the first nonzero exit $P$ to test all the scalar ratios in $O((m+1)n^2)$ comparisons. On success, any column of $P$ has squared norm $q>0$ and the channel is $\rho\mapsto P\rho P^\dagger/q$. Elimination recovers the gate with its phase. The ratios must be exact: near $t=1$, rounding a small bypass exit to zero can accept a replacement that changes the caller's probability from $(1-t)/2$ to one. A direct channel test instead solves for up to $m^2$ return entries (Appendix~\ref{app:axis}).
 
-The bound is sharp. Suppose $\ket0$ exits at once and $\ket1$ after $m>0$ returns, both unchanged. Every exit between $x_0=\ket0\bra0$ and $x_m=\ket1\bra1$ is zero, so only $x_m$ reveals the second direction. A counter modulo $m$ labels both exits zero and preserves $\ket+$, while measurement leaves $I/2$. This also attains the bound in Corollary~\ref{cor:replace} (Appendix~\ref{app:axis}).
+The bound is sharp: the first $m$ exits are not enough. Suppose $\ket0$ exits at once and $\ket1$ after $m>0$ returns, both unchanged. Every exit between $x_0=\ket0\bra0$ and $x_m=\ket1\bra1$ is zero, so only $x_m$ reveals the second direction. A counter modulo $m$ labels both exits zero and preserves $\ket+$, while measurement leaves $I/2$. This also attains the bound in Corollary~\ref{cor:replace} (Appendix~\ref{app:axis}).
 
 \begin{figure}[!htbp]\centering
 \begin{tikzpicture}[kme circuit,>={Stealth[length=1.45mm,width=1mm]},
@@ -2011,8 +2035,17 @@ $s/(1-t)=2$ on unit input. The squared magnitude is the
 \emph{circulating weight}, here $|2|^2=4$, four times the measured mean. At $z=-1$ the signs alternate,
 giving amplitude $s/(1+t)=1/2$ and weight $1/4$.
 
-To see this weight at the output, compare nearby phases. Since $\Theta_{\rm rot}(e^{i\delta})=-1-4i\delta+O(\delta^2)$, its phase
-changes by $4\delta$ to first order. Heebner and Boyd obtain the same factor for a
+To see this weight at the output, compare nearby phases. From the closed form $(t-z)/(1-tz)$,
+\[
+ \Theta_{\rm rot}(1)=\frac{t-1}{1-t}=-1,
+ \qquad
+ \frac{d\Theta_{\rm rot}}{dz}=\frac{t^2-1}{(1-tz)^2},
+ \qquad
+ \Theta_{\rm rot}'(1)=-\frac{1+t}{1-t}=-\frac{8/5}{2/5}=-4 .
+\]
+Since $e^{i\delta}=1+i\delta+O(\delta^2)$, this gives
+$\Theta_{\rm rot}(e^{i\delta})=-1-4i\delta+O(\delta^2)$, so its phase
+changes by $4\delta$, the weight times $\delta$, to first order. Heebner and Boyd obtain the same factor for a
 lossless ring at resonance ($z=1$): it is the intensity inside the ring divided by
 the incident intensity~\cite[p.~848, Eq.~(7)]{HeebnerBoyd99Ring}. If a trip adds phase $\omega\tau_0$ at angular frequency $\omega$ and the coupler is independent of frequency, the delay relative to the direct path is $4\tau_0$~\cite{Wigner55Phase,Smith60LifetimeMatrix}.
 \paragraph{From one return wire to a finite body.}
@@ -2065,7 +2098,7 @@ so the final Hadamard reads the imaginary part of the overlap~\cite[p.~1, follow
  =\operatorname{Im}\langle\Theta(z)u,\Theta(ze^{i\delta})u\rangle
  =\delta\,\|F_z u\|^2+O(\delta^2).
 \]
-An immediate exit leaves the bits equally likely, while \code{guardRound} at $z=1$ gives a difference of $4\delta+O(\delta^2)$. Over $n$ runs the frequency difference divided by $\delta$ estimates four with bias $O(\delta)$ and variance at most $1/(n\delta^2)$. Near $t=1$ the peak narrows and the probe needs a smaller step (Appendix~\ref{app:observing}).
+An immediate exit leaves the bits balanced, while \code{guardRound} at $z=1$ gives a difference of $4\delta+O(\delta^2)$. Over $n$ runs the frequency difference divided by $\delta$ estimates four with bias $O(\delta)$ and variance at most $1/(n\delta^2)$. Near $t=1$ the peak narrows and the probe needs a smaller step (Appendix~\ref{app:observing}).
 
 \begin{figure}[!htbp]\centering
 \begin{minipage}[c]{.54\linewidth}\centering
@@ -2090,9 +2123,9 @@ An immediate exit leaves the bits equally likely, while \code{guardRound} at $z=
  \node[below] at (0,-.87) {return phase $\varphi$};
 \end{tikzpicture}
 \end{minipage}
-\caption{Distributivity carries the probe through both the external and returning ports. Before the final gates the state is
+\caption{Distributivity carries the probe through the external and returning ports. Before the final gates the state is
 $(\ket0\otimes\Theta(z)u+\ket1\otimes\Theta(ze^{i\delta})u)/\sqrt2$.
-The curve gives the weight for \code{guardRound} and the dashed line its phase average.}
+The curve is the weight for \code{guardRound}, the dashed line its mean.}
 \label{fig:phase-probe}
 \Description{A probe qubit controls the extra return phase. At zero phase the weight is four; its average over the full circle is one.}
 \end{figure}
@@ -2114,23 +2147,23 @@ Over a full turn, the first Hadamard sends $1/\sqrt2$ down each path. The second
 
 Varying $z$ gives \code{guardRound} an overall phase because every exit is a multiple of one gate. Conversely, a fixed data channel has the same value at $z=1$ as its average, so coherent feedback and guard measurement agree (Appendix~\ref{app:deriv}).
 
-\par\noindent\begin{minipage}[c]{.75\linewidth}
+\par\noindent\begin{minipage}[c]{.67\linewidth}
 \section{What the caller can tell}\label{sec:family}
 \setlength{\parindent}{1em}\noindent At $z=1$ two closed \code{guardRound} loops look like a straight wire because their signs cancel. We put the probe qubit of Section~\ref{sec:phase} on both return wires so that either loop can turn it by $\delta$.
 
-In \code{twoSections} we close both return ports together (Appendix~\ref{app:programs}). Follow the external sheet from $U$ to $V$. Each return picks up the same phase $z$ on
+In \code{twoSections} we close both return ports together (Appendix~\ref{app:programs}). Follow the external sheet from $U$ to $V$. Each return picks up the same $z$ on
 either wire, so $i$ returns below and $j$ above carry $z^{i+j}$ with exit
-map $x_j^Vx_i^U$. One trip below and two above therefore carry the same $z^3$ as three below.
+map $x_j^Vx_i^U$. One trip below and two above thus carry the same $z^3$ as three below.
 Their amplitudes add, giving $x_k=\sum_{i+j=k}x_j^Vx_i^U$ at total count $k$, and response
 $\Theta_{\rm rot}(z)^2$ for two rotations.
 \end{minipage}\hfill
-\begin{minipage}[c]{.23\linewidth}\centering
+\begin{minipage}[c]{.31\linewidth}\centering
 \includegraphics[width=\linewidth]{figures/80-sequenced-sheets.pdf}
 \end{minipage}\par
 
-In two identical rings a short pulse records the total. The first pulse passes straight through both rings. One round-trip time later, the pulse from a trip in the first ring meets the pulse from a trip in the second.
+In two identical rings a short pulse records the total. The first pulse passes straight through both rings. One trip later, the pulse from a trip in the first ring meets the pulse from a trip in the second.
 
-At the frequency where a trip takes a whole number of cycles, the two sign changes cancel. But when we vary the common phase the responses multiply, so their phase shifts add: $4\delta$ from each ring gives a bit imbalance of $8\delta+O(\delta^2)$ for the pair and zero for a straight wire. At every $z$ the weights add. Each averages over $z$ to one, its measured mean (Theorem~\ref{thm:deriv}), so the pair averages two. The probe cannot tell which loop returned, so a return below and one above still interfere.
+At the frequency where a trip takes a whole number of cycles, the two sign changes cancel. But when we vary the common phase the responses multiply, so their phase shifts add. In Section~\ref{sec:phase} one ring multiplied the amplitude by $-1-4i\delta+O(\delta^2)$ at $z=e^{i\delta}$. The pair multiplies it by $(-1-4i\delta)^2=1+8i\delta+O(\delta^2)$, as labeled on the sheet, and the probe from that section reads the imaginary part: a bit imbalance of $8\delta+O(\delta^2)$ for the pair and zero for a straight wire. At every $z$ the weights add. Each averages over $z$ to one, its measured mean (Theorem~\ref{thm:deriv}), so the pair averages two. The probe cannot tell which loop returned, so a return below and one above still interfere.
 
 \section{Related work and future directions}
 Sabry et al.\ iterate by recurring on smaller arguments~\cite{SabryValironVizzotto18}, whereas closing the return wire lets arbitrarily many trips contribute to a single clause. Cl\'ement and Perdrix eliminate feedback in polarizing beam-splitter diagrams on at least two wires with invertible gates, where a path uses each feedback wire at most twice~\cite[Prop.~26]{ClementPerdrix20PBS}. For our unitary tables Andr\'es-Mart\'inez's construction sums all trips through each port~\cite[Thm.~3.3.15]{AndresMartinez22Thesis}.
