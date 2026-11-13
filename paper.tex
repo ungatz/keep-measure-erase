@@ -748,7 +748,7 @@ Its row $t$ is the amplitude for output $t$. The marked entry takes \kw{back} to
 \end{minipage}\hspace{1.2em}\begin{minipage}[c]{\wd\entryview}\usebox{\entryview}\end{minipage}\par\smallskip
 
 For \code{guardRound} both squared column norms are one. In the inner product the exit row
-contributes $-12/25$ and the back row $12/25$ (Appendix Figure~\ref{fig:column-test}). In general
+contributes $-12/25$ and the back row $12/25$ (Appendix Figure~\ref{fig:column-test}, in the supplementary material). In general
 we check that $M$ is square and $M^\dagger M=I$, where dagger takes the conjugate
 transpose. This tests every squared norm on the diagonal and every pair of different
 columns off it.
@@ -763,7 +763,7 @@ The judgment $\Sigma\vdash\omega:a\leftrightarrow b$ checks tables and matrix at
 same column test, which is decidable over fields such as $\mathbb Q(i,\sqrt2)$. For a
 composite we check that the interfaces match. Checking a table evaluates its clauses, but
 a named call uses a shorter declaration prefix and an inline call a smaller subprogram.
-Checking and evaluation therefore terminate in lexicographic order (Appendix~\ref{app:rules})~\cite[\S\S~2,
+Checking and evaluation therefore terminate by induction in lexicographic order (Appendix~\ref{app:rules})~\cite[\S\S~2,
 5]{SabryValironVizzotto18}~\cite[Ch.~3]{Lemonnier24}.
 
 \subsection{Dynamics}
@@ -857,7 +857,7 @@ The successive returns are four fifths, twelve twenty-fifths,
 36 over 125, and 108 over 625, which enters the fifth call.}
 \end{figure}
 
-In Figure~\ref{view:coherent-term} the gates are maps in $\mathsf{Unitary}$. The guard factorization $F_g:P\oplus P\to\C^2\otimes P$ puts both alternatives on one sheet.
+In Figure~\ref{view:coherent-term} the gates are maps in $\mathsf{Unitary}$, the category of finite-dimensional Hilbert spaces and unitary maps. The guard factorization $F_g:P\oplus P\to\C^2\otimes P$ puts both alternatives on one sheet.
 
 \begin{figure}[!htbp]\centering
 \noindent\begin{minipage}[c]{.48\linewidth}\centering
@@ -887,7 +887,7 @@ input tag and the rows by output tag. On external input $u$ and return $y$,
  \end{pmatrix}\binom{u}{y}
  =\binom{Au+By}{Cu+Dy}.
 \end{equation}
-For \code{guardRound} these columns are $(3/5,4/5)$ and $(-4/5,3/5)$. In $\mathbf{FdHilb}$ the four blocks have types $A:X\to X'$, $B:Y\to X'$, $C:X\to Y$ and $D:Y\to Y$. Both sides have $m=\dim Y$ return values, leaving $n=\dim X=\dim X'$ external ones.
+For \code{guardRound} these columns are $(3/5,4/5)$ and $(-4/5,3/5)$. In $\mathbf{FdHilb}$, which has the same spaces and all linear maps, the four blocks have types $A:X\to X'$, $B:Y\to X'$, $C:X\to Y$ and $D:Y\to Y$. Both sides have $m=\dim Y$ return values, leaving $n=\dim X=\dim X'$ external ones.
 
 The first call sends $Au$ outside and $Cu$ back. The next takes $(0,Cu)$ to $(BCu,DCu)$. After $k+1$ returns, amplitude has entered through $C$, passed through $D$ another $k$ times and left through $B$. Writing $x_k:X\to X'$ for the exit after $k$ returns gives
 \begin{equation}\label{eq:exits}
@@ -1700,16 +1700,16 @@ call to the caller's bit.
 \end{tikzpicture}}\par\smallskip
 
 On \kw{exit}, all of the bypass meets $3/5$ of the lower path. The second Hadamard subtracts
-the two amplitudes and divides by $\sqrt2$, giving $(1-3/5)/2=1/5$ at output $1$. The bypass
+the two amplitudes and divides by $\sqrt2$, giving amplitude $(1-3/5)/2=1/5$ at output $1$. The bypass
 never returns, so \kw{back} tells us that the qubit took the lower path. It returns again with
 probability $9/25$ at each later call, so it eventually exits as $\ket1$, and the second
 Hadamard sends half of its $8/25$ to output $1$. In all, the caller reads $1$ with probability
 $1/25+4/25=1/5$.
 
-In the ring, a pulse shorter than one trip leaves as a train of pulses, one for each exit.
+In the ring, a pulse shorter than one trip leaves as a train of pulses, one for each exit~\cite[Eqs.~(30)--(33)]{RaymerMcKinstrie13Cavity}.
 We time the bypass to meet the direct pulse
 (Figure~\ref{fig:22-pulses}). Each later pulse reaches the splitter alone and splits equally,
-giving $1/5$ overall~\cite[Eqs.~(30)--(33)]{RaymerMcKinstrie13Cavity}.
+giving $1/5$ overall.
 This reminds us of Bergson's first book, where he observes that we can
 hear a bell's rhythm, yet to count its strokes we must keep them
 distinct~\cite[pp.~86--87]{Bergson10TimeAndFreeWill}. The separate pulses do precisely this: their time bins are orthogonal, so a detector that ignores arrival time adds their probabilities.
@@ -1776,7 +1776,7 @@ same sum of probabilities:
 \end{equation}
 Since $\sum_k x_k^\dagger x_k=I$ (Theorem~\ref{thm:total}), the probabilities sum to
 one even without a last call. A smaller register can realize the same channel
-without storing the count (Appendix~\ref{app:readings}).
+without storing the count, as Appendix~\ref{app:readings} shows for \mbox{\code{bypassRound}}.
 
 \begin{table}[!htbp]\centering
 \caption{Erase, keep and measure, in row order, for \code{bypassRound} on $\ket+$ ($t=3/5$).
@@ -2771,6 +2771,7 @@ of quantum recursive programs}.
 \appendix
 \newlength{\appendixindent}
 \setlength{\appendixindent}{\parindent}
+\noindent Citations in these appendices refer to the reference list of the paper.\par\medskip
 \section{Typing and interpreting the clauses}\label{app:rules}
 \subsection{Syntax}
 In \code{trace guardRound on unit}, \code{trace guardRound} closes
@@ -3269,8 +3270,7 @@ put
 $\widehat\beta=\mathsf{dist};\beta;\mathsf{factor}$.
 Thus $F_g=\mathsf{factor};\sigma_{a,\kw{Qubit}}$ places the guard first, as does \code{uniti + uniti; factor} in the executable language.
 Writing $E(\omega)=\mathsf{arr}(\mathsf{arr}\,\omega)$, with
-$\sem{E(\omega)}=\chan{\sem\omega}$, the open call in Figure~\ref{fig:77-measured-sheet}(a)
-places the payload first, giving
+$\sem{E(\omega)}=\chan{\sem\omega}$, the open call in Figure~\ref{fig:77-measured-sheet}(a), written with the payload first, is
 \[
 E(\mathsf{factor});E(\widehat\beta);
 (I_a\otimes\mathsf{measure}_{\kw{Qubit}});E(\mathsf{dist}).
@@ -4397,7 +4397,7 @@ sensitivity to a small loss: for $a=1-\epsilon$ the output loses
 $2\epsilon\langle u,Q(1)u\rangle+O(\epsilon^2)$ of its intensity at zero return phase.
 For a fixed body and a small common phase error $\delta$, the amplitude changes to first order by $i\delta LQ(1)$, since the complex derivative at $z=1$ is $\Theta'(1)=LQ(1)$.
 
-To read both panels of Figure~\ref{fig:22-pulses} from this program, we
+To read the two right panels of Figure~\ref{fig:22-pulses} from this program, we
 also need to say when each exit reaches the straight guide.
 Write $u(T)$ for the incident field, with time measured relative to the direct path. The copy that makes $k$ trips arrives $k\tau_0$ later with the
 amplitude of exit $k$. The field at the marked port is therefore
